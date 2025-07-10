@@ -16,6 +16,9 @@ import {
     RebaseToken__factory,
     SupplyManager__factory,
     UsdtOFT__factory,
+    Executor__factory,
+    RebaseTokenV2__factory,
+    MoleculaPoolTreasuryV2__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -28,12 +31,14 @@ import {
     SavingsUSDS__factory,
     SFrxUSD__factory,
     Aragon__factory,
+    ReceiveULN__factory,
 } from '../../typechain';
 
 import type { ContractNameType } from '../types';
 
 const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     RebaseToken: RebaseToken__factory.abi,
+    RebaseTokenV2: RebaseTokenV2__factory.abi,
     SupplyManager: SupplyManager__factory.abi,
     AgentLZ: AgentLZ__factory.abi,
     ERC20: ERC20__factory.abi,
@@ -42,6 +47,7 @@ const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     IERC20Metadata: IERC20Metadata__factory.abi,
     MUSDE: MUSDE__factory.abi,
     MoleculaPoolTreasury: MoleculaPoolTreasury__factory.abi,
+    MoleculaPoolTreasuryV2: MoleculaPoolTreasuryV2__factory.abi,
     MUSDLock: MUSDLock__factory.abi,
     IOracle: IOracle__factory.abi,
     AccountantAgent: AccountantAgent__factory.abi,
@@ -51,11 +57,13 @@ const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     AavePool: AavePool__factory.abi,
     SparkPool: SparkPool__factory.abi,
     EndpointLZ: ILayerZeroEndpointV2__factory.abi,
+    ExecutorLZ: Executor__factory.abi,
     SwapCurve: Curve__factory.abi,
     ICurveStableSwapFactoryNG: ICurveStableSwapFactoryNG__factory.abi,
     ICurveStableSwapNG: ICurveStableSwapFactoryNG__factory.abi,
     UsdtOFT: UsdtOFT__factory.abi,
     Aragon: Aragon__factory.abi,
+    ReceiveULN: ReceiveULN__factory.abi,
 } as const;
 
 export const allContractAbi: JsonFragment[][] = Object.values(

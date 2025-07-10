@@ -1,7 +1,9 @@
+/* eslint-disable max-lines */
 /* eslint-disable camelcase */
 import {
     AgentLZ__factory,
     RebaseToken__factory,
+    RebaseTokenV2__factory,
     SupplyManager__factory,
     MUSDE__factory,
     MUSDLock__factory,
@@ -14,6 +16,8 @@ import {
     ICurveStableSwapFactoryNG__factory,
     ICurveStableSwapNG__factory,
     UsdtOFT__factory,
+    Executor__factory,
+    MoleculaPoolTreasuryV2__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -26,6 +30,7 @@ import {
     SFrxUSD__factory,
     Curve__factory,
     Aragon__factory,
+    ReceiveULN__factory,
 } from '../typechain';
 
 import { ERC20Safe } from './contracts';
@@ -35,6 +40,7 @@ import { type AllEvmContracts, EvmContractSafe, type ProviderOrRunner } from './
 import type {
     AgentLZ,
     RebaseToken,
+    RebaseTokenV2,
     SupplyManager,
     ERC4626,
     MUSDE,
@@ -42,12 +48,14 @@ import type {
     IOracle,
     AccountantAgent,
     MoleculaPoolTreasury,
+    MoleculaPoolTreasuryV2,
     StakedUSDe,
     SavingsUSDS,
     SFrxUSD,
     AavePool,
     SparkPool,
     ILayerZeroEndpointV2,
+    Executor,
     IERC20Basic,
     IERC20Metadata,
     ContractNameType,
@@ -56,6 +64,7 @@ import type {
     ICurveStableSwapNG,
     UsdtOFT,
     Aragon,
+    ReceiveULN,
 } from './types';
 
 export const EvmContractSafeFactory = {
@@ -63,6 +72,16 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<RebaseToken>(
             {
                 factory: RebaseToken__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+
+    RebaseTokenV2: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<RebaseTokenV2>(
+            {
+                factory: RebaseTokenV2__factory,
                 address,
             },
             rpcProvider,
@@ -147,6 +166,16 @@ export const EvmContractSafeFactory = {
         );
     },
 
+    MoleculaPoolTreasuryV2: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<MoleculaPoolTreasuryV2>(
+            {
+                factory: MoleculaPoolTreasuryV2__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+
     MUSDLock: (address: string, rpcProvider: ProviderOrRunner) => {
         return new EvmContractSafe<MUSDLock>(
             {
@@ -223,6 +252,24 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<ILayerZeroEndpointV2>(
             {
                 factory: ILayerZeroEndpointV2__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    ExecutorLZ: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<Executor>(
+            {
+                factory: Executor__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    ReceiveULN: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<ReceiveULN>(
+            {
+                factory: ReceiveULN__factory,
                 address,
             },
             rpcProvider,

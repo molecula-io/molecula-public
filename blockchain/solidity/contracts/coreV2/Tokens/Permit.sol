@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.23; // Make files compatible between the solutions.
+pragma solidity ^0.8.23;
 
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -12,11 +12,16 @@ import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
  * @dev Based on @openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol
  */
 abstract contract Permit is IERC20Permit, EIP712, Nonces {
+    // ============ Constants ============
+
     /// @dev Hashed representation of the `Permit` function signature as a string.
     bytes32 private constant _PERMIT_TYPEHASH =
+        // solhint-disable-next-line gas-small-strings
         keccak256(
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
+
+    // ============ Errors ============
 
     /**
      * @dev Deadline for the `Permit` function has expired.
@@ -31,13 +36,7 @@ abstract contract Permit is IERC20Permit, EIP712, Nonces {
      */
     error ERC2612InvalidSigner(address signer, address owner);
 
-    /**
-     * @dev Internal function to execute the permit functionality.
-     * @param owner Owner of the funds.
-     * @param spender Spender to be approved.
-     * @param value Value.
-     */
-    function _onPermit(address owner, address spender, uint256 value) internal virtual;
+    // ============ Core Functions ============
 
     /// @inheritdoc IERC20Permit
     function permit(
@@ -67,6 +66,8 @@ abstract contract Permit is IERC20Permit, EIP712, Nonces {
         _onPermit(owner, spender, value);
     }
 
+    // ============ View Functions ============
+
     /**
      * @inheritdoc IERC20Permit
      */
@@ -83,4 +84,14 @@ abstract contract Permit is IERC20Permit, EIP712, Nonces {
     function DOMAIN_SEPARATOR() external view virtual returns (bytes32) {
         return _domainSeparatorV4();
     }
+
+    // ============ Internal Functions ============
+
+    /**
+     * @dev Internal function to execute the permit functionality.
+     * @param owner Owner of the funds.
+     * @param spender Spender to be approved.
+     * @param value Value.
+     */
+    function _onPermit(address owner, address spender, uint256 value) internal virtual;
 }

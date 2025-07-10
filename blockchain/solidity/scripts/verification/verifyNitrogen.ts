@@ -40,7 +40,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         contractsNitrogen.eth.poolKeeper,
     ]);
 
-    await verifyContract(hre, 'MoleculaPoolTreasury', contractsNitrogen.eth.moleculaPool, [
+    await verifyContract(hre, 'MoleculaPoolTreasuryV2', contractsNitrogen.eth.moleculaPool, [
         account.address,
         tokens.map(x => x.token),
         contractsNitrogen.eth.poolKeeper,
@@ -78,20 +78,21 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         config.MUSD_TOKEN_MIN_REDEEM,
     ]);
 
-    if (contractsNitrogen.eth.router !== '') {
-        await verifyContract(hre, 'Router', contractsNitrogen.eth.router, [
-            account.address,
+    if (contractsNitrogen.eth.rebaseTokenOwner !== '') {
+        await verifyContract(hre, 'RebaseTokenOwner', contractsNitrogen.eth.rebaseTokenOwner, [
+            config.OWNER,
             contractsNitrogen.eth.rebaseToken,
             config.GUARDIAN_ADDRESS,
         ]);
     }
 
-    for (const routerAgentAddress of Object.values(contractsNitrogen.eth.routerAgents)) {
-        await verifyContract(hre, 'RouterAgent', routerAgentAddress as string, [
-            account.address,
-            contractsNitrogen.eth.router,
+    for (const tokenVault of Object.values(contractsNitrogen.eth.tokenVaults)) {
+        await verifyContract(hre, 'NitrogenTokenVault', tokenVault as string, [
+            account.address, // Note: the owner is not deploy wallet
             contractsNitrogen.eth.rebaseToken,
             contractsNitrogen.eth.supplyManager,
+            contractsNitrogen.eth.rebaseTokenOwner,
+            config.GUARDIAN_ADDRESS,
         ]);
     }
 

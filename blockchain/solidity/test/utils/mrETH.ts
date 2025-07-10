@@ -3,21 +3,14 @@ import { expect } from 'chai';
 import { keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 
+import {
+    APPROVER_SIGNATURE_AND_EXPIRY,
+    APPROVER_SALT,
+    NATIVE_TOKEN,
+} from '../../configs/ethereum/constants';
 import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
 
 import { FAUCET, grantERC20 } from './grant';
-
-// Default approver signature and expiry for testing
-export const approverSignatureAndExpiry = {
-    signature: '0x',
-    expiry: 0,
-};
-
-// Default salt for testing
-export const approverSalt = '0x0000000000000000000000000000000000000000000000000000000000000000';
-
-// Native token address constant
-export const nativeToken = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 /**
  * Deploys and initializes the mrETH system with all necessary contracts and configurations
@@ -66,7 +59,7 @@ export async function deployMrETh() {
 
     const rebaseERC20V2FutureAddress = ethers.getCreateAddress({
         from: owner.address,
-        nonce: (await owner.getNonce()) + 3,
+        nonce: transactionCount + 3,
     });
 
     // Deploy and initialize DepositManager
@@ -125,9 +118,9 @@ export async function deployMrETh() {
     // Initialize operators and strategies
     await depositManager.addOperator(
         defaultOperator,
-        approverSalt,
-        approverSignatureAndExpiry,
-        approverSalt,
+        APPROVER_SALT,
+        APPROVER_SIGNATURE_AND_EXPIRY,
+        APPROVER_SALT,
         [defaultOperator],
         [10_000n],
     );
@@ -138,7 +131,7 @@ export async function deployMrETh() {
     );
 
     // Deploy and initialize token vaults
-    const TokenVault = await ethers.getContractFactory('MockTokenVault');
+    const TokenVault = await ethers.getContractFactory('MrEthAssetTokenVault');
 
     // Deploy and initialize WETH token vault
     const tokenVaultWETH = await TokenVault.connect(owner).deploy(
@@ -146,7 +139,6 @@ export async function deployMrETh() {
         rebaseTokenV2,
         supplyManagerV2,
         owner!.address,
-        true,
     );
 
     await tokenVaultWETH.init(
@@ -161,7 +153,6 @@ export async function deployMrETh() {
         rebaseTokenV2,
         supplyManagerV2,
         owner!.address,
-        true,
     );
 
     await tokenVaultStETH.init(
@@ -171,17 +162,16 @@ export async function deployMrETh() {
     );
 
     // Deploy and initialize native token vault
-    const NativeTokenVault = await ethers.getContractFactory('MockNativeTokenVault');
+    const NativeTokenVault = await ethers.getContractFactory('MrEthNativeTokenVault');
     const nativeTokenVault = await NativeTokenVault.deploy(
         owner!.address,
         rebaseTokenV2,
         supplyManagerV2,
         owner!.address,
-        false,
     );
 
     await nativeTokenVault.init(
-        nativeToken,
+        NATIVE_TOKEN,
         10n ** 6n, // Minimum deposit assets
         10n ** 18n, // Minimum redeem shares
     );
@@ -205,7 +195,6 @@ export async function deployMrETh() {
         rebaseTokenV2,
         supplyManagerV2,
         owner!.address,
-        false,
     );
 
     await tokenVaultCWETH_V3.init(

@@ -7,13 +7,16 @@ export * from '../typechain/common';
 export type {
     AgentLZ,
     RebaseToken,
+    RebaseTokenV2,
     SupplyManager,
     MUSDE,
     MoleculaPoolTreasury,
+    MoleculaPoolTreasuryV2,
     MUSDLock,
     IOracle,
     AccountantAgent,
     ILayerZeroEndpointV2,
+    Executor,
     IERC20Basic,
     IERC20Metadata,
     ICurveStableSwapFactoryNG,
@@ -23,6 +26,7 @@ export type {
 
 const contractsNames = [
     'RebaseToken',
+    'RebaseTokenV2',
     'SupplyManager',
     'AgentLZ',
     'ERC20',
@@ -31,6 +35,7 @@ const contractsNames = [
     'IERC20Metadata',
     'MUSDE',
     'MoleculaPoolTreasury',
+    'MoleculaPoolTreasuryV2',
     'MUSDLock',
     'IOracle',
     'AccountantAgent',
@@ -40,11 +45,13 @@ const contractsNames = [
     'AavePool',
     'SparkPool',
     'EndpointLZ',
+    'ExecutorLZ',
     'SwapCurve',
     'ICurveStableSwapFactoryNG',
     'ICurveStableSwapNG',
     'UsdtOFT',
     'Aragon',
+    'ReceiveULN',
 ] as const;
 
 export type ContractNameType = (typeof contractsNames)[number];

@@ -9,8 +9,8 @@
             "path": "configs",
         },
         {
-            "name": "💰 Contracts",
-            "path": "contracts",
+            "name": "💰 Blockchain",
+            "path": "blockchain",
         },
         {
             "name": "⚙️ Backend",

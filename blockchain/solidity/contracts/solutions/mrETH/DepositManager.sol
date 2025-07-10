@@ -8,9 +8,9 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {IERC7575} from "./../../common/external/interfaces/IERC7575.sol";
 import {Guardian} from "./../../common/pausable/Guardian.sol";
 import {ConstantsCoreV2} from "./../../coreV2/Constants.sol";
+import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {IMoleculaPoolV2} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {DepositManagerStorage, IDelegationManager, IStrategyFactory} from "./DepositManagerStorage.sol";
 import {IEigenPodManager} from "./external/interfaces/IEigenPodManager.sol";
@@ -110,7 +110,7 @@ contract DepositManager is
         address token,
         address vault,
         uint256 value
-    ) external only(SUPPLY_MANAGER) returns (uint256 moleculaTokenAmount) {
+    ) external only(SUPPLY_MANAGER) returns (uint256 moleculaTokenAssets) {
         // Transfer tokens from the Vault to this contract.
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(vault, address(this), value);
@@ -139,7 +139,7 @@ contract DepositManager is
         address,
         address,
         uint256
-    ) external payable only(SUPPLY_MANAGER) returns (uint256 moleculaTokenAmount) {
+    ) external payable only(SUPPLY_MANAGER) returns (uint256 moleculaTokenAssets) {
         // Convert ETH to WETH and deposit into the Pools.
         IWETH(WETH).deposit{value: msg.value}();
         _depositIntoPools(msg.value);
@@ -148,7 +148,6 @@ contract DepositManager is
     }
 
     /// @dev Allows the contract to receive ETH.
-    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
     /// @inheritdoc IDepositManager
@@ -171,7 +170,7 @@ contract DepositManager is
             unchecked {
                 // Calculate the desired allocation to stay in the buffer.
                 uint256 desiredAllocationToStayInBuffer = (totalSupply() * bufferPercentage) /
-                    PERCENTAGE_FACTOR;
+                    ConstantsCoreV2.PERCENTAGE_FACTOR;
 
                 // Check if any value to stake is available.
                 if (bufferedTvl < desiredAllocationToStayInBuffer) {
@@ -267,7 +266,7 @@ contract DepositManager is
                 if (
                     operatorDelegatorTVLs[i] <
                     (operatorsDelegators[operatorsArray[i]].delegationPortion * restakedTvl) /
-                        PERCENTAGE_FACTOR
+                        ConstantsCoreV2.PERCENTAGE_FACTOR
                 ) {
                     return operatorsDelegators[operatorsArray[i]].delegator;
                 }
@@ -326,6 +325,7 @@ contract DepositManager is
     function totalRestakedSupply()
         public
         view
+        virtual
         returns (uint256 restakedTvl, uint256[] memory operatorDelegatorTVLs)
     {
         // Get strategy manager contract.
@@ -358,7 +358,7 @@ contract DepositManager is
             IEigenPodManager eigenPodManager = DELEGATION_MANAGER.eigenPodManager();
 
             // Get withdrawable amount of restaked ETH.
-            int256 podOwnerShares = eigenPodManager.podOwnerShares(delegator);
+            int256 podOwnerShares = eigenPodManager.podOwnerDepositShares(delegator);
             uint256 pendingNativeSupply = IDelegator(delegator).totalPendingNativeSupply();
 
             // Handle the case of negative pod owner shares.
@@ -475,7 +475,7 @@ contract DepositManager is
         }
 
         // `portionsSum` must be equal to 100%.
-        if (portionsSum != PERCENTAGE_FACTOR) {
+        if (portionsSum != ConstantsCoreV2.PERCENTAGE_FACTOR) {
             revert EWrongPortion();
         }
     }
@@ -517,11 +517,11 @@ contract DepositManager is
         // and that the strategy is whitelisted for deposits.
 
         if (address(strategy.underlyingToken()) != token) {
-            revert EInvalidStrategyConfiguration("Underlying token does not match expected token");
+            revert EInvalidStrategyConfiguration("Underlying token mismatch");
         }
 
         if (!strategyManager.strategyIsWhitelistedForDeposit(strategy)) {
-            revert EInvalidStrategyConfiguration("Strategy is not whitelisted for deposit");
+            revert EInvalidStrategyConfiguration("Strategy not whitelisted");
         }
     }
 
@@ -608,7 +608,7 @@ contract DepositManager is
         }
 
         // `portionsSum` must be equal to 100%.
-        if (portionsSum != PERCENTAGE_FACTOR) {
+        if (portionsSum != ConstantsCoreV2.PERCENTAGE_FACTOR) {
             revert EWrongPortion();
         }
     }
@@ -644,7 +644,7 @@ contract DepositManager is
                 // Calculate the amount to deposit to the Pool by distribution deposit portions.
                 expectedPoolsBalances[i] =
                     (bufferTvl * newPoolsData[i].poolPortion) /
-                    PERCENTAGE_FACTOR;
+                    ConstantsCoreV2.PERCENTAGE_FACTOR;
             }
 
             actualPoolsBalances[i] = IBufferInteractor(newPoolsData[i].poolLib).getEthBalance(
@@ -691,7 +691,9 @@ contract DepositManager is
                 unchecked {
                     if (i != length - 1) {
                         // Calculate the amount to deposit to the Pool by distribution of the deposit portions.
-                        depositValue = (value * _poolData.poolPortion) / PERCENTAGE_FACTOR;
+                        depositValue =
+                            (value * _poolData.poolPortion) /
+                            ConstantsCoreV2.PERCENTAGE_FACTOR;
                     } else {
                         // If it's the last Pool, deposit the entire remaining value.
                         depositValue = value - distributedAmount;
@@ -743,7 +745,8 @@ contract DepositManager is
                         // Calculate the amount to withdraw to maintain Pool portions.
                         amountToWithdraw =
                             poolTvl -
-                            ((_poolData.poolPortion * (bufferedTvl - value)) / PERCENTAGE_FACTOR);
+                            ((_poolData.poolPortion * (bufferedTvl - value)) /
+                                ConstantsCoreV2.PERCENTAGE_FACTOR);
                     } else {
                         // If it's the last Pool, withdraw the entire remaining value.
                         amountToWithdraw = value - withdrawnAmount;
@@ -829,7 +832,7 @@ contract DepositManager is
      * @param percentage All needed percentages.
      */
     function _checkPercentage(uint16 percentage) internal pure {
-        if (percentage > PERCENTAGE_FACTOR) {
+        if (percentage > ConstantsCoreV2.PERCENTAGE_FACTOR) {
             revert EInvalidPercentage();
         }
     }
@@ -869,10 +872,11 @@ contract DepositManager is
     /// @dev Set a new value for the `isRedeemPaused` flag.
     /// @param newValue New value.
     function _setStakePaused(bool newValue) private {
-        if (isStakePaused != newValue) {
-            isStakePaused = newValue;
-            emit IsStakePausedChanged(newValue);
+        if (isStakePaused == newValue) {
+            revert EPauseAlreadySet();
         }
+        isStakePaused = newValue;
+        emit IsStakePausedChanged(newValue);
     }
 
     /// @inheritdoc IDepositManager

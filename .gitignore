@@ -95,3 +95,6 @@ ui-tests/transactionDepositTronDev.small.json
 ui-tests/transactionDepositTronDev.swap.json
 
 ui-tests/transactionWithdrawTronDev.native.json
+
+# Env
+.env.local

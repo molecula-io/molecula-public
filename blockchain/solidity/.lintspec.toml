@@ -1,7 +1,6 @@
 [lintspec]
 paths = []
 exclude = [
-    './contracts/common/external/',
     './contracts/mock',
     './contracts/solutions/Carbon/common/UsdtOFT.sol',
     './contracts/solutions/Carbon/common/interfaces/IUsdtOFT.sol',

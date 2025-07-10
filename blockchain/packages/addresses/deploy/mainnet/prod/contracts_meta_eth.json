@@ -1,0 +1,10 @@
+{
+    "eth": {
+        "metaPoolTreasury": "",
+        "supplyManagerV2": "",
+        "rebaseTokenV2": "",
+        "stETHVault": "",
+        "wETHVault": "",
+        "nativeTokenVault": ""
+    }
+}

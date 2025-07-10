@@ -16,10 +16,24 @@ export const shastaConfig: TronNetworkConfig = {
     LAYER_ZERO_TRON_REQUIERED_DVNS: [
         '0xC6b1A264D9bB30A8d19575B0Bb3BA525A3a6FC93', // LayerZero Labs DVN address
     ],
-    LAYER_ZERO_ETHEREUM_EID: 40161, // sepolia
-    LAYER_ZERO_TRON_EID: 40420, // shasta
-    LAYER_ZERO_ARBITRUM_EID: 40231, // arbitrum sepolia
-    LAYER_ZERO_CELO_EID: 40125, // celo testnet
+    // LayerZero Executor contract's configuration parameters.
+    LAYER_ZERO_EXECUTOR: 'TVqZEgk73zHEn89SPFUfRv8zELsieUMD2y',
+    LAYER_ZERO_PRICE_FEED: 'THyXmFzHfs81NmfF1iAQ1oNAiNyKkYby1t',
+    LAYER_ZERO_WORKER_FEE_LIB: 'TGisyuSS66tPyMMQBcsUhGaRhcJK8L3Ti8',
+    LAYER_ZERO_SEND_ULN_LIB: 'TRvKXqDiPd4y1RCjLyadYeEoPrcyg9CERs',
+    LAYER_ZERO_RECEIVE_ULN_LIB: 'TN2KMvPCcmCq9vVzGUcrzrbwXLy5f3qZeZ',
+
+    /** SEPOLIA EID. */
+    LAYER_ZERO_ETHEREUM_EID: 40161,
+
+    /** SHASTA EID. */
+    LAYER_ZERO_TRON_EID: 40420,
+
+    /** ARBITRUM SEPOLIA EID. */
+    LAYER_ZERO_ARBITRUM_EID: 40231,
+
+    /** CELO TESTNET EID. */
+    LAYER_ZERO_CELO_EID: 40125,
 
     // System contracts
     USDT_ADDRESS: 'TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs',

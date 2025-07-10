@@ -96,71 +96,52 @@ In terminal you can see the table and you can run local host for ./coverage/inde
 
     > Note: set a production environment in [.env.production](./.env.production) if needed.
 
-### How to migrate from `MoleculaPool` to `MoleculaPoolTreasury` contract.
+### How to deploy RebaseTokenOwner
 
-1. Deploy `MoleculaPoolTreasury` contract
-
-    ```
-    yarn deploy:pool:[test|beta|production]
-    ```
-
-2. `PoolKeeper` should set infinite allowance for `MoleculaPoolTreasury` contract for all tokens from old `MoleculaPool`
-   contract.
-
-3. Set new molecula pool in `SupplyManager` contract.
-    ```
-    yarn migrate:nitrogen:pool:[test|beta]
-    ```
-
-### How to deploy and setup Router and RouterAgent
-
-1. Deploy Router:
+1. Deploy RebaseTokenOwner:
 
     ```
-    yarn deploy:router:test
+    yarn deploy:rebaseTokenOwner:test
     ```
 
-2. Deploy RouterAgent and set ERC20 token address :
+2. Set up the system:
+   Set RebaseTokenOwner as an owner of RebaseToken
 
     ```
-    yarn deploy:routerAgent:test --token-name <TOKEN_NAME> --token <TOKEN_ADDRESS>
+    await rebaseToken.transferOwnership(rebaseTokenOwner);
     ```
 
-3. Set correct owner in RouterAgent and Router
+### How to deploy NitrogenTokenVault
+
+1. Deploy NitrogenTokenVault and set ERC20 token address:
 
     ```
-    yarn set:nitrogen:owner:[test|beta|production]
+    yarn deploy:nitrogenTokenVault:test --token-name <TOKEN_NAME> --token <TOKEN_ADDRESS> --min-deposit <>
     ```
 
-4. Add RouterAgent in Router and SupplyManager and set Router as owner in RebaseToken
+    `--token` - ERC20 token address.  
+    `--token-name` - Token name.  
+    `--min-deposit` - Minimal deposit assets.  
+    `--min-redeem` - Minimal redeem shares.
+
+2. Set up the system:
+
+    Call `NitrogenTokenVault.acceptOwnership()` function via the actual owner to accept the ownership transfer.
+
+    Call `SupplyManager.setAgent(NitrogenTokenVault, true)`.
+
+    Add NitrogenTokenVault to RebaseTokenOwner:
 
     ```
-    yarn set:nitrogen:setupRouter:test --min-deposit-value <minDepositValue> --min-redeem-shares <minRedeemShares> --token-name <TokenName>
+    // Add code hash if it's needed
+    const codeHash = keccak256((await NitrogenTokenVault.getDeployedCode())!);
+    await rebaseTokenOwner.setCodeHash(codeHash, true);
+
+    await rebaseTokenOwner.addTokenVault(NitrogenTokenVault);
     ```
-
-    `--min-deposit-value` - Minimal deposit value set in Router for the token that RouterAgent work with.
-    `--min-redeem-shares` - Minimal redeem shares (in mUSD).
-    `--token-name` - Token name that RouterAgent work with.
-
-### How to migrate from `AgentAccountant` to `AccountantAgent` contract.
-
-1. Deploy `AccountantAgent` contract.
-
-    ```
-    yarn deploy:agent:[test|beta|production]
-    ```
-
-2. Migrate from `AgentAccountant` to `AccountantAgent` contract.
-
-    ```
-    yarn migrate:nitrogen:agent:[test|beta] --mpv [1.0|1.1]
-    ```
-
-    In version 1.0 `MoleculaPool` contract is used.  
-    In version 1.1 `MoleculaPoolTreasury` contract is used.
 
 ### How to deploy wmUSD and lmUSD contracts.
 
-    ```
-    yarn deploy:wmUSD:lmUSD:test
-    ```
+```
+yarn deploy:wmUSD:lmUSD:test
+```

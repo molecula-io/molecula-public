@@ -68,7 +68,7 @@ export function ensurePathToFileExists(filePath: string) {
     ensureDirectoryExists(dirname);
 }
 
-// `relativePath` - is relative path from `deployment/src` to `deployment/deploy/...`
+// `relativePath` - is a relative path from `deployment/src` to `deployment/deploy/...`
 const writeToFileImpl = (fileName: string, json: object, relativePath: string) => {
     const jsonData = `${JSON.stringify(json, null, 4)}\n`;
 
@@ -125,8 +125,6 @@ export function getTronEnvironmentConfig(network: EnvironmentType) {
 }
 
 export async function getConfig(hre: HardhatRuntimeEnvironment, network: EnvironmentType) {
-    console.log('Network:', network);
-
     const config = getEnvironmentConfig(network);
 
     const USDT = await hre.ethers.getContractAt('IERC20', config.USDT_ADDRESS);
@@ -165,11 +163,6 @@ export async function increaseBalance(
         console.error('Expected INITIAL_USDT_SUPPLY: ', initSupply);
         process.exit(1);
     }
-}
-
-export async function getDeployerPrivateKey(hre: HardhatRuntimeEnvironment) {
-    const accounts = hre.network.config.accounts as string[];
-    return accounts[0] || '';
 }
 
 export function getEthereumAddress(environment: EnvironmentType, contract: string) {

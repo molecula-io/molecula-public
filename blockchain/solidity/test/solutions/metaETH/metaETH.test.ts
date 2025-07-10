@@ -1,0 +1,302 @@
+/* eslint-disable camelcase, max-lines, no-await-in-loop, no-restricted-syntax, no-bitwise, no-plusplus */
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
+import { expect } from 'chai';
+
+import { ethers } from 'hardhat';
+
+import { NATIVE_TOKEN } from '../../../configs/ethereum/constants';
+import { findRequestRedeemEventV2 } from '../../utils/event';
+import { FAUCET, grantERC20, grantETH } from '../../utils/grant';
+import { expectEqual } from '../../utils/math';
+import { deployMetaEth } from '../../utils/metaETH';
+
+describe('Meta ETH', () => {
+    it('Check deploy', async () => {
+        const { metaPoolTreasury } = await loadFixture(deployMetaEth);
+        const pool = await metaPoolTreasury.getTokenPool();
+        expect(pool.length).to.be.equal(3);
+    });
+
+    it('Should deposit and redeem', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            supplyManagerV2,
+            stETHVault,
+            stETH,
+            nativeTokenVault,
+            minDepositAssets,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand USD and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Check shares
+        const shares = await stETHVault.convertToShares(depositValue);
+        const shares2 = await supplyManagerV2.convertToShares(depositValue);
+        expect(shares).to.be.equal(shares2);
+
+        // Deposit stETH
+        expect(await stETHVault.previewDeposit(depositValue)).to.be.equal(shares);
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+        expect(await rebaseTokenV2.sharesOf(user0)).to.be.equal(shares);
+        expectEqual(await stETHVault.totalAssets(), depositValue);
+
+        // Deposit ETH
+        expect(await nativeTokenVault.previewDeposit(depositValue)).to.be.equal(shares);
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
+        expect(await rebaseTokenV2.sharesOf(user0)).to.be.equal(2n * shares);
+        expect(await nativeTokenVault.totalAssets()).to.be.equal(depositValue);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, stETH, 10n * depositValue - 1n, FAUCET.stETH);
+
+        // requestRedeem
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const redeemAssets = await stETHVault.convertToAssets(userShares);
+        expect(await stETHVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
+        const tx = await stETHVault.connect(user0).requestRedeem(userShares - 1n, user0, user0);
+        expectEqual(await stETHVault.pendingRedeemRequest(0, user0), userShares);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+
+        // fulfillRedeemRequests
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+        expectEqual(await stETHVault.claimableRedeemAssets(user0), redeemAssets);
+
+        // redeem
+        expect(await stETH.balanceOf(user0)).to.be.equal(0);
+        await stETHVault.connect(user0).withdraw(redeemAssets - 1n, user0, user0);
+        expectEqual(await stETH.balanceOf(user0), redeemAssets);
+    });
+
+    it('Test execute', async () => {
+        const { user0, metaPoolTreasury, stETH, poolKeeper } = await loadFixture(deployMetaEth);
+
+        const encodedBalanceOf = stETH.interface.encodeFunctionData('balanceOf', [user0.address]);
+        const execEncodedBalanceOf = [
+            {
+                target: stETH,
+                data: encodedBalanceOf,
+                value: 0,
+            },
+        ];
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf),
+        ).to.be.rejectedWith('ENotInWhiteList(');
+        await metaPoolTreasury.addInWhiteList(stETH);
+
+        await metaPoolTreasury.pauseExecute();
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf),
+        ).to.be.rejectedWith('EFunctionPaused(');
+        await metaPoolTreasury.unpauseExecute();
+
+        await metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf);
+    });
+
+    it('Test approve execute', async () => {
+        const { user0, metaPoolTreasury, stETH, poolKeeper } = await loadFixture(deployMetaEth);
+        const encodedApprove = stETH.interface.encodeFunctionData('approve', [
+            user0.address,
+            100500,
+        ]);
+        const execArgs = [
+            {
+                target: stETH,
+                data: encodedApprove,
+                value: 1,
+            },
+        ];
+        await expect(metaPoolTreasury.execute(execArgs)).to.be.rejectedWith('ENotAuthorized()');
+        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs)).to.be.rejectedWith(
+            'EMsgValueIsNotZero()',
+        );
+
+        const execArgs0 = [
+            {
+                target: stETH,
+                data: encodedApprove,
+                value: 0,
+            },
+        ];
+        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs0)).to.be.rejectedWith(
+            'ENotInWhiteList()',
+        );
+        await metaPoolTreasury.addInWhiteList(user0.address);
+        expect(await metaPoolTreasury.isInWhiteList(user0.address)).to.be.equal(true);
+
+        await metaPoolTreasury.setBlockToken(stETH, true);
+        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs0)).to.be.rejectedWith(
+            'ETokenBlocked()',
+        );
+        await metaPoolTreasury.setBlockToken(stETH, false);
+
+        await metaPoolTreasury.connect(poolKeeper).execute(execArgs0);
+    });
+
+    it('Test approve execute with value', async () => {
+        const { metaPoolTreasury, testSeqno, poolKeeper } = await loadFixture(deployMetaEth);
+
+        const encodedData = testSeqno.interface.encodeFunctionData('incAndPay', [12n]);
+        const execArgs0 = [
+            {
+                target: testSeqno,
+                data: encodedData,
+                value: 1,
+            },
+        ];
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execArgs0, { value: 2 }),
+        ).to.be.rejectedWith('EWrongMsgValue()');
+        await metaPoolTreasury.connect(poolKeeper).execute(execArgs0, { value: 1 });
+    });
+
+    it('Test add/remove tokens', async () => {
+        const { minDepositAssets, metaPoolTreasury, stETH, poolOwner } =
+            await loadFixture(deployMetaEth);
+        const grantAssets = 10n * minDepositAssets;
+        const { provider } = ethers;
+
+        await metaPoolTreasury.removeToken(stETH);
+        await metaPoolTreasury.addToken(stETH);
+
+        await grantERC20(metaPoolTreasury, stETH, grantAssets, FAUCET.stETH);
+        await metaPoolTreasury.removeToken(stETH);
+        expectEqual(await stETH.balanceOf(metaPoolTreasury), 0n);
+        expectEqual(await stETH.balanceOf(poolOwner), grantAssets);
+        await metaPoolTreasury.addToken(stETH);
+
+        await metaPoolTreasury.removeToken(NATIVE_TOKEN);
+        await metaPoolTreasury.addToken(NATIVE_TOKEN);
+        await grantETH(metaPoolTreasury, grantAssets);
+        expect(await provider.getBalance(metaPoolTreasury)).to.be.greaterThan(0);
+        await metaPoolTreasury.removeToken(NATIVE_TOKEN);
+        expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(0);
+        await metaPoolTreasury.addToken(NATIVE_TOKEN);
+    });
+
+    it('Test white list', async () => {
+        const { testSeqno, metaPoolTreasury } = await loadFixture(deployMetaEth);
+        await metaPoolTreasury.deleteFromWhiteList(testSeqno);
+        await expect(metaPoolTreasury.deleteFromWhiteList(testSeqno)).to.be.rejectedWith(
+            'ENotPresentInWhiteList(',
+        );
+    });
+
+    it('Owner does not receive eth', async () => {
+        const { metaPoolTreasury, poolOwner, minDepositAssets } = await loadFixture(deployMetaEth);
+        const grantAssets = 10n * minDepositAssets;
+
+        const MockOwner = await ethers.getContractFactory('MockOwner');
+        const mockOwner = await MockOwner.connect(poolOwner).deploy();
+
+        await metaPoolTreasury.transferOwnership(mockOwner);
+        await mockOwner.acceptOwnership(metaPoolTreasury);
+
+        await grantETH(metaPoolTreasury, grantAssets);
+        await mockOwner.execute(
+            metaPoolTreasury,
+            metaPoolTreasury.interface.encodeFunctionData('removeToken', [NATIVE_TOKEN]),
+            0,
+        );
+    });
+
+    it('Check setPoolKeeper', async () => {
+        const { metaPoolTreasury, randAccount } = await loadFixture(deployMetaEth);
+        await expect(metaPoolTreasury.setPoolKeeper(ethers.ZeroAddress)).to.be.rejectedWith(
+            'EZeroAddress()',
+        );
+        await metaPoolTreasury.setPoolKeeper(randAccount);
+        expect(await metaPoolTreasury.poolKeeper()).to.be.equal(randAccount);
+    });
+
+    it('Block token', async () => {
+        const { metaPoolTreasury, stETH } = await loadFixture(deployMetaEth);
+
+        await expect(metaPoolTreasury.setBlockToken(metaPoolTreasury, true)).to.be.rejectedWith(
+            'ETokenNotExist()',
+        );
+        await metaPoolTreasury.setBlockToken(stETH, true);
+        await expect(metaPoolTreasury.setBlockToken(stETH, true)).to.be.rejectedWith(
+            'EAlreadyBlockedSet()',
+        );
+    });
+
+    it('Test errors', async () => {
+        const { metaPoolTreasury, user0 } = await loadFixture(deployMetaEth);
+        await expect(metaPoolTreasury.fulfillRedeemRequests([])).to.be.rejectedWith(
+            'EEmptyArray()',
+        );
+        await expect(metaPoolTreasury.fulfillRedeemRequestsForNativeToken([])).to.be.rejectedWith(
+            'EEmptyArray()',
+        );
+
+        await metaPoolTreasury.pauseFulfillRedeemRequests();
+        expect(await metaPoolTreasury.isFulFillRedeemPaused()).to.be.equal(true);
+        await expect(metaPoolTreasury.fulfillRedeemRequests([1])).to.be.rejectedWith(
+            'EFunctionPaused(',
+        );
+        await expect(metaPoolTreasury.fulfillRedeemRequestsForNativeToken([1])).to.be.rejectedWith(
+            'EFunctionPaused(',
+        );
+        await metaPoolTreasury.unpauseFulfillRedeemRequests();
+        expect(await metaPoolTreasury.isFulFillRedeemPaused()).to.be.equal(false);
+
+        await expect(
+            metaPoolTreasury.connect(user0).deposit(0, ethers.ZeroAddress, ethers.ZeroAddress, 0),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury
+                .connect(user0)
+                .depositNativeToken(0, ethers.ZeroAddress, ethers.ZeroAddress, 0),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury.connect(user0).requestRedeem(0, ethers.ZeroAddress, 0),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury.connect(user0).grantNativeToken(ethers.ZeroAddress, 0),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury.connect(user0).addTokenVault(ethers.ZeroAddress),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury.connect(user0).removeTokenVault(ethers.ZeroAddress),
+        ).to.be.rejectedWith('ENotAuthorized(');
+        await expect(
+            metaPoolTreasury.connect(user0).addToken(ethers.ZeroAddress),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).removeToken(ethers.ZeroAddress),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).setPoolKeeper(ethers.ZeroAddress),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).setBlockToken(ethers.ZeroAddress, true),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).addInWhiteList(ethers.ZeroAddress),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).deleteFromWhiteList(ethers.ZeroAddress),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            metaPoolTreasury.connect(user0).pauseFulfillRedeemRequests(),
+        ).to.be.rejectedWith('ENotAuthorizedForPause(');
+        await expect(
+            metaPoolTreasury.connect(user0).unpauseFulfillRedeemRequests(),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+
+        await expect(metaPoolTreasury.addInWhiteList(ethers.ZeroAddress)).to.be.rejectedWith(
+            'EZeroAddress()',
+        );
+        await metaPoolTreasury.addInWhiteList(user0);
+        await expect(metaPoolTreasury.addInWhiteList(user0)).to.be.rejectedWith(
+            'EAlreadyAddedInWhiteList()',
+        );
+    });
+});

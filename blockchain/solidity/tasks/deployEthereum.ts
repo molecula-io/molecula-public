@@ -6,9 +6,14 @@ import {
     deployAccountantAgent,
     deployCarbon,
     deployCore,
-    deployMoleculaPoolTreasury,
+    deployMoleculaPoolTreasuryV2WithDerivedParams,
     deployNitrogen,
+    deployExecutor,
+    deployMrEth,
+    deployMetaEth,
 } from '../scripts/ethereum';
+import { deployNitrogenTokenVault } from '../scripts/ethereum/deploy/deployNitrogenTokenVault';
+import { deployRebaseTokenOwner } from '../scripts/ethereum/deploy/deployRebaseTokenOwner';
 import { deploywmUSDlmUSD } from '../scripts/ethereum/deploy/deploywmUSDlmUSD';
 import {
     getEnvironment,
@@ -78,12 +83,14 @@ ethereumMajorScope
     });
 
 ethereumMajorScope
-    .task('deployMoleculaPoolTreasury', 'Deploys the Nitrogen MoleculaPoolTreasury contract')
+    .task('deployMoleculaPoolTreasuryV2', 'Deploys the Nitrogen MoleculaPoolTreasuryV2 contract')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         const environment = getEnvironment(hre, taskArgs.environment);
-        const result = await deployMoleculaPoolTreasury(hre, environment);
-        writeToFile(`${environment}/molecula_pool_treasury.json`, result);
+        const result = await deployMoleculaPoolTreasuryV2WithDerivedParams(hre, environment);
+        writeToFile(`${environment}/molecula_pool_treasuryV2.json`, {
+            moleculaPoolV2: result.moleculaPoolV2,
+        });
         console.log('Deployment and file write completed successfully.');
     });
 
@@ -122,32 +129,6 @@ ethereumMajorScope
     });
 
 ethereumMajorScope
-    .task('deployRouterAgent', 'Deploys RouterAgent')
-    .addParam('environment', 'Deployment environment')
-    .addParam('token', 'ERC20 token address')
-    .addParam('tokenName', 'Token name')
-    .setAction(async (taskArgs, hre) => {
-        console.log('Environment:', taskArgs.environment);
-        console.log('Network:', hre.network.name);
-
-        const environment = getEnvironment(hre, taskArgs.environment);
-        const contractsNitrogen: ContractsNitrogen = await readFromFile(
-            `${environment}/contracts_nitrogen.json`,
-        );
-
-        // @ts-ignore
-        contractsNitrogen.eth.routerAgents[taskArgs.tokenName] = await deployRouterAgent(
-            hre,
-            environment,
-            contractsNitrogen,
-            taskArgs.token,
-        );
-
-        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
-        console.log('Deployment and file write completed successfully.');
-    });
-
-ethereumMajorScope
     .task('deploywmUSDlmUSD', 'Deploys wmUSD and lmUSD contracts')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
@@ -169,4 +150,106 @@ ethereumMajorScope
 
         writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
         console.log('Deployment and file write completed successfully.');
+    });
+
+ethereumMajorScope
+    .task('deployExecutor', 'Deploys LZ Executor contract on Ethereum')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        try {
+            const contractsExecutor = await readFromFile(`${environment}/contracts_executor.json`);
+            const result = await deployExecutor(hre, environment);
+
+            writeToFile(`${environment}/contracts_executor.json`, {
+                eth: result.eth,
+                tron: contractsExecutor.tron,
+            });
+            console.log('Deployment of LZ Executor contract completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
+    });
+
+ethereumMajorScope
+    .task('deployRebaseTokenOwner', 'Deploys RebaseTokenOwner contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        contractsNitrogen.eth.rebaseTokenOwner = await deployRebaseTokenOwner(hre, environment);
+        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
+    });
+
+ethereumMajorScope
+    .task('deployNitrogenTokenVault', 'Deploys NitrogenTokenVault contract')
+    .addParam('environment', 'Deployment environment')
+    .addParam('token', 'ERC20 token address')
+    .addParam('tokenName', 'Token name')
+    .addParam('minDeposit', 'Minimal deposit assets')
+    .addParam('minRedeem', 'Minimal redeem shares')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        console.log('token:', taskArgs.token);
+        console.log('tokenName:', taskArgs.tokenName);
+        console.log('minDeposit:', taskArgs.minDeposit);
+        console.log('minRedeem:', taskArgs.minRedeem);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        const nitrogenTokenVault = await deployNitrogenTokenVault(
+            hre,
+            environment,
+            taskArgs.token,
+            taskArgs.minDeposit,
+            taskArgs.minRedeem,
+        );
+        // @ts-ignore
+        contractsNitrogen.eth.tokenVaults[taskArgs.tokenName] = nitrogenTokenVault;
+
+        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
+    });
+
+ethereumMajorScope
+    .task('deployMrEth', 'Deploys mrETH and core V2 contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        const eth = await deployMrEth(hre, environment);
+        const result = { eth };
+
+        writeToFile(`${environment}/contracts_mr_eth.json`, result);
+        console.log('Deployment and file write completed successfully.');
+    });
+
+ethereumMajorScope
+    .task('deployMetaEth', 'Deploys MetaEth and core V2 contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        const result = {
+            eth: await deployMetaEth(hre, environment),
+        };
+
+        writeToFile(`${environment}/contracts_meta_eth.json`, result);
     });

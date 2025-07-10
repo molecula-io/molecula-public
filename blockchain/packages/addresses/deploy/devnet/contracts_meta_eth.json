@@ -1,0 +1,10 @@
+{
+    "eth": {
+        "metaPoolTreasury": "0x0B6fa59883c7e5B7d1c65eccA466bb3124176c43",
+        "supplyManagerV2": "0x5c766F1a3fb4d4c2e20deed5F6020B09314f959F",
+        "rebaseTokenV2": "0x2B7dd6106971d8C6551598613375e70bd16Fc93E",
+        "stETHVault": "0xC083BCF51DA1d1ABF68aD537F4995CC1DCd0d75D",
+        "wETHVault": "0x4a7AB4FBac2F38Fc82cda252f0564f9ee7F81E7a",
+        "nativeTokenVault": "0x3F4241d098e7AA218b8f7074f99CDD237cbf0098"
+    }
+}

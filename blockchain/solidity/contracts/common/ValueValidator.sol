@@ -6,6 +6,9 @@ pragma solidity ^0.8.23;
 /// @notice Contract for validating common value-based conditions.
 /// @dev Provides modifiers to check for zero values, zero addresses, and `msg.value` conditions.
 contract ValueValidator {
+    /// @dev Error: `msg.sender` is not authorized for this function.
+    error ENotAuthorized();
+
     /// @dev Error thrown when a value is zero but must be non-zero.
     error EZeroValue();
 
@@ -15,8 +18,8 @@ contract ValueValidator {
     /// @dev Error thrown when `msg.value` is not zero but must be zero.
     error EMsgValueIsNotZero();
 
-    /// @dev Error: `msg.sender` is not authorized for this function.
-    error ENotAuthorized();
+    /// @dev Error: Provided array is empty.
+    error EEmptyArray();
 
     /**
      * @dev Ensures the function is called by the expected sender.
@@ -53,6 +56,15 @@ contract ValueValidator {
     modifier zeroMsgValue() {
         if (msg.value != 0) {
             revert EMsgValueIsNotZero();
+        }
+        _;
+    }
+
+    /// @dev Modifier that checks if the array is empty.
+    /// @param arrayLength Array length to check.
+    modifier notEmpty(uint256 arrayLength) {
+        if (arrayLength == 0) {
+            revert EEmptyArray();
         }
         _;
     }

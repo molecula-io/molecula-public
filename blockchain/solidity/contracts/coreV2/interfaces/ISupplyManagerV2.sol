@@ -75,7 +75,7 @@ interface ISupplyManagerV2 {
     ///      indicates that the requested redemptions are ready to be claimed by their respective owners.
     /// @param requestIds Array of request IDs that have been fulfilled.
     /// @param sumAssets Total sum of assets that have been processed for all fulfilled requests.
-    event FulfillRedeemRequests(uint256[] requestIds, uint256 sumAssets);
+    event RedeemRequestsFulfilled(uint256[] requestIds, uint256 sumAssets);
 
     /// @dev Emitted when yield is distributed to parties in the Pool.
     /// @param distributedShares Total amount of shares distributed as yield.
@@ -110,14 +110,14 @@ interface ISupplyManagerV2 {
     /// @dev Error thrown when the `TokenVault` already exists in the parties' list.
     error EDuplicateTokenVault();
 
-    /// @dev Error thrown when the parties' list is empty.
-    error EEmptyParties();
-
     /// @dev Error thrown when the APY is invalid.
     error EInvalidAPY();
 
     /// @dev Error thrown when the yield amount is negative.
     error ENoRealYield();
+
+    /// @dev Error thrown when a native token operation is attempted on a non-native token function.
+    error ENativeToken();
 
     // ============ Core Functions ============
 
@@ -183,6 +183,10 @@ interface ISupplyManagerV2 {
 
     // ============ View Functions ============
 
+    /// @dev Returns Molecula Token's address.
+    /// @return moleculaTokenAddress Molecula Token's address.
+    function moleculaToken() external view returns (address moleculaTokenAddress);
+
     /// @dev Returns information about a specific redeem request.
     /// @param requestID ID of the redeem request to query.
     /// @return tokenVault Address of the token Vault associated with the request.
@@ -208,20 +212,15 @@ interface ISupplyManagerV2 {
     /// @dev Returns the Molecula Pool address.
     /// @return pool Molecula Pool address.
     function getMoleculaPool() external view returns (address pool);
-
-    /// @dev Returns the total supply of the Pool (TVL).
-    /// @return pool Total Pool supply.
-    function totalSupply() external view returns (uint256 pool);
-
-    /// @dev Returns shares supply.
-    /// @return shares Shares supply.
-    function totalSharesSupply() external view returns (uint256 shares);
 }
 
 /// @title ISupplyManagerV2WithNative.
 /// @notice Interface for managing the native token redemption requests in the Supply Manager V2.
 /// @dev Extends ISupplyManagerV2 with the native token support.
 interface ISupplyManagerV2WithNative {
+    /// @dev Error thrown when a non-native token operation is attempted on a native token function.
+    error ENotNativeToken();
+
     /// @dev Processes a deposit into the Pool.
     /// @param token Deposited token's ERC20 address.
     /// @param requestId Deposit operation's ID.

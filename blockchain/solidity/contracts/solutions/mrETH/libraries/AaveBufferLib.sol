@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -9,11 +9,13 @@ library AaveBufferLib {
     /// @dev Constant for the selector of the the AAVE's `deposit` function.
     // solhint-disable-next-line private-vars-leading-underscore
     bytes4 internal constant SUPPLY_SELECTOR =
+        // solhint-disable-next-line gas-small-strings
         bytes4(keccak256("supply(address,uint256,address,uint16)"));
 
     /// @dev Constant for the selector of the AAVE's `withdraw` function.
     // solhint-disable-next-line private-vars-leading-underscore
     bytes4 internal constant WITHDRAW_SELECTOR =
+        // solhint-disable-next-line gas-small-strings
         bytes4(keccak256("withdraw(address,uint256,address)"));
 
     /**

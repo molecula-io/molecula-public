@@ -27,21 +27,25 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             gasPrice: 40_000_000_000,
-            forking: {
-                url: process.env.JSON_RPC_URL as string,
-                blockNumber: 21772906,
-            },
+            ...(process.env.JSON_RPC_URL && {
+                forking: {
+                    url: process.env.JSON_RPC_URL,
+                    blockNumber: 21772906,
+                },
+            }),
         },
-        sepolia: {
-            url: process.env.JSON_RPC_URL_SEPOLIA as string,
-            accounts: {
-                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
-                path: "m/44'/60'/0'/0",
-                initialIndex: 0,
-                count: 20,
-                passphrase: '',
+        ...(process.env.JSON_RPC_URL_SEPOLIA && {
+            sepolia: {
+                url: process.env.JSON_RPC_URL_SEPOLIA,
+                accounts: {
+                    mnemonic: process.env.ETHEREUM_SEED_PHRASE || '',
+                    path: "m/44'/60'/0'/0",
+                    initialIndex: 0,
+                    count: 20,
+                    passphrase: '',
+                },
             },
-        },
+        }),
     },
     mocha: {
         timeout: 10 * 60 * 1000, // 10 min

@@ -29,3 +29,6 @@ ignore = ["contracts/test/**/*.sol", "contracts/mock/**/*.sol"]
 [profile.default.fuzz]
 runs = 1024
 show_metrics = true
+
+[rpc_endpoints]
+mainnet = "${JSON_RPC_URL}"

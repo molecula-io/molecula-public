@@ -9,9 +9,6 @@ import {IDepositManagerTypes} from "./interfaces/IDepositManagerTypes.sol";
 /// @title Deposit Manager Storage
 /// @notice Storage contract for the Deposit Manager contract.
 abstract contract DepositManagerStorage is IDepositManagerTypes {
-    /// @dev Constant for percentage decimals used in pool portion calculations.
-    uint16 public constant PERCENTAGE_FACTOR = 10_000;
-
     /// @dev Supply Manager contract's address.
     address public immutable SUPPLY_MANAGER;
 

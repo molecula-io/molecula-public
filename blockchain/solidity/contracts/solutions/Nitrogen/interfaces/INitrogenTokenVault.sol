@@ -17,6 +17,13 @@ interface INitrogenTokenVault {
         uint256 shares;
     }
 
+    // ============ Events ============
+
+    /// @dev Emitted when redemption requests are ready to be processed.
+    /// @param requestIds Array of request IDs.
+    /// @param values Array of corresponding values.
+    event RedeemClaimable(uint256[] requestIds, uint256[] values);
+
     // ============ Core Functions ============
 
     /// @dev Follows the sequences:

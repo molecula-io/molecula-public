@@ -125,20 +125,21 @@ contract LZMsgCodecTest is Test {
         assertEq(encoded.length, 129);
         // Check that the header byte is set as CONFIRM_DEPOSIT_AND_UPDATE_ORACLE.
         assertEq(uint8(encoded[0]), LZMsgCodec.CONFIRM_DEPOSIT_AND_UPDATE_ORACLE);
+        {
+            // Decode the message.
+            (
+                uint256 decodedRequestId,
+                uint256 decodedShares,
+                uint256 decodedTotalValue,
+                uint256 decodedTotalShares
+            ) = _codec.decodeConfirmDepositMessageAndUpdateOracle(encoded);
 
-        // Decode the message.
-        (
-            uint256 decodedRequestId,
-            uint256 decodedShares,
-            uint256 decodedTotalValue,
-            uint256 decodedTotalShares
-        ) = _codec.decodeConfirmDepositMessageAndUpdateOracle(encoded);
-
-        // Verify that each decoded value matches its original input.
-        assertEq(decodedRequestId, requestId);
-        assertEq(decodedShares, shares);
-        assertEq(decodedTotalValue, totalValue);
-        assertEq(decodedTotalShares, totalShares);
+            // Verify that each decoded value matches its original input.
+            assertEq(decodedRequestId, requestId);
+            assertEq(decodedShares, shares);
+            assertEq(decodedTotalValue, totalValue);
+            assertEq(decodedTotalShares, totalShares);
+        }
     }
 
     /// @notice Tests encoding and decoding of a yield distribution message.
@@ -160,17 +161,18 @@ contract LZMsgCodecTest is Test {
         assertEq(encoded.length, 157);
         // Validate that the header corresponds to DISTRIBUTE_YIELD.
         assertEq(uint8(encoded[0]), LZMsgCodec.DISTRIBUTE_YIELD);
-
-        // Decode the yield message back into arrays.
-        (address[] memory decodedUsers, uint256[] memory decodedShares) = _codec
-            .decodeDistributeYieldMessage(encoded);
-        // Check that the number of entries matches.
-        assertEq(decodedUsers.length, 3);
-        assertEq(decodedShares.length, 3);
-        // Assert that every user and share in the decoded arrays match the original values.
-        for (uint i = 0; i < 3; i++) {
-            assertEq(decodedUsers[i], users[i]);
-            assertEq(decodedShares[i], shares[i]);
+        {
+            // Decode the yield message back into arrays.
+            (address[] memory decodedUsers, uint256[] memory decodedShares) = _codec
+                .decodeDistributeYieldMessage(encoded);
+            // Check that the number of entries matches.
+            assertEq(decodedUsers.length, 3);
+            assertEq(decodedShares.length, 3);
+            // Assert that every user and share in the decoded arrays match the original values.
+            for (uint i = 0; i < 3; i++) {
+                assertEq(decodedUsers[i], users[i]);
+                assertEq(decodedShares[i], shares[i]);
+            }
         }
     }
 
@@ -197,20 +199,21 @@ contract LZMsgCodecTest is Test {
         // Expected length: 1 + 32 + 32 + (2 * (20 + 32)) = 1 + 64 + 104 = 169 bytes.
         assertEq(encoded.length, 169);
         assertEq(uint8(encoded[0]), LZMsgCodec.DISTRIBUTE_YIELD_AND_UPDATE_ORACLE);
-
-        (
-            address[] memory decodedUsers,
-            uint256[] memory decodedShares,
-            uint256 decodedTotalValue,
-            uint256 decodedTotalShares
-        ) = _codec.decodeDistributeYieldMessageAndUpdateOracle(encoded);
-        assertEq(decodedTotalValue, totalValue);
-        assertEq(decodedTotalShares, totalShares);
-        assertEq(decodedUsers.length, users.length);
-        assertEq(decodedShares.length, shares.length);
-        for (uint i = 0; i < users.length; i++) {
-            assertEq(decodedUsers[i], users[i]);
-            assertEq(decodedShares[i], shares[i]);
+        {
+            (
+                address[] memory decodedUsers,
+                uint256[] memory decodedShares,
+                uint256 decodedTotalValue,
+                uint256 decodedTotalShares
+            ) = _codec.decodeDistributeYieldMessageAndUpdateOracle(encoded);
+            assertEq(decodedTotalValue, totalValue);
+            assertEq(decodedTotalShares, totalShares);
+            assertEq(decodedUsers.length, users.length);
+            assertEq(decodedShares.length, shares.length);
+            for (uint i = 0; i < users.length; i++) {
+                assertEq(decodedUsers[i], users[i]);
+                assertEq(decodedShares[i], shares[i]);
+            }
         }
     }
 
@@ -233,15 +236,17 @@ contract LZMsgCodecTest is Test {
         assertEq(uint8(encoded[0]), LZMsgCodec.CONFIRM_REDEEM);
 
         // Decode the message.
-        (uint256[] memory decodedRequestIds, uint256[] memory decodedValues) = _codec
-            .decodeConfirmRedeemMessage(encoded);
-        // Ensure that both arrays contain the correct number of elements.
-        assertEq(decodedRequestIds.length, 2);
-        assertEq(decodedValues.length, 2);
-        // Verify that each element in the arrays is correct.
-        for (uint i = 0; i < 2; i++) {
-            assertEq(decodedRequestIds[i], requestIds[i]);
-            assertEq(decodedValues[i], values[i]);
+        {
+            (uint256[] memory decodedRequestIds, uint256[] memory decodedValues) = _codec
+                .decodeConfirmRedeemMessage(encoded);
+            // Ensure that both arrays contain the correct number of elements.
+            assertEq(decodedRequestIds.length, 2);
+            assertEq(decodedValues.length, 2);
+            // Verify that each element in the arrays is correct.
+            for (uint i = 0; i < 2; i++) {
+                assertEq(decodedRequestIds[i], requestIds[i]);
+                assertEq(decodedValues[i], values[i]);
+            }
         }
     }
 
@@ -259,15 +264,17 @@ contract LZMsgCodecTest is Test {
         assertEq(uint8(encoded[0]), LZMsgCodec.CONFIRM_REDEEM);
 
         // Decode the default redeem message.
-        (uint256[] memory decodedRequestIds, uint256[] memory decodedValues) = _codec
-            .decodeConfirmRedeemMessage(encoded);
-        // Verify that decoded arrays have the correct length.
-        assertEq(decodedRequestIds.length, count);
-        assertEq(decodedValues.length, count);
-        // For default messages, each index should match its position.
-        for (uint i = 0; i < count; i++) {
-            assertEq(decodedRequestIds[i], i);
-            assertEq(decodedValues[i], i);
+        {
+            (uint256[] memory decodedRequestIds, uint256[] memory decodedValues) = _codec
+                .decodeConfirmRedeemMessage(encoded);
+            // Verify that decoded arrays have the correct length.
+            assertEq(decodedRequestIds.length, count);
+            assertEq(decodedValues.length, count);
+            // For default messages, each index should match its position.
+            for (uint i = 0; i < count; i++) {
+                assertEq(decodedRequestIds[i], i);
+                assertEq(decodedValues[i], i);
+            }
         }
     }
 
@@ -285,15 +292,17 @@ contract LZMsgCodecTest is Test {
         assertEq(uint8(encoded[0]), LZMsgCodec.DISTRIBUTE_YIELD);
 
         // Decode the message.
-        (address[] memory decodedUsers, uint256[] memory decodedShares) = _codec
-            .decodeDistributeYieldMessage(encoded);
-        // Ensure the decoded arrays have the correct length.
-        assertEq(decodedUsers.length, count);
-        assertEq(decodedShares.length, count);
-        // The default values: each user is set to address(1) and each share equals its index.
-        for (uint i = 0; i < count; i++) {
-            assertEq(decodedUsers[i], address(0x0000000000000000000000000000000000000001));
-            assertEq(decodedShares[i], i);
+        {
+            (address[] memory decodedUsers, uint256[] memory decodedShares) = _codec
+                .decodeDistributeYieldMessage(encoded);
+            // Ensure the decoded arrays have the correct length.
+            assertEq(decodedUsers.length, count);
+            assertEq(decodedShares.length, count);
+            // The default values: each user is set to address(1) and each share equals its index.
+            for (uint i = 0; i < count; i++) {
+                assertEq(decodedUsers[i], address(0x0000000000000000000000000000000000000001));
+                assertEq(decodedShares[i], i);
+            }
         }
     }
 
@@ -311,22 +320,24 @@ contract LZMsgCodecTest is Test {
         assertEq(uint8(encoded[0]), LZMsgCodec.DISTRIBUTE_YIELD_AND_UPDATE_ORACLE);
 
         // Decode the message.
-        (
-            address[] memory decodedUsers,
-            uint256[] memory decodedShares,
-            uint256 decodedTotalValue,
-            uint256 decodedTotalShares
-        ) = _codec.decodeDistributeYieldMessageAndUpdateOracle(encoded);
-        // The default oracle values are expected to be 1 and 2.
-        assertEq(decodedTotalValue, 1);
-        assertEq(decodedTotalShares, 2);
-        // Verify that the arrays have the right lengths.
-        assertEq(decodedUsers.length, count);
-        assertEq(decodedShares.length, count);
-        // Check each default entry.
-        for (uint i = 0; i < count; i++) {
-            assertEq(decodedUsers[i], address(0x0000000000000000000000000000000000000001));
-            assertEq(decodedShares[i], i);
+        {
+            (
+                address[] memory decodedUsers,
+                uint256[] memory decodedShares,
+                uint256 decodedTotalValue,
+                uint256 decodedTotalShares
+            ) = _codec.decodeDistributeYieldMessageAndUpdateOracle(encoded);
+            // The default oracle values are expected to be 1 and 2.
+            assertEq(decodedTotalValue, 1);
+            assertEq(decodedTotalShares, 2);
+            // Verify that the arrays have the right lengths.
+            assertEq(decodedUsers.length, count);
+            assertEq(decodedShares.length, count);
+            // Check each default entry.
+            for (uint i = 0; i < count; i++) {
+                assertEq(decodedUsers[i], address(0x0000000000000000000000000000000000000001));
+                assertEq(decodedShares[i], i);
+            }
         }
     }
 

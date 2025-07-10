@@ -4,8 +4,9 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { network } from 'hardhat';
 
+import { APPROVER_SIGNATURE_AND_EXPIRY, APPROVER_SALT } from '../../../configs/ethereum/constants';
 import { expectEqual } from '../../utils/math';
-import { deployMrETh, approverSalt, approverSignatureAndExpiry } from '../../utils/mrETH';
+import { deployMrETh } from '../../utils/mrETH';
 import { createValidatorKeys } from '../../utils/sign';
 
 describe('Test mrETH DepositManager', () => {
@@ -504,8 +505,8 @@ describe('Test mrETH DepositManager', () => {
             await depositManager.addOperator(
                 operator2,
                 '0x0000000000000000000000000000000000000000000000000000000000000001',
-                approverSignatureAndExpiry,
-                approverSalt,
+                APPROVER_SIGNATURE_AND_EXPIRY,
+                APPROVER_SALT,
                 [defaultOperator, operator2],
                 [7_000n, 3_000n],
             );
@@ -513,8 +514,8 @@ describe('Test mrETH DepositManager', () => {
             await depositManager.addOperator(
                 operator3,
                 '0x0000000000000000000000000000000000000000000000000000000000000002',
-                approverSignatureAndExpiry,
-                approverSalt,
+                APPROVER_SIGNATURE_AND_EXPIRY,
+                APPROVER_SALT,
                 [defaultOperator, operator2, operator3],
                 [5_000n, 3_000n, 2_000n],
             );

@@ -14,6 +14,13 @@ abstract contract Guardian is Ownable, ValueValidator {
     /// @dev Account address that can pause functions.
     address public guardian;
 
+    // ============ Events ============
+
+    /// @dev Emitted when the Guardian's address is changed.
+    /// @param oldGuardian Previous Guardian's address.
+    /// @param newGuardian New Guardian's address.
+    event GuardianChanged(address indexed oldGuardian, address indexed newGuardian);
+
     // ============ Errors ============
 
     /// @dev Error thrown when the caller is not authorized to pause functions.
@@ -44,6 +51,8 @@ abstract contract Guardian is Ownable, ValueValidator {
     function changeGuardian(
         address newGuardian
     ) external virtual onlyOwner notZeroAddress(newGuardian) {
+        address oldGuardian = guardian;
         guardian = newGuardian;
+        emit GuardianChanged(oldGuardian, newGuardian);
     }
 }

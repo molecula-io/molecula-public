@@ -7,22 +7,20 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC7575} from "./../../common/external/interfaces/IERC7575.sol";
 import {IAgent} from "./../../common/interfaces/IAgent.sol";
-import {IRebaseERC20} from "./../../common/interfaces/IRebaseERC20.sol";
 import {ISupplyManager} from "./../../common/interfaces/ISupplyManager.sol";
-import {PausableContract} from "./../../common/pausable/PausableContract.sol";
+import {Guardian} from "./../../common/pausable/Guardian.sol";
+import {RebaseTokenOwner} from "./../../common/rebase/RebaseTokenOwner.sol";
 import {MoleculaPoolTreasuryV2, TokenType} from "./../../core/MoleculaPoolTreasuryV2.sol";
-import {IRebaseERC20V2} from "../../coreV2/Tokens/interfaces/IRebaseERC20V2.sol";
+import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {BaseTokenVault} from "./../../coreV2/TokenVault/BaseTokenVault.sol";
-import {CommonERC20TokenVault} from "./../../coreV2/TokenVault/CommonERC20TokenVault.sol";
+import {CommonTokenVault} from "./../../coreV2/TokenVault/CommonTokenVault.sol";
 import {INitrogenTokenVault} from "./interfaces/INitrogenTokenVault.sol";
-import {RebaseTokenOwner} from "./RebaseTokenOwner.sol";
 
 /// @dev Specialized Vault implementing asynchronous redemption flows following the ERC-7540 standard,
 /// with synchronous deposit functionality following ERC-4626. This Vault integrates with
 /// RebaseTokenOwner for token supply management and MoleculaPoolTreasury for the underlying asset handling.
-contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgent {
+contract NitrogenTokenVault is INitrogenTokenVault, CommonTokenVault, IAgent {
     using SafeERC20 for IERC20;
 
     // ============ State Variables ============
@@ -32,13 +30,6 @@ contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgen
 
     /// @dev Stores redemption request information indexed by a request ID.
     mapping(uint256 requestId => RequestInfo) public redeemRequests;
-
-    // ============ Events ============
-
-    /// @dev Emitted when redemption requests are ready to be processed.
-    /// @param requestIds Array of request IDs.
-    /// @param values Array of corresponding values.
-    event RedeemClaimable(uint256[] requestIds, uint256[] values);
 
     // ============ Constructor ============
 
@@ -54,11 +45,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgen
         address supplyManager,
         RebaseTokenOwner tokenOwner,
         address guardianAddress
-    )
-        BaseTokenVault(shareAddress, supplyManager)
-        PausableContract(guardianAddress)
-        Ownable(initialOwner)
-    {
+    ) BaseTokenVault(shareAddress, supplyManager) Guardian(guardianAddress) Ownable(initialOwner) {
         REBASE_TOKEN_OWNER = tokenOwner;
     }
 
@@ -69,37 +56,10 @@ contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgen
         return address(REBASE_TOKEN_OWNER);
     }
 
-    /// @inheritdoc IERC7575
-    function convertToAssets(uint256 shares) public view virtual override returns (uint256 assets) {
-        address moleculaPool = ISupplyManager(SUPPLY_MANAGER).getMoleculaPool();
-        MoleculaPoolTreasuryV2 poolTreasury = MoleculaPoolTreasuryV2(moleculaPool);
-
-        uint256 mUSDAmount = IRebaseERC20(_SHARE).convertToAssets(shares);
-
-        // See MoleculaPoolTreasury.requestRedeem
-        // slither-disable-next-line unused-return
-        (TokenType tokenType, , int8 n, , ) = poolTreasury.poolMap(_asset);
-        if (tokenType == TokenType.None) {
-            revert MoleculaPoolTreasuryV2.ETokenNotExist();
-        }
-
-        if (tokenType == TokenType.ERC20) {
-            assets = mUSDAmount / (uint256(10) ** uint256(int256(n)));
-        } else {
-            uint256 assets2 = mUSDAmount / (uint256(10) ** uint256(int256(n)));
-            assets = IERC4626(_asset).convertToShares(assets2);
-        }
-    }
-
-    /// @inheritdoc IERC7575
-    function convertToShares(uint256 assets) public view virtual override returns (uint256 shares) {
-        shares = _convertToShares(assets);
-    }
-
     /// @inheritdoc BaseTokenVault
-    function _convertToShares(
+    function convertAssetsToMoleculaAssets(
         uint256 assets
-    ) internal view virtual override returns (uint256 shares) {
+    ) public view virtual override returns (uint256 moleculaAssets) {
         // Get a Molecula Pool instance for conversion calculations.
         address moleculaPool = ISupplyManager(SUPPLY_MANAGER).getMoleculaPool();
         MoleculaPoolTreasuryV2 poolTreasury = MoleculaPoolTreasuryV2(moleculaPool);
@@ -110,15 +70,34 @@ contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgen
         if (tokenType == TokenType.None) {
             revert MoleculaPoolTreasuryV2.ETokenNotExist();
         }
-        uint256 mUSDAmount;
         if (tokenType == TokenType.ERC20) {
-            mUSDAmount = assets * (uint256(10) ** uint256(int256(n)));
+            moleculaAssets = assets * (uint256(10) ** uint256(int256(n)));
         } else {
-            uint256 assets2 = IERC4626(_asset).convertToAssets(assets);
-            mUSDAmount = assets2 * (uint256(10) ** uint256(int256(n)));
+            uint256 assets4626 = IERC4626(_asset).convertToAssets(assets);
+            moleculaAssets = assets4626 * (uint256(10) ** uint256(int256(n)));
+        }
+    }
+
+    /// @inheritdoc BaseTokenVault
+    function convertMoleculaAssetsToAssets(
+        uint256 moleculaAssets
+    ) public view virtual override returns (uint256 assets) {
+        address moleculaPool = ISupplyManager(SUPPLY_MANAGER).getMoleculaPool();
+        MoleculaPoolTreasuryV2 poolTreasury = MoleculaPoolTreasuryV2(moleculaPool);
+
+        // See MoleculaPoolTreasury.requestRedeem
+        // slither-disable-next-line unused-return
+        (TokenType tokenType, , int8 n, , ) = poolTreasury.poolMap(_asset);
+        if (tokenType == TokenType.None) {
+            revert MoleculaPoolTreasuryV2.ETokenNotExist();
         }
 
-        shares = IRebaseERC20(_SHARE).convertToShares(mUSDAmount);
+        if (tokenType == TokenType.ERC20) {
+            assets = moleculaAssets / (uint256(10) ** uint256(int256(n)));
+        } else {
+            uint256 assets2 = moleculaAssets / (uint256(10) ** uint256(int256(n)));
+            assets = IERC4626(_asset).convertToShares(assets2);
+        }
     }
 
     /// @inheritdoc IERC7575
@@ -234,10 +213,5 @@ contract NitrogenTokenVault is INitrogenTokenVault, CommonERC20TokenVault, IAgen
             assets: 0, // Set the correct value in the `_fulfillRedeemRequests` function.
             shares: shares
         });
-    }
-
-    /// @inheritdoc BaseTokenVault
-    function _maxRedeem(address owner) internal view virtual override returns (uint256 maxShares) {
-        return IRebaseERC20V2(_SHARE).sharesOf(owner);
     }
 }

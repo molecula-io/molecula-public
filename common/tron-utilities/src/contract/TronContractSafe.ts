@@ -15,7 +15,7 @@ import type {
     TriggerSmartContract,
 } from 'tronweb';
 
-import type { Hex } from '@molecula-monorepo/common.evm-utilities';
+import { normalizeAddress, type Hex } from '@molecula-monorepo/common.evm-utilities';
 
 import { jsonStringifyBigint, Log } from '@molecula-monorepo/common.utilities';
 
@@ -96,6 +96,24 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         }
 
         return this.contract.address as TronAddress;
+    }
+
+    /**
+     * Hex address Tron format (41 prefix)
+     */
+    public get addressHexTron(): string {
+        return this.client.address.toHex(this.address);
+    }
+
+    /**
+     * Hex address EVM format (0x prefix)
+     */
+    public get addressHexEvm(): Hex {
+        const hex = this.client.address
+            .toHex(this.address)
+            .replace(this.ADDRESS_PREFIX_REGEX, '0x');
+
+        return normalizeAddress(hex as Hex);
     }
 
     /**
@@ -192,8 +210,11 @@ export class TronContractSafe<Contract extends AllTronContracts> {
 
         try {
             tx = await safeCallQueue.add(
-                // @ts-ignore
-                () => this.contract[method](...args).send({ callValue: value }),
+                () =>
+                    this.contract[method](...args).send({
+                        callValue: value,
+                        feeLimit: 150000000n, // Default is 150 TRX, but some transactions require more
+                    }),
                 { priority: Priority.High },
             );
         } catch (error) {

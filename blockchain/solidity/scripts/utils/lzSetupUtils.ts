@@ -49,16 +49,14 @@ export async function getTronOAppConfig(
     console.log('Send Library Executor Config:', executorConfigArray);
     if (
         remoteEid === shastaConfig.LAYER_ZERO_ETHEREUM_EID &&
-        executorConfigArray.maxMessageSize !== 10000 &&
-        executorConfigArray.executorAddress !== shastaConfig.LAYER_ZERO_TRON_EXECUTOR
+        executorConfigArray.maxMessageSize !== 10000n
     ) {
         throw new Error(
             'Fix executorConfig into setSendConfig! Executor config does not match expected values',
         );
     } else if (
         remoteEid === tronMainnetBetaConfig.LAYER_ZERO_ETHEREUM_EID &&
-        executorConfigArray.maxMessageSize !== 999 &&
-        executorConfigArray.executorAddress !== tronMainnetBetaConfig.LAYER_ZERO_TRON_EXECUTOR
+        executorConfigArray.maxMessageSize !== 999n
     ) {
         throw new Error(
             'Fix executorConfig into setSendConfig! Executor config does not match expected values',

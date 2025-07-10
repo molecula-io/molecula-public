@@ -7,14 +7,16 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {ERC7540Operator} from "./../../common/ERC7540Operator.sol";
-import {IERC7540Deposit, IERC7540Redeem, IERC7540Operator} from "./../../common/external/interfaces/IERC7540.sol";
-import {IERC7575} from "./../../common/external/interfaces/IERC7575.sol";
 import {IdGenerator} from "./../../common/IdGenerator.sol";
-import {PausableVault} from "./../../common/pausable/PausableVault.sol";
+import {IERC7540Deposit, IERC7540Redeem, IERC7540Operator} from "./../external/interfaces/IERC7540.sol";
+import {IERC7575} from "./../external/interfaces/IERC7575.sol";
 import {IIssuer} from "./../interfaces/IIssuer.sol";
+import {IOracleV2} from "./../interfaces/IOracleV2.sol";
 import {ISupplyManagerV2} from "./../interfaces/ISupplyManagerV2.sol";
-import {IBaseTokenVault} from "../Tokens/interfaces/ITokenVault.sol";
+import {IShare} from "./../Tokens/interfaces/IShare.sol";
+import {ERC7540Operator} from "./ERC7540Operator.sol";
+import {IBaseTokenVault} from "./interfaces/ITokenVault.sol";
+import {PausableVault} from "./PausableVault.sol";
 
 /// @title BaseTokenVault.
 /// @dev Vault is used for solutions based on CoreV2. For native and ERC-20 tokens.
@@ -34,7 +36,7 @@ abstract contract BaseTokenVault is
     /// @dev Address of the Supply Manager contract that coordinates asset movements.
     address public immutable SUPPLY_MANAGER;
 
-    /// @dev Molecula token address (e.g. mUSD).
+    /// @dev Molecula Token's address (e.g. mUSD).
     address internal immutable _SHARE;
 
     /// @dev ERC-20 token address (e.g. USDC, sUSDe) or native token.
@@ -97,6 +99,41 @@ abstract contract BaseTokenVault is
 
     // ============ View Functions ============
 
+    /// @dev Returns the maximum amount of shares that can be redeemed.
+    /// @param owner Owner's address.
+    /// @return maxShares Maximum amount of shares that can be redeemed.
+    function maxRedeem(address owner) public view virtual returns (uint256 maxShares) {
+        return IShare(_SHARE).sharesOf(owner);
+    }
+
+    /// @inheritdoc IBaseTokenVault
+    function convertAssetsToMoleculaAssets(
+        uint256 assets
+    ) public view virtual override returns (uint256 moleculaAssets);
+
+    /// @inheritdoc IBaseTokenVault
+    function convertMoleculaAssetsToAssets(
+        uint256 moleculaAssets
+    ) public view virtual override returns (uint256 assets);
+
+    /// @dev Returns the amount of assets to exchange for the given shares.
+    /// @param shares Amount of shares to convert.
+    /// @return assets Amount of assets to receive.
+    /// @dev See IERC7575.convertToShares
+    function convertToAssets(uint256 shares) public view virtual returns (uint256 assets) {
+        uint256 moleculaAssets = IOracleV2(_SHARE).convertToAssets(shares);
+        assets = convertMoleculaAssetsToAssets(moleculaAssets);
+    }
+
+    /// @dev Returns the amount of shares to exchange for the given assets.
+    /// @param assets Amount of assets to convert.
+    /// @return shares Amount of shares to receive.
+    /// @dev See IERC7575.convertToShares
+    function convertToShares(uint256 assets) public view virtual returns (uint256 shares) {
+        uint256 moleculaAssets = convertAssetsToMoleculaAssets(assets);
+        shares = IOracleV2(_SHARE).convertToShares(moleculaAssets);
+    }
+
     /// @inheritdoc IERC7540Redeem
     function pendingRedeemRequest(
         uint256 requestId,
@@ -113,8 +150,8 @@ abstract contract BaseTokenVault is
         uint256 requestId,
         address controller
     ) external view virtual override returns (uint256 claimableShares) {
-        // See the comment in `CommonERC20TokenVault.pendingRedeemRequest`.
-        return requestId == 0 ? _convertToShares(_redeemInfo[controller].claimableRedeemAssets) : 0;
+        // See the comment in `CommonTokenVault.pendingRedeemRequest`.
+        return requestId == 0 ? convertToShares(_redeemInfo[controller].claimableRedeemAssets) : 0;
     }
 
     /// @inheritdoc IBaseTokenVault
@@ -142,7 +179,7 @@ abstract contract BaseTokenVault is
     // ============ Internal Functions ============
 
     /// @dev Initializes the token Vault with specified parameters.
-    /// @param asset_ Asset token address.
+    /// @param asset_ Token's address.
     /// @param minDepositAssets_ Minimum deposit amount.
     /// @param minRedeemShares_ Minimum redemption shares.
     function _init(
@@ -181,7 +218,7 @@ abstract contract BaseTokenVault is
     {
         // Check whether the deposit value is greater or equal to `minDepositAssets`.
         if (assets < minDepositAssets) {
-            revert ETooLowDepositAssets(minDepositAssets);
+            revert ETooLowDepositAssets(assets, minDepositAssets);
         }
 
         // Transfer the requested assets from the owner.
@@ -220,14 +257,14 @@ abstract contract BaseTokenVault is
         returns (uint256 requestId)
     {
         // Check if the requested shares do not exceed owner's balance.
-        uint256 ownerMaxRedeem = _maxRedeem(owner);
+        uint256 ownerMaxRedeem = maxRedeem(owner);
         if (shares > ownerMaxRedeem) {
-            revert ETooManyRequestRedeemShares(ownerMaxRedeem);
+            revert ETooManyRequestRedeemShares(shares, ownerMaxRedeem);
         }
 
         // Check the redemption operation value.
         if (shares < minRedeemShares) {
-            revert ETooLowRequestRedeemShares(minRedeemShares);
+            revert ETooLowRequestRedeemShares(shares, minRedeemShares);
         }
 
         // Generate an ID for each new operation.
@@ -268,14 +305,14 @@ abstract contract BaseTokenVault is
         // Ensure that the requested withdrawal amount does not exceed the claimable assets' amount.
         uint256 maxWithdraw = _redeemInfo[controller].claimableRedeemAssets;
         if (assets > maxWithdraw) {
-            revert ETooManyRedeemAssets(maxWithdraw);
+            revert ETooManyRedeemAssets(assets, maxWithdraw);
         }
 
         // Reduce the claimable assets' amount for the controller.
         _redeemInfo[controller].claimableRedeemAssets -= assets;
 
         // Convert the assets' amount to shares.
-        shares = _convertToShares(assets);
+        shares = convertToShares(assets);
 
         // Transfer the assets to the receiver.
         _transferAssetsToReceiver(receiver, assets);
@@ -283,11 +320,6 @@ abstract contract BaseTokenVault is
         // Emit the `withdraw` event.
         emit IERC7575.Withdraw(msg.sender, receiver, controller, assets, shares);
     }
-
-    /// @dev Returns the maximum amount of shares that can be redeemed.
-    /// @param owner Owner's address.
-    /// @return maxShares Maximum amount of shares that can be redeemed.
-    function _maxRedeem(address owner) internal view virtual returns (uint256 maxShares);
 
     /// @inheritdoc Ownable2Step
     function _transferOwnership(address newOwner) internal virtual override(Ownable, Ownable2Step) {
@@ -367,11 +399,6 @@ abstract contract BaseTokenVault is
         uint256 requestId,
         uint256 shares
     ) internal virtual returns (uint256 assets);
-
-    /// @dev Converts the given amount of assets to the equivalent shares based on the current exchange rate.
-    /// @param assets Amount of assets to convert.
-    /// @return shares Equivalent amount of shares.
-    function _convertToShares(uint256 assets) internal view virtual returns (uint256 shares);
 
     /// @dev Transfers assets from the owner to the Vault during the deposit.
     /// @param owner Address from which the assets must be transferred.

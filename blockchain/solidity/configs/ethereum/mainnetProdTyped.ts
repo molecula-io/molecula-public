@@ -22,6 +22,12 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
         '0x589dEDbD617e0CBcB916A9223F4d1300c294236b', // LayerZero Labs DVN address
     ],
 
+    // LayerZero Executor contract's configuration parameters.
+    LAYER_ZERO_PRICE_FEED: '0xC03f31fD86a9077785b7bCf6598Ce3598Fa91113',
+    LAYER_ZERO_WORKER_FEE_LIB: '0x4e9C57FD2Bd0f47C43F2D62642C1b05894fb9ed0',
+    LAYER_ZERO_SEND_ULN_LIB: '0xbB2Ea70C9E858123480642Cf96acbcCE1372dCe1',
+    LAYER_ZERO_RECEIVE_ULN_LIB: '0xc02Ab410f0734EFa3F14628780e6e695156024C2',
+
     /** LayerZero Tron EID. */
     LAYER_ZERO_TRON_EID: 30420,
 
@@ -137,4 +143,48 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
     LMUSD_TOKEN_SYMBOL: 'lmUSD',
     LMUSD_PERIODS: [],
     LMUSD_MULTIPLIERS: [],
+
+    /** mrETH token name. */
+    MRETH_TOKEN_NAME: 'Molecula rebase ETH',
+
+    /** mrETH token symbol. */
+    MRETH_TOKEN_SYMBOL: 'mrETH',
+
+    /** mrETH token decimals. */
+    MRETH_TOKEN_DECIMALS: 18,
+
+    /** mrETH token minimum deposit. */
+    MRETH_TOKEN_MIN_DEPOSIT: 1_000_000n,
+
+    /** mrETH token minimum redeem. */
+    MRETH_TOKEN_MIN_REDEEM: 10n ** 18n,
+
+    // ===================== MetaETH Solution =====================
+
+    /** Owner address. Must specify it before the deployment. */
+    META_OWNER: '0x',
+
+    /** Pool keeper address. Must specify it before the deployment. */
+    META_POOL_KEEPER: '0x',
+
+    /** Guardian address that can pause MetaPoolTreasury contract. Must specify it before the deployment */
+    META_GUARDIAN: '0x',
+
+    /** (META_APY / 10_000) * 100% is the percentage of revenue retained by all molecula token holders. */
+    META_APY: 8_000,
+
+    /** MetaETH token name. */
+    META_TOKEN_NAME: 'MetaETH',
+
+    /** MetaETH token symbol. */
+    META_TOKEN_SYMBOL: 'METH',
+
+    /** MetaETH token decimals. */
+    META_TOKEN_DECIMALS: 18,
+
+    /** Minimal deposit in eth */
+    META_MIN_DEPOSIT_ETH: 1_000_000n,
+
+    /** Minimal redeem in shares */
+    META_MIN_REDEEM_SHARES: 10n ** 18n,
 };

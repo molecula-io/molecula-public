@@ -1,4 +1,4 @@
-import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+import { DevnetContractsExecutor, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import { ethMainnetBetaConfig } from '../ethereum/mainnetBetaTyped';
 import { sepoliaConfig } from '../ethereum/sepoliaTyped';
@@ -57,7 +57,10 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 10_000,
-            executorAddress: sepoliaConfig.LAYER_ZERO_EXECUTOR,
+            executorAddress:
+                !DevnetContractsExecutor.eth.executor || DevnetContractsExecutor.eth.executor === ''
+                    ? sepoliaConfig.LAYER_ZERO_EXECUTOR
+                    : DevnetContractsExecutor.eth.executor,
         },
     },
     // Shasta → Sepolia (devnet environment)
@@ -84,7 +87,11 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 10_000,
-            executorAddress: shastaConfig.LAYER_ZERO_TRON_EXECUTOR,
+            executorAddress:
+                !DevnetContractsExecutor.tron.executor ||
+                DevnetContractsExecutor.tron.executor === ''
+                    ? shastaConfig.LAYER_ZERO_TRON_EXECUTOR
+                    : DevnetContractsExecutor.tron.executor,
         },
     },
     // Ethereum mainnet → Tron mainnet (beta environment)

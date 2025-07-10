@@ -19,7 +19,9 @@
 ./contracts/test
 
 # Ignore verified contracts
+./contracts/common/ZeroValueChecker.sol
 ./contracts/common/interfaces/IAgent.sol
+./contracts/common/interfaces/IERC20Basic.sol
 ./contracts/common/interfaces/IRebaseERC20.sol
 ./contracts/common/interfaces/IRebaseTokenEvents.sol
 ./contracts/common/interfaces/ISupplyManager.sol
@@ -29,7 +31,3 @@
 ./contracts/core/extensions/mUSDe.sol
 ./contracts/solutions/Carbon/tron/TronOracle.sol
 ./contracts/solutions/Nitrogen/AccountantAgent.sol
-./contracts/solutions/Nitrogen/AgentAccountant.sol
-./contracts/solutions/Nitrogen/interfaces/IRebaseTokenOwner.sol
-./contracts/common/interfaces/IERC20Basic.sol
-./contracts/common/ZeroValueChecker.sol

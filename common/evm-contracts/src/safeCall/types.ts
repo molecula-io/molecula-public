@@ -1,6 +1,6 @@
 import type { ContractRunner, Provider } from 'ethers';
 
-import type { MoleculaPoolTreasury } from '@molecula-monorepo/solidity/typechain-types';
+import type { Executor, MoleculaPoolTreasury } from '@molecula-monorepo/solidity/typechain-types';
 
 import type {
     AgentLZ,
@@ -25,6 +25,7 @@ import type {
     SparkPool,
     UsdtOFT,
     Aragon,
+    ReceiveULN,
 } from '../types';
 
 type AnyFunction = () => void;
@@ -70,6 +71,8 @@ export type AllEvmContracts =
     | SavingsUSDS
     | SFrxUSD
     | ILayerZeroEndpointV2
+    | ReceiveULN
+    | Executor
     | MUSDE
     | AavePool
     | SparkPool

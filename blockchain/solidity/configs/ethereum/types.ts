@@ -9,6 +9,13 @@ export type EthereumNetworkConfig = {
     LAYER_ZERO_ENDPOINT: EVMAddress;
     LAYER_ZERO_EXECUTOR: EVMAddress;
     LAYER_ZERO_ETHEREUM_REQUIERED_DVNS: EVMAddress[];
+
+    // LayerZero Executor contract's configuration parameters.
+    LAYER_ZERO_PRICE_FEED: EVMAddress;
+    LAYER_ZERO_WORKER_FEE_LIB: EVMAddress;
+    LAYER_ZERO_SEND_ULN_LIB: EVMAddress;
+    LAYER_ZERO_RECEIVE_ULN_LIB: EVMAddress;
+
     LAYER_ZERO_TRON_EID: number;
     LAYER_ZERO_ETHEREUM_EID: number;
     LAYER_ZERO_ARBITRUM_EID: number;
@@ -64,4 +71,20 @@ export type EthereumNetworkConfig = {
     LMUSD_TOKEN_SYMBOL: string;
     LMUSD_PERIODS: [];
     LMUSD_MULTIPLIERS: [];
+
+    MRETH_TOKEN_NAME: string;
+    MRETH_TOKEN_SYMBOL: string;
+    MRETH_TOKEN_DECIMALS: number;
+    MRETH_TOKEN_MIN_DEPOSIT: bigint;
+    MRETH_TOKEN_MIN_REDEEM: bigint;
+
+    META_OWNER: EVMAddress;
+    META_POOL_KEEPER: EVMAddress;
+    META_GUARDIAN: EVMAddress;
+    META_APY: number;
+    META_TOKEN_NAME: string;
+    META_TOKEN_SYMBOL: string;
+    META_TOKEN_DECIMALS: number;
+    META_MIN_DEPOSIT_ETH: bigint;
+    META_MIN_REDEEM_SHARES: bigint;
 };

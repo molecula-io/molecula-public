@@ -50,12 +50,6 @@ abstract contract PausableContract is Guardian {
         _;
     }
 
-    // ============ Constructor ============
-
-    /// @dev Initializes the contract with a guardian address.
-    /// @param guardianAddress Guardian's address.
-    constructor(address guardianAddress) Guardian(guardianAddress) {}
-
     // ============ Admin Functions ============
 
     /// @dev Pauses all registered functions.

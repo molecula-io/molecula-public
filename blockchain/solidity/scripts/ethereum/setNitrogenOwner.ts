@@ -20,11 +20,11 @@ export async function setNitrogenOwner(
         { name: 'AccountantAgent', addr: contractsNitrogen.eth.accountantAgent },
         { name: 'RebaseToken', addr: contractsNitrogen.eth.rebaseToken },
     ];
-    if (contractsNitrogen.eth.router !== '') {
-        contracts.push({ name: 'Router', addr: contractsNitrogen.eth.router });
+    if (contractsNitrogen.eth.rebaseTokenOwner !== '') {
+        contracts.push({ name: 'RebaseTokenOwner', addr: contractsNitrogen.eth.rebaseTokenOwner });
     }
-    for (const [tokenName, agentAddress] of Object.entries(contractsNitrogen.eth.routerAgents)) {
-        contracts.push({ name: `RouterAgent#${tokenName}`, addr: agentAddress as string });
+    for (const [tokenName, tokenVault] of Object.entries(contractsNitrogen.eth.tokenVaults)) {
+        contracts.push({ name: `TokenVault#${tokenName}`, addr: tokenVault as string });
     }
 
     const config = getEnvironmentConfig(environment);

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import {IStrategy} from "../external/interfaces/IStrategy.sol";
 import {IStrategyLib} from "./IStrategyLib.sol";
@@ -47,8 +47,8 @@ interface IDepositManagerTypes {
     struct PoolData {
         address poolToken;
         address poolLib;
-        uint128 poolPortion;
-        uint128 poolId;
+        uint16 poolPortion;
+        uint64 poolId;
     }
 
     /**

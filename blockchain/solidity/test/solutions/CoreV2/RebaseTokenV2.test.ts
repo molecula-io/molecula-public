@@ -11,7 +11,7 @@ import { signERC2612Permit } from '../../utils/sign';
 
 describe('RebaseTokenV2', () => {
     it('Test total supply: USDC (6 decimals)', async () => {
-        const { rebaseTokenV2, USDC, mockDistributedPool, supplyManagerV2 } =
+        const { rebaseTokenV2, USDC, metaPoolTreasury, supplyManagerV2 } =
             await loadFixture(deployCoreV2);
 
         const virtualOffset = 10n ** 18n;
@@ -20,7 +20,7 @@ describe('RebaseTokenV2', () => {
         expect(totalSupply).to.be.equal(virtualOffset);
         expect(totalSharesSupply).to.be.equal(virtualOffset);
 
-        await grantERC20(mockDistributedPool, USDC, 1);
+        await grantERC20(metaPoolTreasury, USDC, 1);
         totalSupply = await rebaseTokenV2.totalSupply();
         totalSharesSupply = await rebaseTokenV2.totalSharesSupply();
         expect(totalSupply).to.be.equal(4n * 10n ** 11n + virtualOffset); // 60% is for APY
@@ -33,31 +33,25 @@ describe('RebaseTokenV2', () => {
     });
 
     it('Test transfer/transferFrom/approve', async () => {
-        const {
-            user0,
-            user1,
-            USDe,
-            tokenUSDEVault: tokenVault,
-            rebaseTokenV2,
-            mockDistributedPool,
-        } = await loadFixture(deployCoreV2);
+        const { user0, user1, USDe, usdeVault, rebaseTokenV2, metaPoolTreasury } =
+            await loadFixture(deployCoreV2);
 
         const decimals: bigint = await USDe.decimals();
         const depositValue = 100n * 10n ** decimals - 1n;
 
-        // Grand USD and approve tokens for tokenVault
+        // Grand USD and approve tokens for usdeVault
         await grantERC20(user0, USDe, depositValue, FAUCET.USDe);
-        await USDe.connect(user0).approve(tokenVault, depositValue);
+        await USDe.connect(user0).approve(usdeVault, depositValue);
 
         // user0 sets operator and deposit tokens
-        await tokenVault
+        await usdeVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
 
         let mUSDAmount = await rebaseTokenV2.balanceOf(user0);
         expect(mUSDAmount).to.be.equal(100n * 10n ** 18n - 1n);
 
-        await grantERC20(mockDistributedPool, USDe, depositValue, FAUCET.USDe);
+        await grantERC20(metaPoolTreasury, USDe, depositValue, FAUCET.USDe);
         mUSDAmount = await rebaseTokenV2.balanceOf(user0);
 
         // user0 transfers tokens to user1
@@ -80,11 +74,11 @@ describe('RebaseTokenV2', () => {
     });
 
     it('Test remove token vault', async () => {
-        const { rebaseTokenV2, tokenUSDCVault: tokenVault } = await loadFixture(deployCoreV2);
+        const { rebaseTokenV2, usdcVault } = await loadFixture(deployCoreV2);
 
-        expect(await rebaseTokenV2.isTokenVaultAllowed(tokenVault)).to.be.true;
-        await rebaseTokenV2.removeTokenVault(tokenVault);
-        expect(await rebaseTokenV2.isTokenVaultAllowed(tokenVault)).to.be.false;
+        expect(await rebaseTokenV2.isTokenVaultAllowed(usdcVault)).to.be.true;
+        await rebaseTokenV2.removeTokenVault(usdcVault);
+        expect(await rebaseTokenV2.isTokenVaultAllowed(usdcVault)).to.be.false;
     });
 
     it('Test errors', async () => {
@@ -153,5 +147,29 @@ describe('RebaseTokenV2', () => {
         await rebaseTokenV2
             .connect(user1)
             .permit(sign.owner, sign.spender, sign.value, sign.deadline, sign.v, sign.r, sign.s);
+
+        await expect(
+            rebaseTokenV2
+                .connect(user1)
+                .permit(sign.owner, sign.spender, sign.value, 0, sign.v, sign.r, sign.s),
+        ).to.be.rejectedWith('ERC2612ExpiredSignature(');
+
+        await expect(
+            rebaseTokenV2
+                .connect(user1)
+                .permit(
+                    user1.address,
+                    sign.spender,
+                    sign.value,
+                    sign.deadline,
+                    sign.v,
+                    sign.r,
+                    sign.s,
+                ),
+        ).to.be.rejectedWith('ERC2612InvalidSigner(');
+
+        await rebaseTokenV2.DOMAIN_SEPARATOR();
+        expect(await rebaseTokenV2.nonces(user0.address)).to.be.equal(1);
+        expect(await rebaseTokenV2.nonces(user1.address)).to.be.equal(0);
     });
 });

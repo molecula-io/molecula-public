@@ -6,7 +6,7 @@ import { ethers } from 'hardhat';
 import { INITIAL_SUPPLY } from '../../utils/Carbon';
 import { deployNitrogenWithUSDT } from '../../utils/NitrogenCommon';
 import { findRequestRedeemEvent } from '../../utils/event';
-import { grantERC20, grantETH } from '../../utils/grant';
+import { grantERC20 } from '../../utils/grant';
 
 describe('Test SupplyManger yield', () => {
     describe('Test SupplyManager pool yield lock and out of gas distribution', () => {
@@ -130,9 +130,8 @@ describe('Test SupplyManger yield', () => {
 
             // caller deposit 100 USDT
 
-            // Grant user1 wallet with 100 USDT and 2 ETH
+            // Grant user1 wallet with 100 USDT
             await grantERC20(caller, USDT, depositValue);
-            await grantETH(caller);
             expect(await USDT.balanceOf(caller)).to.equal(depositValue);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
 
@@ -176,9 +175,8 @@ describe('Test SupplyManger yield', () => {
 
             // second caller deposit 100 USDT
 
-            // Grant user1 wallet with 100 USDT and 2 ETH
+            // Grant user1 wallet with 100 USDT
             await grantERC20(caller, USDT, depositValue);
-            await grantETH(caller);
             expect(await USDT.balanceOf(caller)).to.equal(depositValue);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
 

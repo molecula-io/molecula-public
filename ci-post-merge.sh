@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ./install_utils.sh
-
 echo "📊 Checking versions..."
 yarn run check-versions
 
@@ -23,7 +21,6 @@ if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^blockchain/'; th
 fi
 
 if [[ "${IS_BLOCKCHAIN}" == true ]]; then
-  install_lintspec
 
   echo "🔍 Running solidity code quality checks..."
   turbo run lintspec:check --filter=@molecula-monorepo/solidity \
@@ -33,7 +30,6 @@ if [[ "${IS_BLOCKCHAIN}" == true ]]; then
     # test --filter=@molecula-monorepo/solidity --filter=@molecula-monorepo/blockchain.ethena
 
   # Run slither first and do it separately because slither cleans compiled artifacts
-  install_or_update_slither
   echo "🔍 Running slither check..."
   turbo run slither --affected || { echo "❌ pre-merge slither failed"; exit 1; }
  fi
@@ -41,9 +37,7 @@ if [[ "${IS_BLOCKCHAIN}" == true ]]; then
 
 # Then run the required checks in parallel
 echo "🔍 Running general code quality checks..."
-turbo run compile \
-  gql:generate \
-  tsc \
+turbo run tsc \
   eslint:check \
   prettier:check \
   cycles:check \

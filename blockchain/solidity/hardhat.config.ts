@@ -63,58 +63,72 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             gasPrice: 40_000_000_000,
-            forking: {
-                url: process.env.JSON_RPC_URL as string,
-                blockNumber: 21772906,
-            },
+            ...(process.env.JSON_RPC_URL && {
+                forking: {
+                    url: process.env.JSON_RPC_URL,
+                    blockNumber: 22389026,
+                },
+            }),
         },
-        sepolia: {
-            url: process.env.JSON_RPC_URL_SEPOLIA as string,
-            accounts: {
-                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
-                path: "m/44'/60'/0'/0",
-                initialIndex: 0,
-                count: 20,
-                passphrase: '',
+        ...(process.env.JSON_RPC_URL_SEPOLIA &&
+            process.env.ETHEREUM_SEED_PHRASE && {
+                sepolia: {
+                    url: process.env.JSON_RPC_URL_SEPOLIA,
+                    accounts: {
+                        mnemonic: process.env.ETHEREUM_SEED_PHRASE,
+                        path: "m/44'/60'/0'/0",
+                        initialIndex: 0,
+                        count: 20,
+                        passphrase: '',
+                    },
+                },
+            }),
+        ...(process.env.JSON_RPC_URL &&
+            process.env.ETHEREUM_SEED_PHRASE && {
+                ethereum: {
+                    url: process.env.JSON_RPC_URL,
+                    accounts: {
+                        mnemonic: process.env.ETHEREUM_SEED_PHRASE,
+                        path: "m/44'/60'/0'/0",
+                        initialIndex: 0,
+                        count: 20,
+                        passphrase: '',
+                    },
+                },
+            }),
+        ...(process.env.TRON_SEED_PHRASE && {
+            shasta: {
+                url: shastaConfig.RPC_URL,
+                accounts: {
+                    mnemonic: process.env.TRON_SEED_PHRASE,
+                    path: "m/44'/195'/0'/0/0",
+                    initialIndex: 0,
+                    count: 20,
+                    passphrase: '',
+                },
             },
-        },
-        ethereum: {
-            url: process.env.JSON_RPC_URL as string,
-            accounts: {
-                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
-                path: "m/44'/60'/0'/0",
-                initialIndex: 0,
-                count: 20,
-                passphrase: '',
+        }),
+        ...(process.env.TRON_SEED_PHRASE && {
+            tron: {
+                url: tronMainnetProdConfig.RPC_URL,
+                accounts: {
+                    mnemonic: process.env.TRON_SEED_PHRASE,
+                    path: "m/44'/195'/0'/0/0",
+                    initialIndex: 0,
+                    count: 20,
+                    passphrase: '',
+                },
             },
-        },
-        shasta: {
-            url: shastaConfig.RPC_URL,
-            accounts: {
-                mnemonic: process.env.TRON_SEED_PHRASE as string,
-                path: "m/44'/195'/0'/0/0",
-                initialIndex: 0,
-                count: 20,
-                passphrase: '',
-            },
-        },
-        tron: {
-            url: tronMainnetProdConfig.RPC_URL,
-            accounts: {
-                mnemonic: process.env.TRON_SEED_PHRASE as string,
-                path: "m/44'/195'/0'/0/0",
-                initialIndex: 0,
-                count: 20,
-                passphrase: '',
-            },
-        },
+        }),
     },
-    etherscan: {
-        apiKey: {
-            sepolia: process.env.ETHEREUM_API_KEY as string,
-            ethereum: process.env.ETHEREUM_API_KEY as string,
+    ...(process.env.ETHEREUM_API_KEY && {
+        etherscan: {
+            apiKey: {
+                sepolia: process.env.ETHEREUM_API_KEY,
+                ethereum: process.env.ETHEREUM_API_KEY,
+            },
         },
-    },
+    }),
 
     mocha: {
         timeout: 10 * 60 * 1000, // 10 min

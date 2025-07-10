@@ -1,4 +1,5 @@
 import './deployCarbonMultichain';
+import './deployLzExecutorMultichain';
 import './deployEthereum';
 import './deployTron';
 import './setupCarbonMultichain';

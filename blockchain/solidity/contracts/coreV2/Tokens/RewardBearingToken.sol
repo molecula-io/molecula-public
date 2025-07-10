@@ -1,20 +1,22 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.23;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {IIssuer, IIssuerShare7575} from "./../interfaces/IIssuer.sol";
+import {IIssuer} from "./../interfaces/IIssuer.sol";
 import {IOracleV2} from "./../interfaces/IOracleV2.sol";
-import {CommonToken} from "./CommonToken.sol";
-import {IShareAssetConverter} from "./interfaces/IShareAssetConverter.sol";
+import {IShare} from "./interfaces/IShare.sol";
 import {Permit} from "./Permit.sol";
+import {ShareToken} from "./ShareToken.sol";
 
 /// @title RewardBearingToken Contract
 /// @notice A token contract that represents shares in an underlying asset pool with reward-bearing capabilities
 /// @dev Implements ERC20 standard with additional functionality for reward distribution and ownership management
-contract RewardBearingToken is IIssuerShare7575, ERC20, Ownable2Step, Permit, CommonToken {
+// Next line in order to suspend warning: RewardBearingToken should inherit from contracts/common/interfaces/IRebaseERC20.sol
+// slither-disable-next-line missing-inheritance
+contract RewardBearingToken is IIssuer, ERC20, Ownable2Step, Permit, ShareToken {
     // ============ Constructor ============
 
     /// @dev Initializes the RewardBearingToken contract
@@ -33,7 +35,7 @@ contract RewardBearingToken is IIssuerShare7575, ERC20, Ownable2Step, Permit, Co
         ERC20(name_, symbol_)
         EIP712(name_, "2.0.0")
         Ownable(initialOwner)
-        CommonToken(oracle_, supplyManager)
+        ShareToken(oracle_, supplyManager)
     {}
 
     // ============ Admin Functions ============
@@ -62,12 +64,22 @@ contract RewardBearingToken is IIssuerShare7575, ERC20, Ownable2Step, Permit, Co
 
     // ============ View Functions ============
 
+    /// @inheritdoc IShare
+    function sharesOf(address user) external view virtual override returns (uint256 shares) {
+        return balanceOf(user);
+    }
+
+    /// @inheritdoc IShare
+    function totalSharesSupply() external view virtual override returns (uint256 totalShares) {
+        return totalSupply();
+    }
+
     /// @inheritdoc ERC20
     function totalSupply() public view virtual override returns (uint256) {
         return IOracleV2(oracle).getTotalSharesSupply();
     }
 
-    /// @inheritdoc IShareAssetConverter
+    /// @inheritdoc IShare
     function localTotalShares() external view virtual override returns (uint256) {
         return super.totalSupply();
     }

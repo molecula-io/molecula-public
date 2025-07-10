@@ -13,6 +13,9 @@
         "imports-order": "error",
         "gas-indexed-events": "error",
         "comprehensive-interface": "off",
-        "ordering": "off"
+        "ordering": "off",
+        "use-natspec": "off",
+        "function-max-lines": "off",
+        "gas-strict-inequalities": "off"
     }
 }

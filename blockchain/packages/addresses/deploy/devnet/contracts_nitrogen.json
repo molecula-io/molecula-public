@@ -1,7 +1,7 @@
 {
     "eth": {
         "supplyManager": "0x263ca7c176d6A695F9C5f0ED9A9F69d66Ae11A0c",
-        "moleculaPool": "0x689C9a3C9c163C4fA85fba573e6c2772552Ea276",
+        "moleculaPool": "0x19D5242Ed9c0EF475359905bc15Fb4cff556a6ec",
         "accountantAgent": "0x910862aC883B232D7E3d6714dA35337C5FD7fdEE",
         "rebaseToken": "0x86e400c1771BB97cb2483CCe85422E96cbA606AF",
         "poolKeeper": "0x51fFFb7a28734D7Abb70a30012ce86646E39E269",
@@ -9,8 +9,10 @@
         "mUSDe": "0x8b76f5b8470C3acCF8956b9859d36372EAB51f81",
         "lmUSD": "0x12CCD83E41E3Ab85875B457af6709598FD9FFaf5",
         "wmUSD": "0xb480E55e042797c74B43c3e506Fd603ecbb5DEb7",
-        "router": "",
-        "routerAgents": {},
+        "rebaseTokenOwner": "0xe61C68b0bC0a862953D203babEc883B117B994d6",
+        "tokenVaults": {
+            "USDc": "0x14341e94Ede9AB2D2C063A0178C718c77e623A32"
+        },
         "ethena": {
             "USDe": "0x3882Ef2d84B0aA75b1565Bb99A8fb90e52612b92",
             "sUSDe": "0x572d3e6b50BB4B2CB4061db7aa233Ae50d9ab258"

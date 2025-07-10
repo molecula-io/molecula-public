@@ -14,15 +14,4 @@ interface IRebaseERC20V2 {
     /// @param to Tokens recipient's address.
     /// @param shares Shares amount to transfer.
     event TransferShares(address indexed from, address indexed to, uint256 indexed shares);
-
-    // ============ View Functions ============
-
-    /// @dev Returns the user's shares.
-    /// @param user User whose shares are to be returned.
-    /// @return shares User's shares.
-    function sharesOf(address user) external view returns (uint256 shares);
-
-    /// @dev Returns the total supply of the token in shares.
-    /// @return totalShares Token's total supply in shares.
-    function totalSharesSupply() external view returns (uint256 totalShares);
 }

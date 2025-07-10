@@ -12,18 +12,18 @@ yarn run check-versions
 # Only merge main branch if we're targeting main in the MR
 if [ -n "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}" ] && [ "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}" = "main" ]; then
   echo "🔄 MR targeting main branch detected. Merging main branch into current branch..."
-  
+
   # Set Git identity for CI environment (local to this repository) only if not already configured
   if [ -z "$(git config user.email)" ]; then
     echo "Setting up Git user.email..."
     git config --local user.email "ci@dats.tech"
   fi
-  
+
   if [ -z "$(git config user.name)" ]; then
     echo "Setting up Git user.name..."
     git config --local user.name "Molecula CI"
   fi
-  
+
   git fetch origin main
   git merge origin/main --no-edit || { echo "❌ Merge failed. Please resolve conflicts manually."; exit 1; }
   echo "✅ Successfully merged main branch"
@@ -57,7 +57,6 @@ if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^blockchain/'; th
 fi
 
 if [[ "${IS_BLOCKCHAIN}" == true ]]; then
-  install_lintspec
 
   echo "🔍 Running solidity code quality checks..."
   yarn turbo run lintspec:check --filter=@molecula-monorepo/solidity \
@@ -67,7 +66,6 @@ if [[ "${IS_BLOCKCHAIN}" == true ]]; then
     # test --filter=@molecula-monorepo/solidity --filter=@molecula-monorepo/blockchain.ethena
 
   # Run slither first and do it separately because slither cleans compiled artifacts
-  install_or_update_slither
   echo "🔍 Running slither check..."
   turbo run slither --affected || { echo "❌ pre-merge slither failed"; exit 1; }
 fi

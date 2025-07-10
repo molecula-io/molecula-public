@@ -1,47 +1,29 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IERC7575Payable} from "./../../common/external/interfaces/IERC7575Payable.sol";
-import {PausableContract} from "./../../common/pausable/PausableContract.sol";
 import {ConstantsCoreV2} from "./../Constants.sol";
+import {IERC7575Payable} from "./../external/interfaces/IERC7575Payable.sol";
 import {ISupplyManagerV2} from "./../interfaces/ISupplyManagerV2.sol";
 import {ISupplyManagerV2WithNative} from "./../interfaces/ISupplyManagerV2.sol";
-import {IBaseTokenVault} from "../Tokens/interfaces/ITokenVault.sol";
-import {INativeTokenVault} from "../Tokens/interfaces/ITokenVault.sol";
 import {BaseTokenVault} from "./BaseTokenVault.sol";
+import {IBaseTokenVault} from "./interfaces/ITokenVault.sol";
+import {INativeTokenVault} from "./interfaces/ITokenVault.sol";
 
 /// @title NativeTokenVault.
 /// @notice Based on EIP-7535: https://eips.ethereum.org/EIPS/eip-7535
 /// @dev TokenVault that uses the native token as an underlying asset.
+///      Native token is pegged 1:1 to the Molecula Token.
 abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC7575Payable {
     using Address for address payable;
 
-    /// @dev Initializes the Vault with core dependencies.
-    /// @param initialOwner Owner's address.
-    /// @param shareAddress Share token contract's address.
-    /// @param supplyManager Supply Manager contract's address.
-    /// @param guardianAddress Address of the guardian that can pause the contract.
-    constructor(
-        address initialOwner,
-        address shareAddress,
-        address supplyManager,
-        address guardianAddress
-    )
-        BaseTokenVault(shareAddress, supplyManager)
-        PausableContract(guardianAddress)
-        Ownable(initialOwner)
-    {}
-
     // ============ Core Functions ============
 
-    receive() external payable {
-        // Get tokens from the Molecula pool.
-    }
+    // Get tokens from the Molecula pool.
+    receive() external payable {}
 
     /// @inheritdoc IBaseTokenVault
     function init(
@@ -79,7 +61,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
         address controller,
         address owner
     ) external virtual override onlyOperator(owner) returns (uint256 requestId) {
-        uint256 shares = _convertToShares(assets);
+        uint256 shares = convertToShares(assets);
         return _requestRedeem(shares, controller, owner);
     }
 
@@ -112,6 +94,41 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
 
     // ============ View Functions ============
 
+    /// @inheritdoc BaseTokenVault
+    function convertAssetsToMoleculaAssets(
+        uint256 assets
+    ) public view virtual override returns (uint256 moleculaAssets) {
+        moleculaAssets = assets;
+    }
+
+    /// @inheritdoc BaseTokenVault
+    function convertMoleculaAssetsToAssets(
+        uint256 moleculaAssets
+    ) public view virtual override returns (uint256 assets) {
+        assets = moleculaAssets;
+    }
+
+    /// @inheritdoc IERC7575Payable
+    function maxRedeem(
+        address owner
+    ) public view virtual override(IERC7575Payable, BaseTokenVault) returns (uint256 maxShares) {
+        return super.maxRedeem(owner);
+    }
+
+    /// @inheritdoc IERC7575Payable
+    function convertToAssets(
+        uint256 shares
+    ) public view virtual override(BaseTokenVault, IERC7575Payable) returns (uint256 assets) {
+        assets = super.convertToAssets(shares);
+    }
+
+    /// @inheritdoc IERC7575Payable
+    function convertToShares(
+        uint256 assets
+    ) public view virtual override(BaseTokenVault, IERC7575Payable) returns (uint256 shares) {
+        shares = super.convertToShares(assets);
+    }
+
     /// @inheritdoc IERC7575Payable
     function share() external view returns (address shareTokenAddress) {
         return _SHARE;
@@ -121,9 +138,6 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
     function asset() external view returns (address assetTokenAddress) {
         return _asset;
     }
-
-    /// @inheritdoc IERC7575Payable
-    function convertToAssets(uint256 shares) public view virtual override returns (uint256 assets);
 
     /// @inheritdoc IERC7575Payable
     function maxDeposit(
@@ -140,13 +154,8 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
     }
 
     /// @inheritdoc IERC7575Payable
-    function maxRedeem(address owner) external view virtual override returns (uint256 maxShares) {
-        return _maxRedeem(owner);
-    }
-
-    /// @inheritdoc IERC7575Payable
     function maxWithdraw(address owner) external view virtual override returns (uint256 maxAssets) {
-        uint256 maxShares = _maxRedeem(owner);
+        uint256 maxShares = maxRedeem(owner);
         return convertToAssets(maxShares);
     }
 
@@ -154,7 +163,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
     function previewDeposit(
         uint256 assets
     ) external view virtual override returns (uint256 shares) {
-        return _convertToShares(assets);
+        return convertToShares(assets);
     }
 
     /// @inheritdoc IERC7575Payable

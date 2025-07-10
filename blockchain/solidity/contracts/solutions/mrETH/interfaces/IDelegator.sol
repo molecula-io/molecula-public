@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IDelegationManager, IStrategy} from "../external/interfaces/IDelegationManager.sol";
 import {BeaconChainProofs} from "../external/libraries/BeaconChainProofs.sol";

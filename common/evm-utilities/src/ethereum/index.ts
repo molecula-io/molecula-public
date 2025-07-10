@@ -14,6 +14,7 @@ export * from './normalizeAddress';
 export * from './areEvmAddressesEqual';
 export * from './findBlockByTimestamp';
 export * from './getMethodType';
+export * from './addressTo32bytes';
 
 // Export types
 export * from './types';

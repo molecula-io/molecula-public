@@ -8,6 +8,7 @@
         "naming-convention",
         "reentrancy-events",
         "solc-version",
-        "timestamp"
+        "timestamp",
+        "unimplemented-functions"
     ]
 }

@@ -49,11 +49,11 @@ export async function deployCore(
         from: account.address,
         nonce: (await account.getNonce()) + 2, // deploy moleculaPool + transfer tokens
     });
-    const MoleculaPoolFactory = await hre.ethers.getContractFactory('MoleculaPoolTreasury');
+    const MoleculaPoolFactoryV2 = await hre.ethers.getContractFactory('MoleculaPoolTreasuryV2');
     if (config.GUARDIAN_ADDRESS === '0x') {
         throw new Error(`Set guardian address in config.`);
     }
-    const moleculaPool = await MoleculaPoolFactory.deploy(
+    const moleculaPoolV2 = await MoleculaPoolFactoryV2.deploy(
         account.address,
         tokens.map(x => x.token),
         poolKeeper,
@@ -62,11 +62,11 @@ export async function deployCore(
         config.GUARDIAN_ADDRESS,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
-    await moleculaPool.waitForDeployment();
-    console.log('MoleculaPool address: ', await moleculaPool.getAddress());
+    await moleculaPoolV2.waitForDeployment();
+    console.log('MoleculaPoolTreasuryV2 address: ', await moleculaPoolV2.getAddress());
     await increaseBalance(
-        'MoleculaPoolTreasury',
-        await moleculaPool.getAddress(),
+        'MoleculaPoolTreasuryV2',
+        await moleculaPoolV2.getAddress(),
         config.INITIAL_USDT_SUPPLY,
         USDT,
     );
@@ -76,7 +76,7 @@ export async function deployCore(
     const supplyManager = await SupplyManager.deploy(
         account.address, // In the end set owner to pool_keeper
         poolKeeper,
-        await moleculaPool.getAddress(),
+        await moleculaPoolV2.getAddress(),
         config.APY_FORMATTER,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
@@ -89,7 +89,7 @@ export async function deployCore(
         );
         process.exit(1);
     }
-    if ((await moleculaPool.SUPPLY_MANAGER()) !== supplyManagerFutureAddress) {
+    if ((await moleculaPoolV2.SUPPLY_MANAGER()) !== supplyManagerFutureAddress) {
         console.error(
             "MoleculaPool's SupplyManager address not equal to deployed SupplyManager: ",
             supplyManagerFutureAddress,
@@ -99,14 +99,14 @@ export async function deployCore(
 
     // print addresses
     console.log('Block #', await hre.ethers.provider.getBlockNumber());
-    console.log('MoleculaPool address: ', await moleculaPool.getAddress());
+    console.log('MoleculaPool address: ', await moleculaPoolV2.getAddress());
     console.log('SupplyManager address: ', await supplyManager.getAddress());
     console.log('Pool keeper: ', poolKeeper);
     console.log('mUSDe deployed: ', mUSDe);
 
     return {
         supplyManager: await supplyManager.getAddress(),
-        moleculaPool: await moleculaPool.getAddress(),
+        moleculaPool: await moleculaPoolV2.getAddress(),
         poolKeeper,
         mUSDe,
         ethena: {

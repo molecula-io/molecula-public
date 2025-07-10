@@ -11,4 +11,9 @@ export type LoadEventsFilter = {
      * Block timestamp
      */
     timestamp: number;
+
+    /**
+     * Limit
+     */
+    limit?: number;
 };

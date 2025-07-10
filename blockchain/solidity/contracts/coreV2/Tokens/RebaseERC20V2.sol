@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity ^0.8.23;
 
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {ValueValidator} from "./../../common/ValueValidator.sol";
-import {CommonToken} from "./CommonToken.sol";
 import {IRebaseERC20V2} from "./interfaces/IRebaseERC20V2.sol";
-import {IShareAssetConverter} from "./interfaces/IShareAssetConverter.sol";
+import {IShare} from "./interfaces/IShare.sol";
+import {ShareToken} from "./ShareToken.sol";
 
 /// @title RebaseERC20V2.
 /// @notice Contract for implementing the RebaseERC20V2 functionality.
@@ -21,7 +21,7 @@ abstract contract RebaseERC20V2 is
     IERC20Errors,
     Context,
     ValueValidator,
-    CommonToken
+    ShareToken
 {
     // ============ State Variables ============
 
@@ -40,7 +40,7 @@ abstract contract RebaseERC20V2 is
     /// @inheritdoc IERC20Metadata
     string public symbol;
 
-    /// @inheritdoc IShareAssetConverter
+    /// @inheritdoc IShare
     uint256 public localTotalShares;
 
     // ============ Constructor ============
@@ -88,7 +88,7 @@ abstract contract RebaseERC20V2 is
 
     // ============ View Functions ============
 
-    /// @inheritdoc IRebaseERC20V2
+    /// @inheritdoc IShare
     function sharesOf(address user) external view virtual override returns (uint256 shares) {
         return _shares[user];
     }

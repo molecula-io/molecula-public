@@ -9,47 +9,43 @@ import { expectEqual } from '../../utils/math';
 
 describe('RewardBearingToken', () => {
     it('Using RewardBearingToken', async () => {
-        const {
-            user0,
-            tokenUSDCVault: tokenVault,
-            rewardBearingToken,
-            USDC,
-            mockDistributedPool,
-        } = await loadFixture(deployCoreV2RewardBearingToken);
+        const { user0, usdcVault, rewardBearingToken, USDC, metaPoolTreasury } = await loadFixture(
+            deployCoreV2RewardBearingToken,
+        );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         // Deposit assets
-        const shares = await tokenVault.previewDeposit(depositValue);
-        await tokenVault.connect(user0).requestDeposit(depositValue, user0, user0);
+        const shares = await usdcVault.previewDeposit(depositValue);
+        await usdcVault.connect(user0).requestDeposit(depositValue, user0, user0);
         expect(await rewardBearingToken.balanceOf(user0)).to.be.equal(shares);
 
         // Generate yield
-        await grantERC20(mockDistributedPool, USDC, 10n * depositValue - 1n);
+        await grantERC20(metaPoolTreasury, USDC, 10n * depositValue - 1n);
         // Balance is not changed
         expect(await rewardBearingToken.balanceOf(user0)).to.be.equal(shares);
 
         // requestRedeem
         const userShares = await rewardBearingToken.balanceOf(user0);
-        const redeemAssets = await tokenVault.convertToAssets(userShares);
-        expect(await tokenVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
-        const tx = await tokenVault.connect(user0).requestRedeem(userShares - 1n, user0, user0);
-        expectEqual(await tokenVault.pendingRedeemRequest(0, user0), userShares);
+        const redeemAssets = await usdcVault.convertToAssets(userShares);
+        expect(await usdcVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
+        const tx = await usdcVault.connect(user0).requestRedeem(userShares - 1n, user0, user0);
+        expectEqual(await usdcVault.pendingRedeemRequest(0, user0), userShares);
         const redeemEvent = await findRequestRedeemEventV2(tx);
 
         // fulfillRedeemRequests
-        await mockDistributedPool.fulfillRedeemRequests([redeemEvent.operationId]);
-        expectEqual(await tokenVault.claimableRedeemRequest(0, user0), userShares, 18, 6);
-        expect(await tokenVault.claimableRedeemAssets(user0)).to.be.equal(redeemAssets);
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+        expectEqual(await usdcVault.claimableRedeemRequest(0, user0), userShares, 18, 6);
+        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.equal(redeemAssets);
 
         // redeem
         expect(await USDC.balanceOf(user0)).to.be.equal(0);
-        await tokenVault.connect(user0).redeem(userShares, user0, user0);
+        await usdcVault.connect(user0).redeem(userShares, user0, user0);
         expect(await USDC.balanceOf(user0)).to.be.equal(redeemAssets);
     });
 });

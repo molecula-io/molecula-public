@@ -1,0 +1,11 @@
+{
+    "eth": {
+        "supplyManagerV2": "0x6731743a845c9E6963632fBc488DDF463723987a",
+        "mrETH": "0xC5F9b193f19CD2701141F9714ca7D143a64F1c84",
+        "vaultWETH": "0xf767860bA78787F6198e08d5F2E833713127C814",
+        "vaultETH": "0x08f798EF8A8FEf9cd0C13BaE9aca977e44874959",
+        "vaultStETH": "0x833f0e0f97B5cacCc6E8f04CaBFDB3FB205AC283",
+        "depositManager": "0xE58824a25A5277677F695f56303117573f9E3033",
+        "delegatorImplementation": "0x77e0F32d52a32d8783965cda9636B6E8201821d4"
+    }
+}

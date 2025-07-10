@@ -17,6 +17,14 @@ export const tronMainnetBetaConfig: TronNetworkConfig = {
         '0x8bC1D368036EE5E726D230beB685294BE191A24e', // LayerZero Labs DVN address
         '0xE13b0667fcE48d12773EAd95D87dc9d1c58544DF', // USDT0 DVN address
     ],
+
+    // LayerZero Executor contract's configuration parameters.
+    LAYER_ZERO_EXECUTOR: 'TKSQrCn9r7jdNxWuQGRw8RJT8x4LFNfr7B',
+    LAYER_ZERO_PRICE_FEED: 'TLw8tyzdGvBQAJ8udJaqW3gUeB6FanjBZZ',
+    LAYER_ZERO_WORKER_FEE_LIB: 'TJzufosriKzXsSECBiusTcVndAm9dDvfTr',
+    LAYER_ZERO_SEND_ULN_LIB: 'TWhf9vzMEGmWjn538ymX76sgGN3LxG7mQJ',
+    LAYER_ZERO_RECEIVE_ULN_LIB: 'TJpoNxF3CreFRpTdLhyXuJzEo4vMAns7Wz',
+
     LAYER_ZERO_ETHEREUM_EID: 30101,
     LAYER_ZERO_TRON_EID: 30420,
     LAYER_ZERO_ARBITRUM_EID: 30110,

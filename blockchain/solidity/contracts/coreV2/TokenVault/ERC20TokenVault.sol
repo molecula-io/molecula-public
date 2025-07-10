@@ -1,78 +1,41 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISupplyManagerV2} from "./../interfaces/ISupplyManagerV2.sol";
-import {IERC20TokenVault} from "../Tokens/interfaces/ITokenVault.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {BaseTokenVault} from "./BaseTokenVault.sol";
-import {CommonERC20TokenVault} from "./CommonERC20TokenVault.sol";
+import {TokenVault} from "./TokenVault.sol";
 
-/// @title ERC20TokenVault.
-/// @dev TokenVault that uses IERC20 tokens as underlying assets.
-abstract contract ERC20TokenVault is CommonERC20TokenVault, IERC20TokenVault {
-    using SafeERC20 for IERC20;
-
-    // ============ Constructor ============
-
-    /// @dev Initializes the contract setting the initializer address.
-    /// @param owner_ Owner's address.
-    /// @param shareAddress Share token's address.
-    /// @param supplyManager Supply Manager's address.
-    constructor(
-        address owner_,
-        address shareAddress,
-        address supplyManager
-    ) BaseTokenVault(shareAddress, supplyManager) Ownable(owner_) {}
-
-    // ============ Core Functions ============
-
-    /// @inheritdoc IERC20TokenVault
-    function fulfillRedeemRequests(
-        address assetOwner,
-        uint256[] calldata requestIds,
-        uint256 sumAssets
-    ) external virtual override {
-        // slither-disable-next-line arbitrary-send-erc20
-        IERC20(_asset).safeTransferFrom(assetOwner, address(this), sumAssets);
-
-        _fulfillRedeemRequests(requestIds, sumAssets);
-    }
-
-    // ============ Internal Functions ============
-
-    /// @dev Returns the issuer contract interface.
-    /// @return Issuer contract interface.
-    function _issuer() internal view virtual override returns (address) {
-        return _SHARE;
-    }
+/// @title ERC20TokenVault
+/// @notice Underlying asset is an ERC-20 token, not its extensions like ERC-4626.
+abstract contract ERC20TokenVault is TokenVault {
+    /// @dev Power of 10 used to convert between assets and Molecula Tokens.
+    uint128 public pow10;
 
     /// @inheritdoc BaseTokenVault
-    function _supplyManagerRequestRedeem(
-        address controller,
-        address owner,
-        uint256 requestId,
-        uint256 shares
-    ) internal virtual override returns (uint256 assets) {
-        assets = ISupplyManagerV2(SUPPLY_MANAGER).requestRedeem(
-            _asset,
-            controller,
-            owner,
-            requestId,
-            shares
-        );
-    }
-
-    /// @inheritdoc BaseTokenVault
-    function _storeRedeemRequestInfo(
-        uint256 /*requestId*/,
-        address /*controller*/,
-        address /*owner*/,
-        uint256 /*shares*/ // solhint-disable-next-line no-empty-blocks
+    function _init(
+        address asset_,
+        uint128 minDepositAssets_,
+        uint128 minRedeemShares_
     ) internal virtual override {
-        // Do nothing. SupplyManagerV2 stores information about request.
+        super._init(asset_, minDepositAssets_, minRedeemShares_);
+        uint128 assetDecimals = IERC20Metadata(_asset).decimals();
+        uint128 shareDecimals = IERC20Metadata(_SHARE).decimals();
+        pow10 = uint128(10) ** (shareDecimals - assetDecimals);
+    }
+
+    /// @inheritdoc BaseTokenVault
+    function convertAssetsToMoleculaAssets(
+        uint256 assets
+    ) public view virtual override returns (uint256 moleculaAssets) {
+        moleculaAssets = assets * pow10;
+    }
+
+    /// @inheritdoc BaseTokenVault
+    function convertMoleculaAssetsToAssets(
+        uint256 moleculaAssets
+    ) public view virtual override returns (uint256 assets) {
+        assets = moleculaAssets / pow10;
     }
 }

@@ -11,4 +11,8 @@ library ConstantsCoreV2 {
     ///         https://eips.ethereum.org/EIPS/eip-7528
     /// @dev This pseudo-address is commonly used to differentiate between ERC20 tokens and the native tokens.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    /// @dev Basis points factor, where 100% = 10,000.
+    /// Used as a denominator in percentage calculations.
+    uint16 public constant PERCENTAGE_FACTOR = 10_000;
 }

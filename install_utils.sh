@@ -5,12 +5,25 @@ set -eo pipefail
 
 function install_or_update_slither() {
   # https://github.com/crytic/slither
-  echo "Try installing slither via python3 pip... "
-  if ! command python3 -m pip install --upgrade slither-analyzer; then
-    echo "Try upgrading slither via pipx... "
-    if ! command pipx upgrade slither-analyzer; then
-      echo "Try installing slither via pipx... "
+  echo "Trying to install slither via python3 pip..."
+  if ! python3 -m pip install --upgrade slither-analyzer >/dev/null 2>&1; then
+    echo "pip install failed, trying pipx..."
+
+    # Ensure pipx is installed
+    if ! command -v pipx >/dev/null 2>&1; then
+      echo "pipx not found, installing pipx..."
+      python3 -m pip install --user pipx
+      export PATH="$HOME/.local/bin:$PATH"
+      pipx ensurepath
+    fi
+
+    # Now install or upgrade slither with pipx
+    if ! command -v slither >/dev/null 2>&1; then
+      echo "Installing slither via pipx..."
       pipx install slither-analyzer
+    else
+      echo "Upgrading slither via pipx..."
+      pipx upgrade slither-analyzer
     fi
   fi
 }

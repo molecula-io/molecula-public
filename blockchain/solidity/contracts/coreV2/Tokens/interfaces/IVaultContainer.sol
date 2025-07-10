@@ -26,6 +26,21 @@ interface IVaultContainer {
     /// @dev Thrown when token Vault's code hash is not in allowlist.
     error CodeHashNotInWhiteList();
 
+    // ============ Events ============
+
+    /// @dev Emitted when a new token Vault is added.
+    /// @param tokenVault Address of the added token Vault.
+    event TokenVaultAdded(address indexed tokenVault);
+
+    /// @dev Emitted when a token Vault is removed.
+    /// @param tokenVault Address of the removed token Vault.
+    event TokenVaultRemoved(address indexed tokenVault);
+
+    /// @dev Emitted when the allowlist status of the code hash is updated.
+    /// @param codeHash Hash of the code whose status was updated.
+    /// @param isValid New allowlist status of the code hash.
+    event CodeHashSet(bytes32 indexed codeHash, bool indexed isValid);
+
     // ============ Admin Functions ============
 
     /// @dev Adds a new token Vault.

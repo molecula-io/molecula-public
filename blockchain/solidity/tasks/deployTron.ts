@@ -4,6 +4,7 @@ import { scope } from 'hardhat/config';
 import type { HardhatNetworkHDAccountsConfig } from 'hardhat/types/config';
 
 import { deployCarbon } from '../scripts/tron/deploy/deployCarbonTron';
+import { deployExecutor } from '../scripts/tron/deploy/deployExecutor';
 import { deployMockUSDT, deployUsdtOFT } from '../scripts/tron/deploy/deployMockTron';
 import {
     handleError,
@@ -77,6 +78,36 @@ tronMajorScope
             await deployUsdtOFT(hre, accounts.mnemonic, accounts.path, environment);
 
             console.log('Deployment UsdtOFT mock completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
+    });
+
+tronMajorScope
+    .task('deployExecutor', 'Deploys LZ Executor contract on Tron')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n TRON Deployment');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
+        const environment = getEnvironment(hre, taskArgs.environment);
+        try {
+            const contractsExecutor = await readFromFile(`${environment}/contracts_executor.json`);
+            // Execute deployment
+            const executor = await deployExecutor(
+                hre,
+                accounts.mnemonic,
+                accounts.path,
+                environment,
+            );
+            writeToFile(`${environment}/contracts_executor.json`, {
+                eth: contractsExecutor.eth,
+                tron: executor.tron,
+            });
+
+            console.log('Deployment of LZ Executor contract completed successfully.');
         } catch (error) {
             handleError(error);
         }

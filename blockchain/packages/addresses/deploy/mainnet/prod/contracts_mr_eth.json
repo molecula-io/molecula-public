@@ -1,0 +1,11 @@
+{
+    "eth": {
+        "depositManager": "",
+        "delegatorImplementation": "",
+        "supplyManagerV2": "",
+        "mrETH": "",
+        "vaultWETH": "",
+        "vaultETH": "",
+        "vaultStETH": ""
+    }
+}

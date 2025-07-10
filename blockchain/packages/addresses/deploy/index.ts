@@ -1,20 +1,23 @@
 import {
-    type DevnetContractAccountantAgent,
     type DevnetContractsCore,
     type DevnetContractsNitrogen,
     type DevnetContractsCarbon,
+    type DevnetContractsMrEth,
+    type DevnetContractsMetaEth,
 } from './devnet';
 import {
     type MainBetaContractsCarbon,
-    type MainBetaContractAccountantAgent,
     type MainBetaContractsCore,
     type MainBetaContractsNitrogen,
+    type MainBetaContractsMrEth,
+    type MainBetaContractsMetaEth,
 } from './mainnet/beta';
 import {
-    type MainProdContractAccountantAgent,
     type MainProdContractsCarbon,
     type MainProdContractsCore,
     type MainProdContractsNitrogen,
+    type MainProdContractsMrEth,
+    type MainProdContractsMetaEth,
 } from './mainnet/prod';
 
 export * from './devnet';
@@ -36,7 +39,12 @@ export type ContractsCarbon =
     | typeof MainBetaContractsCarbon
     | typeof MainProdContractsCarbon;
 
-export type ContractAccountantAgent =
-    | typeof DevnetContractAccountantAgent
-    | typeof MainBetaContractAccountantAgent
-    | typeof MainProdContractAccountantAgent;
+export type ContractsMrEth =
+    | typeof DevnetContractsMrEth
+    | typeof MainBetaContractsMrEth
+    | typeof MainProdContractsMrEth;
+
+export type ContractsMetaEth =
+    | typeof DevnetContractsMetaEth
+    | typeof MainBetaContractsMetaEth
+    | typeof MainProdContractsMetaEth;

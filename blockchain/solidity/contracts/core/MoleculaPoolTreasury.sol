@@ -74,7 +74,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     /// @dev Mapping of the ERC20 pool.
     mapping(address => TokenInfo) public poolMap;
 
-    /// @dev White list of addresses callable by this contract.
+    /// @dev Whitelist of addresses callable by this contract.
     mapping(address => bool) public isInWhiteList;
 
     /// @dev Error: Not a smart-contract.
@@ -104,7 +104,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     /// @dev Error: The `redeem` or `execute` function with the blocked token is called.
     error ETokenBlocked();
 
-    /// @dev Error: The target address is not in the white list.
+    /// @dev Error: The target address is not in the whitelist.
     error ENotInWhiteList();
 
     /// @dev Error: The target address has already been added.
@@ -122,11 +122,11 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     /// @dev Error: There are unprocessed redeem requests.
     error EUnprocessedRedeemRequests();
 
-    /// @dev Emitted when the target has been added in the white list.
+    /// @dev Emitted when the target has been added in the whitelist.
     /// @param target Address.
     event AddedInWhiteList(address indexed target);
 
-    /// @dev Emitted when the target has been deleted from the white list.
+    /// @dev Emitted when the target has been deleted from the whitelist.
     /// @param target Address.
     event DeletedFromWhiteList(address indexed target);
 
@@ -482,7 +482,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     }
 
     /**
-     * @dev Add the target in the white list.
+     * @dev Add the target in the whitelist.
      * @param target Address.
      */
     function _addInWhiteList(address target) private checkNotZero(target) {
@@ -493,7 +493,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     }
 
     /**
-     * @dev Add the target in the white list.
+     * @dev Add the target in the whitelist.
      * @param target Address.
      */
     function addInWhiteList(address target) external onlyOwner {
@@ -502,7 +502,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     }
 
     /**
-     * @dev Delete the target from the white list.
+     * @dev Delete the target from the whitelist.
      * @param target Address.
      */
     function deleteFromWhiteList(address target) external onlyOwner checkNotZero(target) {
@@ -552,7 +552,7 @@ contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
                 spender := mload(add(data, 36)) // skip: 32 bytes data.length + 4 bytes selector
             }
 
-            // Ensure spender is whitelisted.
+            // Ensure that the spender is whitelisted.
             if (!isInWhiteList[spender]) {
                 revert ENotInWhiteList();
             }

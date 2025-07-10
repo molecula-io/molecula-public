@@ -1,22 +1,22 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.23;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {IIssuer, IIssuerShare7575} from "./../interfaces/IIssuer.sol";
+import {IIssuer} from "./../interfaces/IIssuer.sol";
 import {IOracleV2} from "./../interfaces/IOracleV2.sol";
-import {CommonToken} from "./CommonToken.sol";
-import {IRebaseERC20V2} from "./interfaces/IRebaseERC20V2.sol";
+import {IShare} from "./interfaces/IShare.sol";
 import {Permit} from "./Permit.sol";
 import {RebaseERC20V2} from "./RebaseERC20V2.sol";
+import {ShareToken} from "./ShareToken.sol";
 
 /// @title RebaseTokenV2.
 /// @notice Contract for implementing the RebaseERC20V2 functionality.
 /// @dev Extends RebaseERC20V2 with additional vault container and ownership features.
 // slither-disable-next-line missing-inheritance
-contract RebaseTokenV2 is IIssuerShare7575, Ownable2Step, Permit, RebaseERC20V2 {
+contract RebaseTokenV2 is IIssuer, Ownable2Step, Permit, RebaseERC20V2 {
     // ============ Constructor ============
 
     /// @dev Initializes the contract with specified parameters.
@@ -37,7 +37,7 @@ contract RebaseTokenV2 is IIssuerShare7575, Ownable2Step, Permit, RebaseERC20V2 
         RebaseERC20V2(tokenName, tokenSymbol, tokenDecimals)
         Ownable(initialOwner)
         EIP712(tokenName, "2.0.0")
-        CommonToken(oracle_, supplyManager_)
+        ShareToken(oracle_, supplyManager_)
     {}
 
     // ============ Core Functions ============
@@ -75,7 +75,7 @@ contract RebaseTokenV2 is IIssuerShare7575, Ownable2Step, Permit, RebaseERC20V2 
         totalPool = IOracleV2(oracle).getTotalPoolSupply();
     }
 
-    /// @inheritdoc IRebaseERC20V2
+    /// @inheritdoc IShare
     function totalSharesSupply() external view virtual override returns (uint256 totalShares) {
         totalShares = IOracleV2(oracle).getTotalSharesSupply();
     }

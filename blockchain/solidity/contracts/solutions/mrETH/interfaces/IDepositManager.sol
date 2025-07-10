@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import {IMoleculaPoolV2WithNativeToken} from "./../../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {IDelegationManager, IStrategy} from "./../external/interfaces/IDelegationManager.sol";
@@ -37,55 +37,58 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @param newValue New value.
     event IsStakePausedChanged(bool indexed newValue);
 
-    /// @dev Error indicating Deposit Manager is already initialized.
+    /// @dev Error: The `Pause` status has been already set.
+    error EPauseAlreadySet();
+
+    /// @dev Error: Deposit Manager is already initialized.
     error EInitialized();
 
-    /// @dev Error indicating incorrect array length.
+    /// @dev Error: Incorrect array length.
     error EIncorrectLength();
 
-    /// @dev Error indicating that the native value amount not match to msg.value.
+    /// @dev Error: Native value amount does not match `msg.value`.
     error EIncorrectNativeValue();
 
-    /// @dev Error indicating that the buffered amount exceeds the value stored in the buffer.
+    /// @dev Error: Buffered amount exceeds the value stored in the buffer.
     error ENoNeedToStake();
 
-    /// @dev Error indicating that the value amount is not enough for deposit into EigenLayer.
+    /// @dev Error: Value amount is not enough for a deposit into EigenLayer.
     error ETooHighDepositValue();
 
-    /// @dev Throws an error if the operation status is incorrect.
+    /// @dev Error: Operation status is incorrect.
     error EBadOperationStatus();
 
-    /// @dev Throws an error if the poolId does not match the position in the array.
+    /// @dev Error: `poolId` does not match the position in the array.
     error EWrongPoolId();
 
-    /// @dev Throws an error if the sum of portions is not equal to `1`.
+    /// @dev Error: Sum of portions is not equal to `1`.
     error EWrongPortion();
 
-    /// @dev Throws an error if the buffer percentage is invalid.
+    /// @dev Error: Buffer percentage is invalid.
     error EInvalidPercentage();
 
     /// @dev Error: The `stake` and `delegate` functions are called while being paused as the `isStakePaused` flag is set.
     error EStakePaused();
 
-    /// @dev Throws an error if trying to remove the delegator with an active stake.
+    /// @dev Error: Attempt to remove the delegator with an active stake.
     error EDelegatorHasActiveStake();
 
-    /// @dev Error indicating that the new token Vault does not have a strategy in the DepositManager contract.
+    /// @dev Error: New token Vault does not have a strategy in the DepositManager contract.
     error EStrategyNotExists();
 
-    /// @dev Error indicating that the added strategy address is not whitelisted by EigenLayer or does not match the added token.
+    /// @dev Error: Added strategy address is not whitelisted by EigenLayer or does not match the added token.
     error EInvalidStrategyConfiguration(string);
 
-    /// @dev Error indicating that the operator is already added to the DepositManager contract.
+    /// @dev Error: Operator is already added to the DepositManager contract.
     error EOperatorExists();
 
-    /// @dev Error indicating that the DepositManager contract does not have any operator for delegation.
+    /// @dev Error: DepositManager contract does not have any operator for delegation.
     error EOperatorNotExists();
 
-    /// @dev Error indicating that the predicted clone address already has bytecode.
+    /// @dev Error: Predicted clone address already has bytecode.
     error EContractAlreadyExists();
 
-    /// @dev Error indicating that the predicted clone address does not match the deployed clone.
+    /// @dev Error: Predicted clone address does not match the deployed clone.
     error EIncorrectPredictedAddress();
 
     /**

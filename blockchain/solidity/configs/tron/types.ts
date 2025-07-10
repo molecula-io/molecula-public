@@ -5,10 +5,18 @@ import type { TronAddress, EVMAddress } from '@molecula-monorepo/blockchain.addr
  */
 export type TronNetworkConfig = {
     RPC_URL: string;
-    // Layer zero
+    // Layer zero configuration parameters.
     LAYER_ZERO_TRON_ENDPOINT: TronAddress;
     LAYER_ZERO_TRON_EXECUTOR: EVMAddress;
     LAYER_ZERO_TRON_REQUIERED_DVNS: EVMAddress[];
+
+    // LayerZero Executor contract's configuration parameters.
+    LAYER_ZERO_EXECUTOR: TronAddress;
+    LAYER_ZERO_PRICE_FEED: TronAddress;
+    LAYER_ZERO_WORKER_FEE_LIB: TronAddress;
+    LAYER_ZERO_SEND_ULN_LIB: TronAddress;
+    LAYER_ZERO_RECEIVE_ULN_LIB: TronAddress;
+
     LAYER_ZERO_ETHEREUM_EID: number;
     LAYER_ZERO_TRON_EID: number;
     LAYER_ZERO_ARBITRUM_EID: number;

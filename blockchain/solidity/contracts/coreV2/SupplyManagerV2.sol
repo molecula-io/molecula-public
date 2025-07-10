@@ -1,16 +1,18 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity 0.8.28;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {IERC7575} from "./../common/external/interfaces/IERC7575.sol";
 import {ValueValidator} from "./../common/ValueValidator.sol";
-import {IIssuerShare7575} from "./interfaces/IIssuer.sol";
+import {ConstantsCoreV2} from "./Constants.sol";
+import {IERC7575} from "./external/interfaces/IERC7575.sol";
+import {IIssuer} from "./interfaces/IIssuer.sol";
 import {IMoleculaPoolV2} from "./interfaces/IMoleculaPoolV2.sol";
 import {IOracleV2} from "./interfaces/IOracleV2.sol";
 import {ISupplyManagerV2} from "./interfaces/ISupplyManagerV2.sol";
-import {IERC20TokenVault} from "./Tokens/interfaces/ITokenVault.sol";
+import {IVaultContainer} from "./Tokens/interfaces/IVaultContainer.sol";
+import {ITokenVault} from "./TokenVault/interfaces/ITokenVault.sol";
 
 /// @title Supply Manager V2.
 /// @notice Manages the Pool data and handles the deposit and redemption operations.
@@ -22,15 +24,11 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     // ============ Constants ============
 
     /// @dev https://docs.openzeppelin.com/contracts/5.x/erc4626#defending_with_a_virtual_offset
-    ///      `_VIRTUAL_OFFSET` represents a virtual amount of fantom molecula tokens and
+    ///      `_VIRTUAL_OFFSET` represents a virtual amount of fantom Molecula Tokens and
     ///      shares considered to be initially deposited in an empty `TokenVault`. This is
     ///      used as a mitigation technique against the first depositor price manipulation attacks.
     ///      The virtual tokens and shares are not minted but factored into calculations.
     uint64 internal constant _VIRTUAL_OFFSET = 1e18;
-
-    /// @dev Basis points factor for the APY calculation, where 100% = 10000.
-    /// Used as a denominator in percentage calculations.
-    uint16 internal constant _APY_FACTOR = 10_000;
 
     /// @dev Represents 100% in the full portion calculation (1e18).
     /// Used for precise decimal calculation in yield distribution.
@@ -38,18 +36,18 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
 
     // ============ State Variables ============
 
-    /// @dev Controls the token Vault validation and share minting.
-    IIssuerShare7575 public immutable SHARE7575;
+    /// @dev Molecula Token's address.
+    address public immutable MOLECULA_TOKEN;
 
     /// @notice Molecula Pool contract's interface.
     /// @dev Handles asset deposits and redemptions.
-    address public immutable MOLECULA_POOL;
+    address internal immutable _MOLECULA_POOL;
 
     /// @notice Total amount of staking shares in circulation.
     /// @dev Used for calculating share prices and distribution.
-    uint256 public totalSharesSupply;
+    uint256 internal _totalSharesSupply;
 
-    /// @notice Total amount of Molecula tokens deposited into the Pool.
+    /// @notice Total amount of Molecula Tokens deposited into the Pool.
     /// @dev Represents the base value without yield.
     uint256 public totalDepositedSupply;
 
@@ -58,7 +56,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     uint256 public lockedYieldShares;
 
     /// @notice APY formatter parameter for yield calculation.
-    /// @dev (apyFormatter / _APY_FACTOR) * 100% = percentage retained by mUSD holders.
+    /// @dev (apyFormatter / ConstantsCoreV2.PERCENTAGE_FACTOR) * 100% = percentage retained by mUSD holders.
     uint16 public apyFormatter;
 
     /// @dev Address authorized to distribute yield.
@@ -69,7 +67,18 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
 
     /// @dev Validates that the caller is an authorized `TokenVault`.
     modifier onlyTokenVault() {
-        SHARE7575.validateTokenVault(msg.sender);
+        IVaultContainer(MOLECULA_TOKEN).validateTokenVault(msg.sender);
+        _;
+    }
+
+    /**
+     * @dev Validate APY.
+     * @param apy APY.
+     */
+    modifier checkApyFormatter(uint256 apy) {
+        if (apy > ConstantsCoreV2.PERCENTAGE_FACTOR) {
+            revert EInvalidAPY();
+        }
         _;
     }
 
@@ -80,26 +89,26 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     /// @param yieldDistributorAddress Address authorized to distribute yield.
     /// @param moleculaPoolAddress Address of the Molecula Pool's contract.
     /// @param apy Initial APY formatter value.
-    /// @param share7575_ Address of the Share7575's contract.
+    /// @param moleculaToken_ Molecula Token's contract address.
     /// @dev Sets up the initial state and validates parameters.
     constructor(
         address initialOwner,
         address yieldDistributorAddress,
         address moleculaPoolAddress,
         uint16 apy,
-        address share7575_
+        address moleculaToken_
     )
         Ownable(initialOwner)
         notZeroAddress(yieldDistributorAddress)
         notZeroAddress(moleculaPoolAddress)
-        notZeroAddress(share7575_)
+        notZeroAddress(moleculaToken_)
+        checkApyFormatter(apy)
     {
-        MOLECULA_POOL = moleculaPoolAddress;
-        totalSharesSupply = totalDepositedSupply = _poolSupplyWithOffset();
-        _checkApyFormatter(apy);
+        _MOLECULA_POOL = moleculaPoolAddress;
+        _totalSharesSupply = totalDepositedSupply = _poolSupplyWithOffset();
         apyFormatter = apy;
         yieldDistributor = yieldDistributorAddress;
-        SHARE7575 = IIssuerShare7575(share7575_);
+        MOLECULA_TOKEN = moleculaToken_;
     }
 
     // ============ Core Deposit/Withdrawal Functions ============
@@ -111,18 +120,18 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         uint256 assets
     ) external virtual override onlyTokenVault returns (uint256 shares) {
         // Save the total supply value at the start of the operation.
-        uint256 startTotalSupply = totalSupply();
+        uint256 startTotalSupply = getTotalPoolSupply();
 
         // Call the Molecula Pool to deposit the assets.
         // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
-        uint256 moleculaTokenAmount = IMoleculaPoolV2(MOLECULA_POOL).deposit(
+        uint256 moleculaTokenAssets = IMoleculaPoolV2(_MOLECULA_POOL).deposit(
             requestId,
             token,
             msg.sender,
             assets
         );
 
-        shares = _updateDepositData(requestId, assets, startTotalSupply, moleculaTokenAmount);
+        shares = _updateDepositData(requestId, assets, startTotalSupply, moleculaTokenAssets);
     }
 
     /// @inheritdoc ISupplyManagerV2
@@ -134,7 +143,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         uint256 shares
     ) external virtual override onlyTokenVault returns (uint256 assets) {
         // Ensure that shares can be redeemed.
-        if (shares > totalSharesSupply) {
+        if (shares > _totalSharesSupply) {
             revert ENoShares();
         }
 
@@ -144,10 +153,10 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         }
 
         // Get the current total supply.
-        uint256 currentTotalSupply = totalSupply();
+        uint256 currentTotalSupply = getTotalPoolSupply();
 
         // Convert shares to the value before applying any changes to the contract values.
-        uint256 moleculaTokenAmount = _convert(shares, currentTotalSupply, totalSharesSupply);
+        uint256 moleculaTokenAssets = _convert(shares, currentTotalSupply, _totalSharesSupply);
 
         // Prepare the operation yield variables.
         uint256 operationYield = 0;
@@ -156,41 +165,41 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         // Ensure that the operation has generated yield and lock it if it has.
         if (apyFormatter != 0 && totalDepositedSupply < currentTotalSupply) {
             // Calculate an operation yield value, which can be later distributed as a protocol income.
-            // The operation yield must be equal to `actualIncome * (_APY_FACTOR - apyFormatter)`.
-            // The simplified formula: `userIncome / apyFormatter * (_APY_FACTOR - apyFormatter)`.
-            // The detailed formula: `((shares * (totalSupply - totalDepositedSupply)) / totalSharesSupply) / apyFormatter * (_APY_FACTOR - apyFormatter)`.
+            // The operation yield must be equal to `actualIncome * (ConstantsCoreV2.PERCENTAGE_FACTOR - apyFormatter)`.
+            // The simplified formula: `userIncome / apyFormatter * (ConstantsCoreV2.PERCENTAGE_FACTOR - apyFormatter)`.
+            // The detailed formula: `((shares * (totalSupply - totalDepositedSupply)) / _totalSharesSupply) / apyFormatter * (ConstantsCoreV2.PERCENTAGE_FACTOR - apyFormatter)`.
             operationYield =
                 (shares *
                     (currentTotalSupply - totalDepositedSupply) *
-                    (_APY_FACTOR - apyFormatter)) /
-                (totalSharesSupply * apyFormatter);
+                    (ConstantsCoreV2.PERCENTAGE_FACTOR - apyFormatter)) /
+                (_totalSharesSupply * apyFormatter);
 
             // Present the operation yield as locked yield shares, which are to be distributed later.
             // slither-disable-next-line divide-before-multiply.
-            operationYieldShares = _convert(operationYield, totalSharesSupply, currentTotalSupply);
+            operationYieldShares = _convert(operationYield, _totalSharesSupply, currentTotalSupply);
 
             // Update the locked yield shares by increasing it by the operation yield shares' amount.
             lockedYieldShares += operationYieldShares;
         }
 
         // Decrease the total deposited supply value by the redeemed value.
-        totalDepositedSupply -= _convert(shares, totalDepositedSupply, totalSharesSupply);
+        totalDepositedSupply -= _convert(shares, totalDepositedSupply, _totalSharesSupply);
 
         // Increase `totalDepositedSupply` with the operation yield.
         totalDepositedSupply += operationYield;
 
         // Decrease the total shares' supply amount by the redeemed shares.
-        totalSharesSupply -= shares;
+        _totalSharesSupply -= shares;
 
         // Increase the total shares' supply amount with the operation yield shares.
-        totalSharesSupply += operationYieldShares;
+        _totalSharesSupply += operationYieldShares;
 
         // Make a redeem operation request into the Pool and get a converted value with the right decimal amount.
         // slither-disable-next-line reentrancy-no-eth
-        assets = IMoleculaPoolV2(MOLECULA_POOL).requestRedeem(
+        assets = IMoleculaPoolV2(_MOLECULA_POOL).requestRedeem(
             requestId,
             token,
-            moleculaTokenAmount
+            moleculaTokenAssets
         );
 
         // Save the redeem operation information.
@@ -207,74 +216,41 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         emit RedeemRequest(requestId, msg.sender, shares, assets);
     }
 
-    // ============ Redemption Management ============
-
     /// @inheritdoc ISupplyManagerV2
     // solhint-disable-next-line gas-calldata-parameters
     function fulfillRedeemRequests(
         address assetOwner,
         uint256[] memory requestIds
-    ) external virtual override only(MOLECULA_POOL) returns (address asset, uint256 sumAssets) {
+    ) external virtual override only(_MOLECULA_POOL) returns (address asset, uint256 sumAssets) {
         address tokenVault;
         (tokenVault, sumAssets) = _fulfillRedeemRequests(requestIds);
 
         // Get the ERC20 token associated with the `TokenVault`.
         asset = IERC7575(tokenVault).asset();
+        if (asset == ConstantsCoreV2.NATIVE_TOKEN) {
+            revert ENativeToken();
+        }
 
         // Call the `fulfillRedeemRequests` function on `TokenVault`.
-        IERC20TokenVault(tokenVault).fulfillRedeemRequests(assetOwner, requestIds, sumAssets);
+        ITokenVault(tokenVault).fulfillRedeemRequests(assetOwner, requestIds, sumAssets);
 
-        emit FulfillRedeemRequests(requestIds, sumAssets);
+        emit RedeemRequestsFulfilled(requestIds, sumAssets);
     }
 
     // ============ Yield Management ============
 
     /// @inheritdoc ISupplyManagerV2
-    function totalSupply() public view virtual override returns (uint256 totalAmount) {
-        // Get the Pool's total supply.
-        totalAmount = _poolSupplyWithOffset();
-
-        // Reduce the total supply using the APY formatter if needed.
-        uint256 _totalDepositedSupply = totalDepositedSupply;
-        if (totalAmount > _totalDepositedSupply) {
-            // Calculate yield: (totalSupply - totalDeposited) * apyFormatter / APY_FACTOR
-            unchecked {
-                totalAmount =
-                    ((totalAmount - _totalDepositedSupply) * apyFormatter) /
-                    _APY_FACTOR +
-                    _totalDepositedSupply;
-            }
-        }
-    }
-
-    /// @inheritdoc ISupplyManagerV2
-    function getMoleculaPool() external view virtual override returns (address pool) {
-        return MOLECULA_POOL;
-    }
-
-    /**
-     * @dev Validate APY.
-     * @param apy APY.
-     */
-    function _checkApyFormatter(uint256 apy) internal pure virtual {
-        if (apy > _APY_FACTOR) {
-            revert EInvalidAPY();
-        }
-    }
-
-    /// @inheritdoc ISupplyManagerV2
     function distributeYield(
         Party[] calldata parties,
         uint16 newApyFormatter
-    ) external virtual override only(yieldDistributor) {
-        // Validate the input.
-        _checkApyFormatter(newApyFormatter);
-
-        // Validate the parties.
-        if (parties.length == 0) {
-            revert EEmptyParties();
-        }
-
+    )
+        external
+        virtual
+        override
+        only(yieldDistributor)
+        checkApyFormatter(newApyFormatter)
+        notEmpty(parties.length)
+    {
         // Calculate the extra yield to distribute.
         uint256 actualTotalSupply = _poolSupplyWithOffset();
         if (actualTotalSupply <= totalDepositedSupply) {
@@ -285,12 +261,16 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         unchecked {
             realYield = actualTotalSupply - totalDepositedSupply;
         }
-        uint256 currentYield = (realYield * apyFormatter) / _APY_FACTOR;
+        uint256 currentYield = (realYield * apyFormatter) / ConstantsCoreV2.PERCENTAGE_FACTOR;
         uint256 extraYield = realYield - currentYield;
 
         // Find the amount of shares to mint.
-        uint256 newTotalSupply = totalDepositedSupply + currentYield;
-        uint256 sharesToMint = _convert(extraYield, totalSharesSupply, newTotalSupply);
+        // Note: `totalDepositedSupply + currentYield`  is new total supply.
+        uint256 sharesToMint = _convert(
+            extraYield,
+            _totalSharesSupply,
+            totalDepositedSupply + currentYield
+        );
 
         // Find the amount of shares to distribute by adding the locked yield shares' amount.
         uint256 sharesToDistribute = sharesToMint + lockedYieldShares;
@@ -306,7 +286,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
             totalPortion += party.portion;
 
             // slither-disable-next-line reentrancy-no-eth
-            SHARE7575.mint(party.user, shares);
+            IIssuer(MOLECULA_TOKEN).mint(party.user, shares);
         }
 
         // Check that the total portion is equal to `_FULL_PORTION`.
@@ -317,7 +297,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         // Distribute an extra yield by:
         // - Increasing the total shares' supply.
         // - Equating the total deposited and real total supply values.
-        totalSharesSupply += sharesToMint;
+        _totalSharesSupply += sharesToMint;
         totalDepositedSupply = actualTotalSupply;
 
         // Reset the locked yield shares' amount.
@@ -330,22 +310,66 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         emit YieldDistributed(sharesToDistribute);
     }
 
+    // ============ Admin Functions ============
+
+    /// @inheritdoc ISupplyManagerV2
+    function setYieldDistributor(
+        address newYieldDistributor
+    ) external virtual override onlyOwner notZeroAddress(newYieldDistributor) {
+        yieldDistributor = newYieldDistributor;
+    }
+
+    // ============ Molecula Token Functions ============
+
+    /// @inheritdoc ISupplyManagerV2
+    function onAddTokenVault(address tokenVault) external virtual override only(MOLECULA_TOKEN) {
+        IMoleculaPoolV2(_MOLECULA_POOL).addTokenVault(tokenVault);
+    }
+
+    /// @inheritdoc ISupplyManagerV2
+    function onRemoveTokenVault(address tokenVault) external virtual override only(MOLECULA_TOKEN) {
+        IMoleculaPoolV2(_MOLECULA_POOL).removeTokenVault(tokenVault);
+    }
+
     // ============ View Functions ============
 
+    /// @inheritdoc ISupplyManagerV2
+    function moleculaToken() external view returns (address moleculaTokenAddress) {
+        return MOLECULA_TOKEN;
+    }
+
+    /// @inheritdoc ISupplyManagerV2
+    function getMoleculaPool() external view virtual override returns (address pool) {
+        return _MOLECULA_POOL;
+    }
+
     /// @inheritdoc IOracleV2
-    function getTotalPoolSupply() external view virtual override returns (uint256 pool) {
-        return totalSupply();
+    function getTotalPoolSupply() public view virtual override returns (uint256 totalAmount) {
+        // Get the Pool's total supply.
+        totalAmount = _poolSupplyWithOffset();
+
+        // Reduce the total supply using the APY formatter if needed.
+        uint256 _totalDepositedSupply = totalDepositedSupply;
+        if (totalAmount > _totalDepositedSupply) {
+            // Calculate yield: (totalSupply - totalDeposited) * apyFormatter / APY_FACTOR
+            unchecked {
+                totalAmount =
+                    ((totalAmount - _totalDepositedSupply) * apyFormatter) /
+                    ConstantsCoreV2.PERCENTAGE_FACTOR +
+                    _totalDepositedSupply;
+            }
+        }
     }
 
     /// @inheritdoc IOracleV2
     function getTotalSharesSupply() external view virtual override returns (uint256 shares) {
-        return totalSharesSupply;
+        return _totalSharesSupply;
     }
 
     /// @inheritdoc IOracleV2
     function getTotalSupply() public view virtual override returns (uint256 pool, uint256 shares) {
-        pool = totalSupply();
-        shares = totalSharesSupply;
+        pool = getTotalPoolSupply();
+        shares = _totalSharesSupply;
     }
 
     /// @inheritdoc IOracleV2
@@ -362,29 +386,6 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     ) external view virtual override returns (uint256 assets) {
         (uint256 pool, uint256 poolShares) = getTotalSupply();
         assets = _convert(shares, pool, poolShares);
-    }
-
-    // ============ Admin Functions ============
-
-    /// @inheritdoc ISupplyManagerV2
-    function setYieldDistributor(
-        address newYieldDistributor
-    ) external virtual override onlyOwner notZeroAddress(newYieldDistributor) {
-        yieldDistributor = newYieldDistributor;
-    }
-
-    /// @inheritdoc ISupplyManagerV2
-    function onAddTokenVault(
-        address tokenVault
-    ) external virtual override only(address(SHARE7575)) {
-        IMoleculaPoolV2(MOLECULA_POOL).addTokenVault(tokenVault);
-    }
-
-    /// @inheritdoc ISupplyManagerV2
-    function onRemoveTokenVault(
-        address tokenVault
-    ) external virtual override only(address(SHARE7575)) {
-        IMoleculaPoolV2(MOLECULA_POOL).removeTokenVault(tokenVault);
     }
 
     // ============ Internal Functions ============
@@ -405,9 +406,9 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     }
 
     /// @dev Returns the total supply with a virtual offset added to mitigate the first depositor attacks.
-    /// @return Total supply from `MOLECULA_POOL` and the `_VIRTUAL_OFFSET` constant.
+    /// @return Total supply from `_MOLECULA_POOL` and the `_VIRTUAL_OFFSET` constant.
     function _poolSupplyWithOffset() internal view virtual returns (uint256) {
-        return IMoleculaPoolV2(MOLECULA_POOL).totalSupply() + _VIRTUAL_OFFSET;
+        return IMoleculaPoolV2(_MOLECULA_POOL).totalSupply() + _VIRTUAL_OFFSET;
     }
 
     /// @dev Internal function to process multiple redeem requests.
@@ -443,7 +444,8 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
                 redeemRequest.state = RequestState.Claimable;
             } else if (redeemRequest.state == RequestState.None) {
                 revert EUnknownRequest();
-            } else if (redeemRequest.state == RequestState.Claimable) {
+            } else {
+                // Here `redeemRequest.state == RequestState.Claimable`
                 // If the request is in the `Claimable` status, it is already confirmed with no need to be processed.
                 requestIds[i] = 0;
             }
@@ -459,22 +461,22 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     /// @param requestId Deposit request's ID.
     /// @param assets Amount of assets being deposited.
     /// @param startTotalSupply Total supply snapshot taken at the start of deposit.
-    /// @param moleculaTokenAmount Amount of Molecula tokens minted for this deposit.
+    /// @param moleculaTokenAssets Amount of Molecula Tokens minted for this deposit.
     /// @return shares Amount of shares minted to represent the deposited assets.
     function _updateDepositData(
         uint256 requestId,
         uint256 assets,
         uint256 startTotalSupply,
-        uint256 moleculaTokenAmount
+        uint256 moleculaTokenAssets
     ) internal virtual returns (uint256 shares) {
         // Calculate the shares' amount to add upon the deposit operation by dividing by the `sharePrice` value.
-        shares = _convert(moleculaTokenAmount, totalSharesSupply, startTotalSupply);
+        shares = _convert(moleculaTokenAssets, _totalSharesSupply, startTotalSupply);
 
         // Increase the total shares' supply amount.
-        totalSharesSupply += shares;
+        _totalSharesSupply += shares;
 
         // Increase the total deposited supply value.
-        totalDepositedSupply += moleculaTokenAmount;
+        totalDepositedSupply += moleculaTokenAssets;
 
         // Emit the `Deposit` event.
         emit Deposit(requestId, msg.sender, assets, shares);

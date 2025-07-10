@@ -16,8 +16,6 @@ import {MockUSDT} from "../../contracts/mock/USDT/MockUsdt.sol";
 // Import the test helper that contains basic setup functions for Foundry tests.
 import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/TestHelperOz5.sol";
 
-import "forge-std/console.sol";
-
 /// @dev This contract inherits from TestHelperOz5 to leverage its endpoint and OApp setup utilities.
 contract UsdtOFTTest is TestHelperOz5 {
     using OptionsBuilder for bytes; // Enables fluent usage of the OptionsBuilder library on bytes data.
@@ -34,34 +32,25 @@ contract UsdtOFTTest is TestHelperOz5 {
     address alice = vm.addr(1);
 
     // Endpoint IDs for our mock endpoints.
-    uint16 aEid = 1;
-    uint16 bEid = 2;
+    uint16 constant aEid = 1;
+    uint16 constant bEid = 2;
 
     // Define initial transferable credits for the USDT_OFT contract and the initial USDT balance for Alice.
-    uint256 usdtOftTransferableCredits = 1000000 * 10 ** 6;
-    uint256 aliceUsdtABalance = 10000 * 10 ** 6;
+    uint256 constant usdtOftTransferableCredits = 1000000 * 10 ** 6;
+    uint256 constant aliceUsdtABalance = 10000 * 10 ** 6;
 
-    /**
-     * @notice The setUp function initializes the test environment.
-     * It sets up endpoints, deploys and configures mock contracts, mints tokens, and deposits credits.
-     */
-    function setUp() public virtual override {
-        // Allocate an initial balance of 1000 ether to alice for testing purposes.
-        vm.deal(alice, 1000 ether);
-
-        // Call parent setup (from TestHelperOz5) to prepare the testing environment.
-        super.setUp();
-
-        // Setup two mock endpoints using the provided UltraLightNode library implementation.
-        setUpEndpoints(2, LibraryType.UltraLightNode);
-
+    function setUpOFTs() public {
+        // This function is intentionally left empty as the setup is done in the setUp function.
+        // It is here to satisfy the inheritance structure of TestHelperOz5.
         // Deploy two USDT_OFT contracts (one for each endpoint) using the provided creation code.
         // The setupOApps function deploys the contracts and returns an array of their addresses.
-        address[] memory oaps = setupOApps(type(MockUsdtOFT).creationCode, 1, 2);
+        {
+            address[] memory oaps = setupOApps(type(MockUsdtOFT).creationCode, 1, 2);
 
-        // Initialize the two USDT_OFT contracts from the deployed addresses.
-        usdtOFTA = MockUsdtOFT(payable(oaps[0]));
-        usdtOFTB = MockUsdtOFT(payable(oaps[1]));
+            // Initialize the two USDT_OFT contracts from the deployed addresses.
+            usdtOFTA = MockUsdtOFT(payable(oaps[0]));
+            usdtOFTB = MockUsdtOFT(payable(oaps[1]));
+        }
 
         // Deploy two separate USDT token mocks for chain A and chain B.
         usdtA = new MockUSDT();
@@ -88,6 +77,24 @@ contract UsdtOFTTest is TestHelperOz5 {
     }
 
     /**
+     * @notice The setUp function initializes the test environment.
+     * It sets up endpoints, deploys and configures mock contracts, mints tokens, and deposits credits.
+     */
+    function setUp() public virtual override {
+        // Allocate an initial balance of 1000 ether to alice for testing purposes.
+        vm.deal(alice, 1000 ether);
+
+        // Call parent setup (from TestHelperOz5) to prepare the testing environment.
+        super.setUp();
+
+        // Setup two mock endpoints using the provided UltraLightNode library implementation.
+        setUpEndpoints(2, LibraryType.UltraLightNode);
+
+        // Call the function to set up the USDT_OFT contracts and their inner tokens.
+        setUpOFTs();
+    }
+
+    /**
      * @notice Tests the constructor setup for USDT_OFT contracts.
      * Checks that the owner, endpoint ID (eid), and inner token addresses are correctly set.
      */
@@ -111,14 +118,12 @@ contract UsdtOFTTest is TestHelperOz5 {
      * and asserts that the returned fees match the expected conditions.
      */
     function test_QuoteSendMessage() public view {
-        uint32 dstEid = 2; // Define destination endpoint ID.
-
         // Create additional options for the send operation, e.g., a specific executor gas allocation.
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200000, 0);
 
         // Build a mock SendParam struct for fee estimation.
         SendParam memory sendParam = SendParam({
-            dstEid: dstEid, // Destination endpoint.
+            dstEid: bEid, // Destination endpoint.
             to: bytes32(uint256(uint160(address(alice)))), // Convert alice's address into a bytes32 format.
             amountLD: 10e6, // Define amount for estimation (e.g., 10 USDT with 6 decimals).
             minAmountLD: 0, // Set a minimal acceptable amount.
@@ -143,7 +148,6 @@ contract UsdtOFTTest is TestHelperOz5 {
      * @param amount The fuzzed transfer amount for testing.
      */
     function testFuzz_QuoteOftMessage(uint256 amount) public view {
-        uint32 dstEid = 2; // Example destination endpoint.
         // Limit the amount to avoid overflow and to be within realistic bounds.
         vm.assume(amount < 10000000000 * 10 ** 6);
 
@@ -152,7 +156,7 @@ contract UsdtOFTTest is TestHelperOz5 {
 
         // Create a SendParam object with the fuzzed amount.
         SendParam memory sendParam = SendParam({
-            dstEid: dstEid,
+            dstEid: bEid,
             to: bytes32(uint256(uint160(address(alice)))),
             amountLD: amount,
             minAmountLD: 0,
@@ -165,8 +169,7 @@ contract UsdtOFTTest is TestHelperOz5 {
         (, , OFTReceipt memory oftReceipt) = usdtOFTA.quoteOFT(sendParam);
 
         // Calculate the fee based on a 0.1% rate (10/10000) and the expected amount after fee deduction.
-        uint256 feeAmount = (amount * 10) / 10000;
-        uint256 expectedAmount = amount - feeAmount;
+        uint256 expectedAmount = amount - ((amount * 10) / 10000);
         // Verify that the expected amount matches the amount received as per the OFT receipt.
         assertEq(expectedAmount, oftReceipt.amountReceivedLD);
     }
@@ -182,16 +185,14 @@ contract UsdtOFTTest is TestHelperOz5 {
         vm.assume(amount < aliceUsdtABalance);
         vm.assume(amount > 0);
         // Calculate the fee and expected received amount.
-        uint256 feeAmount = (amount * 10) / 10000;
-        uint256 expectedAmount = amount - feeAmount;
-        uint32 dstEid = 2; // Destination endpoint.
+        uint256 expectedAmount = amount - ((amount * 10) / 10000);
 
         // Build options for the send operation.
         bytes memory options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(200000, 0);
 
         // Setup the SendParam structure for the send operation.
         SendParam memory sendParam = SendParam({
-            dstEid: dstEid,
+            dstEid: bEid,
             to: bytes32(uint256(uint160(address(alice)))),
             amountLD: amount,
             minAmountLD: expectedAmount, // Minimum acceptable received amount.
@@ -210,7 +211,7 @@ contract UsdtOFTTest is TestHelperOz5 {
         usdtA.approve(address(usdtOFTA), amount);
 
         // Capture the initial credits available in the USDT_OFT contracts for verification.
-        uint256 usdtOftACreditsBefore = usdtOFTA.credits(dstEid);
+        uint256 usdtOftACreditsBefore = usdtOFTA.credits(bEid);
         uint256 usdtOftALocalCreditsBefore = usdtOFTA.credits(aEid);
 
         // Assert initial balances: alice should have USDT on chain A and none on chain B.
@@ -231,6 +232,6 @@ contract UsdtOFTTest is TestHelperOz5 {
 
         // Verify that the credits for the USDT_OFT contract on both the local and destination endpoints are updated.
         assertEq(usdtOFTA.credits(aEid), usdtOftALocalCreditsBefore + expectedAmount);
-        assertEq(usdtOFTA.credits(dstEid), usdtOftACreditsBefore - expectedAmount);
+        assertEq(usdtOFTA.credits(bEid), usdtOftACreditsBefore - expectedAmount);
     }
 }
