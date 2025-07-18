@@ -39,7 +39,7 @@ contract UsdtOFTTest is TestHelperOz5 {
     uint256 constant usdtOftTransferableCredits = 1000000 * 10 ** 6;
     uint256 constant aliceUsdtABalance = 10000 * 10 ** 6;
 
-    function setUpOFTs() public {
+    function setUpOFTs() internal {
         // This function is intentionally left empty as the setup is done in the setUp function.
         // It is here to satisfy the inheritance structure of TestHelperOz5.
         // Deploy two USDT_OFT contracts (one for each endpoint) using the provided creation code.
@@ -53,27 +53,33 @@ contract UsdtOFTTest is TestHelperOz5 {
         }
 
         // Deploy two separate USDT token mocks for chain A and chain B.
-        usdtA = new MockUSDT();
-        usdtOFTA.setInnerToken(address(usdtA)); // Set the inner token (USDT) for the first OFT.
-        usdtB = new MockUSDT();
-        usdtOFTB.setInnerToken(address(usdtB)); // Set the inner token (USDT) for the second OFT.
+        {
+            usdtA = new MockUSDT();
+            usdtOFTA.setInnerToken(address(usdtA)); // Set the inner token (USDT) for the first OFT.
+            usdtB = new MockUSDT();
+            usdtOFTB.setInnerToken(address(usdtB)); // Set the inner token (USDT) for the second OFT.
+        }
 
         // Mint USDT tokens for alice on chain A.
         usdtA.mint(alice, aliceUsdtABalance);
 
         // Mint USDT tokens for this test contract and deposit them as transferable credits for usdtOFTA.
-        usdtA.mint(address(this), usdtOftTransferableCredits);
-        usdtA.approve(address(usdtOFTA), usdtOftTransferableCredits);
-        usdtOFTA.depositLocal(usdtOftTransferableCredits);
-        // Link transferable credits on chain A to chain B by setting token credits.
-        usdtOFTA.increaseCredits(usdtOFTB.eid(), usdtOftTransferableCredits);
+        {
+            usdtA.mint(address(this), usdtOftTransferableCredits);
+            usdtA.approve(address(usdtOFTA), usdtOftTransferableCredits);
+            usdtOFTA.depositLocal(usdtOftTransferableCredits);
+            // Link transferable credits on chain A to chain B by setting token credits.
+            usdtOFTA.increaseCredits(usdtOFTB.eid(), usdtOftTransferableCredits);
+        }
 
         // Perform similar operations for chain B: minting, approving and depositing credits into usdtOFTB.
-        usdtB.mint(address(this), usdtOftTransferableCredits);
-        usdtB.approve(address(usdtOFTB), usdtOftTransferableCredits);
-        usdtOFTB.depositLocal(usdtOftTransferableCredits);
-        // Link transferable credits on chain B to chain A.
-        usdtOFTB.increaseCredits(usdtOFTA.eid(), usdtOftTransferableCredits);
+        {
+            usdtB.mint(address(this), usdtOftTransferableCredits);
+            usdtB.approve(address(usdtOFTB), usdtOftTransferableCredits);
+            usdtOFTB.depositLocal(usdtOftTransferableCredits);
+            // Link transferable credits on chain B to chain A.
+            usdtOFTB.increaseCredits(usdtOFTA.eid(), usdtOftTransferableCredits);
+        }
     }
 
     /**
@@ -210,28 +216,30 @@ contract UsdtOFTTest is TestHelperOz5 {
         vm.startPrank(alice);
         usdtA.approve(address(usdtOFTA), amount);
 
-        // Capture the initial credits available in the USDT_OFT contracts for verification.
-        uint256 usdtOftACreditsBefore = usdtOFTA.credits(bEid);
-        uint256 usdtOftALocalCreditsBefore = usdtOFTA.credits(aEid);
+        {
+            // Capture the initial credits available in the USDT_OFT contracts for verification.
+            uint256 usdtOftACreditsBefore = usdtOFTA.credits(bEid);
+            uint256 usdtOftALocalCreditsBefore = usdtOFTA.credits(aEid);
 
-        // Assert initial balances: alice should have USDT on chain A and none on chain B.
-        assertEq(usdtB.balanceOf(alice), 0);
-        assertEq(usdtA.balanceOf(alice), aliceUsdtABalance);
+            // Assert initial balances: alice should have USDT on chain A and none on chain B.
+            assertEq(usdtB.balanceOf(alice), 0);
+            assertEq(usdtA.balanceOf(alice), aliceUsdtABalance);
 
-        // Execute the send operation; using fee.nativeFee as the value to satisfy fee requirements.
-        usdtOFTA.send{value: fee.nativeFee}(sendParam, fee, address(alice));
-        // Verify that a packet has been sent to the destination endpoint (chain B).
-        verifyPackets(bEid, addressToBytes32(address(usdtOFTB)));
+            // Execute the send operation; using fee.nativeFee as the value to satisfy fee requirements.
+            usdtOFTA.send{value: fee.nativeFee}(sendParam, fee, address(alice));
+            // Verify that a packet has been sent to the destination endpoint (chain B).
+            verifyPackets(bEid, addressToBytes32(address(usdtOFTB)));
 
-        // Assert that after the send, alice's USDT balance on chain B reflects the expected transferred amount.
-        assertEq(usdtB.balanceOf(alice), oftReceipt.amountReceivedLD);
-        // Also check that alice's balance on chain A decreased by the sent amount.
-        assertEq(usdtA.balanceOf(alice), aliceUsdtABalance - amount);
-        // Confirm the fee deduction calculation.
-        assertEq(expectedAmount, oftReceipt.amountReceivedLD);
+            // Assert that after the send, alice's USDT balance on chain B reflects the expected transferred amount.
+            assertEq(usdtB.balanceOf(alice), oftReceipt.amountReceivedLD);
+            // Also check that alice's balance on chain A decreased by the sent amount.
+            assertEq(usdtA.balanceOf(alice), aliceUsdtABalance - amount);
+            // Confirm the fee deduction calculation.
+            assertEq(expectedAmount, oftReceipt.amountReceivedLD);
 
-        // Verify that the credits for the USDT_OFT contract on both the local and destination endpoints are updated.
-        assertEq(usdtOFTA.credits(aEid), usdtOftALocalCreditsBefore + expectedAmount);
-        assertEq(usdtOFTA.credits(bEid), usdtOftACreditsBefore - expectedAmount);
+            // Verify that the credits for the USDT_OFT contract on both the local and destination endpoints are updated.
+            assertEq(usdtOFTA.credits(aEid), usdtOftALocalCreditsBefore + expectedAmount);
+            assertEq(usdtOFTA.credits(bEid), usdtOftACreditsBefore - expectedAmount);
+        }
     }
 }

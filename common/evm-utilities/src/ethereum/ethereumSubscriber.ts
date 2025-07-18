@@ -5,7 +5,7 @@ import type {
     TypedListener as CommonTypedListener,
 } from '@molecula-monorepo/common.evm-contracts/src/types'; // fix circular dependencies with this
 
-import { Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
 import type {
     TypedContractEvent,
     TypedListener,

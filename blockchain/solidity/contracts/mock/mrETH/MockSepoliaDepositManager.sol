@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {DepositManager} from "../../solutions/mrETH/DepositManager.sol";
-import {IDepositManager} from "../../solutions/mrETH/interfaces/IDepositManager.sol";
-import {IStrategy, IStrategyManager} from "../../solutions/mrETH/external/interfaces/IStrategyManager.sol";
+import {DepositManager} from "./../../solutions/mrETH/DepositManager.sol";
+import {IStrategy, IStrategyManager} from "./../../solutions/mrETH/external/interfaces/IStrategyManager.sol";
+import {IDepositManager} from "./../../solutions/mrETH/interfaces/IDepositManager.sol";
 
 /**
  * @title Mock Deposit Manager contract for Sepolia.
@@ -25,6 +25,7 @@ contract MockSepoliaDepositManager is DepositManager {
      * @param weth_ Wrapped ETH contract's address.
      * @param strategyFactory_ Strategy Factory contract's address.
      * @param delegationManager_ Delegation Manager contract's address.
+     * @param rewardsCoordinator_ Reward Coordinator contract's address.
      * @param delegatorImplementation_ Delegator implementation contract's address.
      * @custom:revert Check if any of the addresses is zero.
      */
@@ -36,6 +37,7 @@ contract MockSepoliaDepositManager is DepositManager {
         address weth_,
         address strategyFactory_,
         address delegationManager_,
+        address rewardsCoordinator_,
         address delegatorImplementation_
     )
         DepositManager(
@@ -46,6 +48,7 @@ contract MockSepoliaDepositManager is DepositManager {
             weth_,
             strategyFactory_,
             delegationManager_,
+            rewardsCoordinator_,
             delegatorImplementation_
         )
     {}

@@ -25,7 +25,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
     const controller = signers.at(6)!;
     const randAccount = signers.at(7)!;
     const guardian = signers.at(8)!;
-    const authorizedYieldDistributor = signers.at(9)!;
+    const yieldDistributor = signers.at(9)!;
     const lmUSDHolder = signers.at(10)!;
     const user2 = signers.at(11)!;
 
@@ -131,7 +131,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
         from: poolOwner.address,
         nonce: (await poolOwner.getNonce()) + 1,
     });
-    const WMUSD = await ethers.getContractFactory('WMUSD');
+    const WMUSD = await ethers.getContractFactory('WMUSDCandy');
     const wmusd = await WMUSD.deploy(
         ethMainnetBetaConfig.WMUSD_TOKEN_NAME,
         ethMainnetBetaConfig.WMUSD_TOKEN_SYMBOL,
@@ -168,7 +168,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
         controller,
         randAccount,
         guardian,
-        authorizedYieldDistributor,
+        yieldDistributor,
         USDT,
         lmUSDHolder,
         user2,
@@ -285,7 +285,8 @@ export async function deployNitrogenWithTokenVault() {
     const operator = signers.at(11)!;
 
     const USDC = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.USDC_ADDRESS);
-    const SUSDE = await ethers.getContractAt('IERC4626', ethMainnetBetaConfig.SUSDE_ADDRESS);
+    const sUSDe = await ethers.getContractAt('IERC4626', ethMainnetBetaConfig.SUSDE_ADDRESS);
+    const USDe = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.USDE_ADDRESS);
 
     // deploy RebaseTokenOwner
     const RebaseTokenOwner = await ethers.getContractFactory('RebaseTokenOwner');
@@ -297,62 +298,65 @@ export async function deployNitrogenWithTokenVault() {
 
     // deploy TokenVault
     const TokenVault = await ethers.getContractFactory('NitrogenTokenVault');
-    const tokenUSDCVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
+    const usdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
         nitrogen.poolOwner,
         // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
         nitrogen.rebaseToken,
         nitrogen.supplyManager,
         rebaseTokenOwner,
         nitrogen.guardian,
+        ethers.ZeroAddress,
     );
-    const tokenSUSDEVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
+    const susdeVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
         nitrogen.poolOwner,
         // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
         nitrogen.rebaseToken,
         nitrogen.supplyManager,
         rebaseTokenOwner,
         nitrogen.guardian,
+        ethers.ZeroAddress,
     );
 
-    // init tokenUSDCVault
-    await tokenUSDCVault.init(
+    // init usdcVault
+    await usdcVault.init(
         USDC, // asset
         10n ** 6n, // minDepositValue
         10n ** 18n, // minRedeemShares
     );
-    await tokenSUSDEVault.init(
-        SUSDE, // asset
+    await susdeVault.init(
+        sUSDe, // asset
         10n ** 6n, // minDepositValue
         10n ** 18n, // minRedeemShares
     );
 
-    // Add tokenUSDCVault to supplyManager
-    await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(tokenUSDCVault, true);
-    await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(tokenSUSDEVault, true);
+    // Add usdcVault to supplyManager
+    await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(usdcVault, true);
+    await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(susdeVault, true);
 
-    // Add tokenUSDCVault to RebaseTokenOwner
-    const codeHash = keccak256((await tokenUSDCVault.getDeployedCode())!);
+    // Add usdcVault to RebaseTokenOwner
+    const codeHash = keccak256((await usdcVault.getDeployedCode())!);
     await rebaseTokenOwner.setCodeHash(codeHash, true);
-    await rebaseTokenOwner.addTokenVault(tokenUSDCVault.getAddress());
-    await rebaseTokenOwner.addTokenVault(tokenSUSDEVault.getAddress());
+    await rebaseTokenOwner.addTokenVault(usdcVault.getAddress());
+    await rebaseTokenOwner.addTokenVault(susdeVault.getAddress());
 
     // Set rebaseTokenOwner as owner of rebaseToken
     await nitrogen.rebaseToken
         .connect(nitrogen.rebaseTokenOwner)
         .transferOwnership(rebaseTokenOwner);
 
-    await tokenSUSDEVault.unpauseAll();
-    await tokenUSDCVault.unpauseAll();
+    await susdeVault.unpauseAll();
+    await usdcVault.unpauseAll();
 
     return {
         ...nitrogen,
-        tokenUSDCVault,
-        tokenSUSDEVault,
+        usdcVault,
+        susdeVault,
         rebaseTokenOwner,
         USDC,
-        SUSDE,
+        sUSDe,
         user2,
         operator,
+        USDe,
     };
 }
 

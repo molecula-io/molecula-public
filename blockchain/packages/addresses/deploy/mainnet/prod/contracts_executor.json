@@ -1,0 +1,10 @@
+{
+    "eth": {
+        "executorFeeLib": "",
+        "executor": ""
+    },
+    "tron": {
+        "executorFeeLib": "",
+        "executor": ""
+    }
+}

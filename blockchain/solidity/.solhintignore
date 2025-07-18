@@ -12,11 +12,9 @@
 ./test
 ./node_modules
 
-# Test contracts and mock
+# Test contracts
 ./contracts/test/UsdtTron.sol
 ./contracts/test/UsdtEthereum.sol
-./contracts/mock
-./contracts/test
 
 # Ignore verified contracts
 ./contracts/common/ZeroValueChecker.sol

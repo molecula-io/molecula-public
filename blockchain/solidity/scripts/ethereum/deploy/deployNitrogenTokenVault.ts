@@ -28,6 +28,7 @@ export async function deployNitrogenTokenVault(
         contractsNitrogen.eth.supplyManager,
         contractsNitrogen.eth.rebaseTokenOwner,
         config.GUARDIAN_ADDRESS,
+        hre.ethers.ZeroAddress,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await nitrogenTokenVault.waitForDeployment();

@@ -52,6 +52,18 @@ interface IDepositManagerTypes {
     }
 
     /**
+     * @dev Struct to set the data of pools.
+     * @param pool Pool addresses.
+     * @param auth Boolean flag indicating for adding or removing the pool.
+     * @param newPoolData New PoolData.
+     */
+    struct SetPoolData {
+        address pool;
+        bool auth;
+        PoolData newPoolData;
+    }
+
+    /**
      * @dev Struct to store the strategy-related data.
      * @param strategy EigenLayer strategy contract.
      * @param strategyLib Library for interacting with the strategy.

@@ -142,6 +142,7 @@
         "JSON_RPC_URL_SEPOLIA",
         "ETHEREUM_SEED_PHRASE",
         "ETHEREUM_API_KEY",
+        "FORK_BLOCK_NUMBER",
         "TRON_SEED_PHRASE",
         "MAVA_WIDGET_TOKEN",
         "API_TESTS_AUTH_TOKEN",
@@ -161,6 +162,16 @@
         "REDIS_DB",
         "REDIS_PREFIX",
         "REDIS_TTL",
+        "REDIS_ENABLED_BETA",
+        "REDIS_URL_BETA",
+        "REDIS_DB_BETA",
+        "REDIS_PREFIX_BETA",
+        "REDIS_TTL_BETA",
+        "REDIS_ENABLED_ALPHA",
+        "REDIS_URL_ALPHA",
+        "REDIS_DB_ALPHA",
+        "REDIS_PREFIX_ALPHA",
+        "REDIS_TTL_ALPHA",
         "NATS_URL",
         "USE_LEGACY_OPERATIONS",
         "EVM_TOKEN_TRACKER_URL",
@@ -174,7 +185,9 @@
         "TELEGRAM_CHAT_ID",
         "TELEGRAM_CHAT_ID_ALPHA",
         "TELEGRAM_CHAT_ID_BETA",
-        "SERVICE_PORT"
+        "SERVICE_PORT",
+        "UNLEASH_SERVER_API_URL",
+        "UNLEASH_SERVER_API_TOKEN"
     ],
     "globalDependencies": [".env"]
 }

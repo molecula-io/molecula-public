@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable class-methods-use-this */
-import { jsonStringifyBigint } from '../../jsonStringifyBigint';
+import { jsonStringifyBigint } from '@molecula-monorepo/common.shared';
 
 import { type DatsLogData, LogLevel, type LogWriter } from '../types';
 

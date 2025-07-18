@@ -17,7 +17,9 @@
     },
     "dependencies": {
         "@molecula-monorepo/common.evm-utilities": "*",
+        "@molecula-monorepo/common.logs": "*",
         "@molecula-monorepo/common.tron-contracts": "*",
+        "@molecula-monorepo/common.shared": "*",
         "@molecula-monorepo/common.utilities": "*",
         "axios-request-throttle": "^1.0.0",
         "bignumber.js": "^9.1.2",

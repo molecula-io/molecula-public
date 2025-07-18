@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
-
-import {RebaseERC20} from "../../../common/rebase/RebaseERC20.sol";
+pragma solidity ^0.8.24;
 
 interface IwmUSD {
+    // ============ Events ============
+
     /// @dev Event emitted when the user wrapped their mUSD tokens.
     /// @param sender User address.
     /// @param value mUSD amount that user wrapped and one got the same amount of wmUSD amount.
@@ -20,46 +20,36 @@ interface IwmUSD {
         uint256 indexed mUSDAmount
     );
 
-    /// @dev Event emitted when yield is distributed for user.
-    /// @param user User address.
-    /// @param shares Shares for the user.
+    /// @dev Event emitted when yield is distributed for beneficiary.
+    /// @param beneficiary User address.
+    /// @param shares Shares for the beneficiary.
     /// @param mUSDAmount mUSD amount.
     event YieldDistributed(
-        address indexed user,
+        address indexed beneficiary,
         uint256 indexed shares,
         uint256 indexed mUSDAmount
     );
 
     /// @dev Event emitted when authorized yield distributor is changed.
-    /// @param oldAuthorizedYieldDistributor Previous authorized yield distributor.
-    /// @param newAuthorizedYieldDistributor New authorized yield distributor.
-    event AuthorizedYieldDistributorChanged(
-        address indexed oldAuthorizedYieldDistributor,
-        address indexed newAuthorizedYieldDistributor
+    /// @param oldYieldDistributor Previous authorized yield distributor.
+    /// @param newYieldDistributor New authorized yield distributor.
+    event YieldDistributorChanged(
+        address indexed oldYieldDistributor,
+        address indexed newYieldDistributor
     );
 
+    // ============ Errors ============
+
     /// @dev Throws an error if the Yield Distributor is not authorized.
-    error ENotAuthorizedYieldDistributor();
+    error ENotYieldDistributor();
 
     /// @dev Throws an error if shares for distributions are greater than the yield shares.
     error ETooManyShares();
 
-    /// @dev Returns mUSD Rebase token's address.
-    /// @return mUSD Rebase token's address.
-    // solhint-disable-next-line func-name-mixedcase
-    function MUSD() external returns (RebaseERC20);
+    /// @dev Throws an error if the mUSD contract address is not set.
+    error EContractIsEmpty();
 
-    /// @dev Authorized yield distributor (e.g. the lmUSD token).
-    /// @return Authorized yield distributor.
-    function authorizedYieldDistributor() external returns (address);
-
-    /// @dev Returns mUSD wrapped value.
-    /// @return mUSD wrapped value.
-    function mUSDWrappedValue() external returns (uint256);
-
-    /// @dev Returns mUSD wrapped shares.
-    /// @return mUSD wrapped shares.
-    function mUSDWrappedShares() external returns (uint256);
+    // ============ Core Functions ============
 
     /// @dev Convert mUSD to wmUSD.
     /// @param value Token amount.
@@ -68,6 +58,29 @@ interface IwmUSD {
     /// @dev Convert wmUSD to mUSD.
     /// @param value Token amount.
     function unwrap(uint256 value) external;
+
+    /// @dev Grant shares for the beneficiary.
+    /// @param beneficiary Beneficiary address.
+    /// @param shares Shares for the beneficiary.
+    function distributeYield(address beneficiary, uint256 shares) external;
+
+    /// @dev Setter for the Authorized Yield Distributor address.
+    /// @param newYieldDistributor New authorized Yield Distributor address.
+    function setYieldDistributor(address newYieldDistributor) external;
+
+    // ============ View Functions ============
+
+    /// @dev Returns mUSD Rebase token's address.
+    /// @return mUSD Rebase token's address.
+    function mUSD() external view returns (address);
+
+    /// @dev Authorized yield distributor (e.g. the lmUSD token).
+    /// @return Authorized yield distributor.
+    function yieldDistributor() external view returns (address);
+
+    /// @dev Returns mUSD wrapped shares.
+    /// @return mUSD wrapped shares.
+    function totalShares() external view returns (uint256);
 
     /// @dev Convert wmUSD to mUSD.
     /// @param wmUSDAmount wmUSD amount.
@@ -81,13 +94,4 @@ interface IwmUSD {
     /// @dev Returns the current yield in shares.
     /// @return Current yield in shares.
     function currentYieldShares() external view returns (uint256);
-
-    /// @dev Grant shares for the user.
-    /// @param user User address.
-    /// @param shares Shares for the user.
-    function distributeYield(address user, uint256 shares) external;
-
-    /// @dev Setter for the Authorized Yield Distributor address.
-    /// @param newAuthorizedYieldDistributor New authorized Yield Distributor address.
-    function setAuthorizedYieldDistributor(address newAuthorizedYieldDistributor) external;
 }

@@ -1,3 +1,4 @@
+@chainlink/=../../node_modules/@chainlink/
 @openzeppelin/=node_modules/@openzeppelin/
 @layerzerolabs/=node_modules/@layerzerolabs/
 @avve/=node_modules/@aave/

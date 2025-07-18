@@ -50,16 +50,24 @@ export async function deployMrETh() {
     const DelegatorImplementation = await ethers.getContractFactory('Delegator');
     const delegatorImplementation = await DelegatorImplementation.deploy();
 
+    // Deploy mock rewards coordinator
+    const RewardsCoordinator = await ethers.getContractFactory('MockRewardsCoordinator');
+    const rewardsCoordinator = await RewardsCoordinator.connect(owner!).deploy();
+
+    // Grant stETH and WETH tokens to rewards coordinator
+    await grantERC20(rewardsCoordinator, stETH, ethers.parseEther('100'), FAUCET.stETH);
+    await grantERC20(rewardsCoordinator, WETH, ethers.parseEther('100'));
+
     // Calculate future contract addresses for initialization
     const transactionCount = await owner.getNonce();
     const supplyManagerFutureAddress = ethers.getCreateAddress({
         from: owner.address,
-        nonce: transactionCount + 2,
+        nonce: transactionCount + 3,
     });
 
     const rebaseERC20V2FutureAddress = ethers.getCreateAddress({
         from: owner.address,
-        nonce: transactionCount + 3,
+        nonce: transactionCount + 4,
     });
 
     // Deploy and initialize DepositManager
@@ -72,23 +80,38 @@ export async function deployMrETh() {
         ethMainnetBetaConfig.WETH_ADDRESS,
         ethMainnetBetaConfig.STRATEGY_FACTORY,
         ethMainnetBetaConfig.DELEGATION_MANAGER,
-        await delegatorImplementation.getAddress(),
+        rewardsCoordinator,
+        delegatorImplementation,
     );
 
-    // Initialize DepositManager with Aave pool
-    await depositManager.initialize(
-        0,
-        [aavePool],
-        [
+    await expect(
+        depositManager.initialize(10_001n, [
             {
+                pool: aavePool,
+                newPoolData: {
+                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolLib: aaveBufferLib,
+                    poolPortion: 10_000n,
+                    poolId: 0,
+                },
+                auth: true,
+            },
+        ]),
+    ).to.be.rejectedWith('EInvalidPercentage()');
+
+    // Initialize DepositManager with Aave pool
+    await depositManager.initialize(0, [
+        {
+            pool: aavePool,
+            newPoolData: {
                 poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
-                poolLib: await aaveBufferLib.getAddress(),
+                poolLib: aaveBufferLib,
                 poolPortion: 10_000n,
                 poolId: 0,
             },
-        ],
-        [true],
-    );
+            auth: true,
+        },
+    ]);
 
     // Deploy and initialize SupplyManagerV2
     const SupplyManagerV2 = await ethers.getContractFactory('SupplyManagerV2WithNative');
@@ -99,7 +122,7 @@ export async function deployMrETh() {
         4000,
         rebaseERC20V2FutureAddress,
     );
-    expect(await supplyManagerV2.getAddress()).to.be.equal(supplyManagerFutureAddress);
+    expect(supplyManagerV2).to.be.equal(supplyManagerFutureAddress);
 
     // Deploy and initialize RebaseTokenV2
     const RebaseTokenV2 = await ethers.getContractFactory('RebaseTokenV2');
@@ -111,10 +134,13 @@ export async function deployMrETh() {
         18,
         supplyManagerV2,
     );
-    expect(await rebaseTokenV2.getAddress()).to.be.equal(rebaseERC20V2FutureAddress);
+    expect(rebaseTokenV2).to.be.equal(rebaseERC20V2FutureAddress);
 
     const defaultOperator = ethMainnetBetaConfig.EIGENLAYER_OPERATOR;
 
+    await expect(depositManager.chooseDelegatorForDeposit()).to.be.rejectedWith(
+        'EOperatorNotExists()',
+    );
     // Initialize operators and strategies
     await depositManager.addOperator(
         defaultOperator,
@@ -129,6 +155,14 @@ export async function deployMrETh() {
         [ethMainnetBetaConfig.STRATEGY_BASE_STETH],
         [ethers.ZeroAddress],
     );
+
+    await expect(
+        depositManager.addStrategies(
+            [WETH],
+            [ethMainnetBetaConfig.STRATEGY_BASE_STETH],
+            [ethers.ZeroAddress],
+        ),
+    ).to.be.rejectedWith('EInvalidStrategyConfiguration("Underlying token mismatch")');
 
     // Deploy and initialize token vaults
     const TokenVault = await ethers.getContractFactory('MrEthAssetTokenVault');
@@ -220,6 +254,36 @@ export async function deployMrETh() {
     // Unpause token vaults
     await tokenVaultWETH.unpauseAll();
     await tokenVaultStETH.unpauseAll();
+
+    await expect(
+        depositManager.initialize(0, [
+            {
+                pool: aavePool,
+                newPoolData: {
+                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolLib: aaveBufferLib,
+                    poolPortion: 10_000n,
+                    poolId: 0,
+                },
+                auth: true,
+            },
+        ]),
+    ).to.be.rejectedWith('InvalidInitialization()');
+
+    await expect(
+        depositManager.connect(user0).initialize(0, [
+            {
+                pool: aavePool,
+                newPoolData: {
+                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolLib: aaveBufferLib,
+                    poolPortion: 10_000n,
+                    poolId: 0,
+                },
+                auth: true,
+            },
+        ]),
+    ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
 
     return {
         depositManager,

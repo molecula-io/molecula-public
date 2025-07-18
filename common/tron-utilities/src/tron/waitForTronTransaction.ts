@@ -1,6 +1,7 @@
 import type { TronWeb, GetTransactionResponse, TransactionInfo } from 'tronweb';
 
-import { Async, Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
+import { Async } from '@molecula-monorepo/common.utilities';
 
 import {
     TronTransactionRuntimeError,

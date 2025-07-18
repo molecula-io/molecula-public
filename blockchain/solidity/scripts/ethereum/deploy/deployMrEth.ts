@@ -212,6 +212,7 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
         config.WETH_ADDRESS,
         config.STRATEGY_FACTORY,
         config.DELEGATION_MANAGER,
+        config.REWARDS_COORDINATOR,
         await delegatorImplementation.getAddress(),
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
@@ -220,19 +221,18 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
     console.log('DepositManager deployed successfully');
 
     // Initialize DepositManager with Aave pool configuration
-    await depositManager.initialize(
-        0,
-        [aavePool],
-        [
-            {
+    await depositManager.initialize(0, [
+        {
+            pool: aavePool,
+            newPoolData: {
                 poolToken: config.AWETH_ADDRESS,
                 poolLib: await aaveBufferLib.getAddress(),
                 poolPortion: 10_000n, // 100% allocation
                 poolId: 0,
             },
-        ],
-        [true],
-    );
+            auth: true,
+        },
+    ]);
 
     // Configure operators and strategies
     await depositManager.addOperator(

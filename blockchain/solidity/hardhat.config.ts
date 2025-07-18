@@ -13,6 +13,7 @@ import { tronMainnetProdConfig } from './configs/tron/mainnetProdTyped';
 import { shastaConfig } from './configs/tron/shastaTyped';
 
 dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '.config.env' });
 
 const config: HardhatUserConfig = {
     paths: {
@@ -31,7 +32,17 @@ const config: HardhatUserConfig = {
                 },
             },
             {
-                version: '0.8.23', // using in tron contracts
+                version: '0.8.24', // used for contracts targeting the Tron network
+                settings: {
+                    evmVersion: 'cancun',
+                    optimizer: {
+                        enabled: true,
+                        runs: 400,
+                    },
+                },
+            },
+            {
+                version: '0.8.23', // used for contracts targeting the Tron network
                 settings: {
                     evmVersion: 'shanghai',
                     optimizer: {
@@ -63,12 +74,13 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             gasPrice: 40_000_000_000,
-            ...(process.env.JSON_RPC_URL && {
-                forking: {
-                    url: process.env.JSON_RPC_URL,
-                    blockNumber: 22389026,
-                },
-            }),
+            ...(process.env.JSON_RPC_URL &&
+                process.env.FORK_BLOCK_NUMBER && {
+                    forking: {
+                        url: process.env.JSON_RPC_URL,
+                        blockNumber: parseInt(process.env.FORK_BLOCK_NUMBER, 10),
+                    },
+                }),
         },
         ...(process.env.JSON_RPC_URL_SEPOLIA &&
             process.env.ETHEREUM_SEED_PHRASE && {

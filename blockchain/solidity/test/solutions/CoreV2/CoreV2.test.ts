@@ -2,11 +2,11 @@
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 
-import { ethers } from 'ethers';
+import { ethers } from 'hardhat';
 
 import { deployCoreV2 } from '../../utils/CoreV2';
 import { findRequestRedeemEventV2 } from '../../utils/event';
-import { grantERC20 } from '../../utils/grant';
+import { grantERC20, grantETH } from '../../utils/grant';
 import { expectEqual } from '../../utils/math';
 
 describe('Core V2', () => {
@@ -78,11 +78,14 @@ describe('Core V2', () => {
         const userShares = await rebaseTokenV2.sharesOf(user0);
         const redeemAssets = await usdcVault.convertToAssets(userShares);
         expect(await usdcVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
-        const tx = await usdcVault.connect(user0).requestRedeem(userShares - 1n, user0, user0);
+        const tx = await usdcVault.connect(user0).requestRedeem(userShares, user0, user0);
         expectEqual(await usdcVault.pendingRedeemRequest(0, user0), userShares);
         const redeemEvent = await findRequestRedeemEventV2(tx);
 
         // fulfillRedeemRequests
+        await expect(
+            metaPoolTreasury.fulfillRedeemRequestsForNativeToken([redeemEvent.operationId]),
+        ).to.be.rejectedWith('ENotNativeToken()');
         await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
         expectEqual(await usdcVault.claimableRedeemRequest(0, user0), userShares, 18, 6);
         expect(await usdcVault.claimableRedeemAssets(user0)).to.be.equal(redeemAssets);
@@ -91,6 +94,66 @@ describe('Core V2', () => {
         expect(await USDC.balanceOf(user0)).to.be.equal(0);
         await usdcVault.connect(user0).redeem(userShares, user0, user0);
         expect(await USDC.balanceOf(user0)).to.be.equal(redeemAssets);
+    });
+
+    it('Should deposit and redeem native token', async () => {
+        const { user0, user1, nativeTokenVault, rebaseTokenV2, metaPoolTreasury, supplyManagerV2 } =
+            await loadFixture(deployCoreV2);
+
+        const decimals: bigint = 18n;
+        const depositValue = 100n * 10n ** decimals;
+
+        // Check shares
+        const shares = await nativeTokenVault.convertToShares(depositValue);
+        const shares2 = await supplyManagerV2.convertToShares(depositValue);
+        expect(shares).to.be.equal(shares2);
+
+        // Deposit assets in every way
+        expect(await nativeTokenVault.previewDeposit(depositValue)).to.be.equal(shares);
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
+        expect(await rebaseTokenV2.sharesOf(user0)).to.be.equal(shares);
+
+        expectEqual(await nativeTokenVault.previewMint(shares), depositValue);
+        await nativeTokenVault.connect(user0).mint(shares, user0, { value: depositValue });
+        expectEqual(await rebaseTokenV2.sharesOf(user0), 2n * shares);
+
+        // Generate yield
+        await grantETH(metaPoolTreasury, 10n * depositValue - 1n);
+
+        // requestRedeem
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const redeemAssets = await nativeTokenVault.convertToAssets(userShares);
+        expect(await nativeTokenVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
+        let tx = await nativeTokenVault.connect(user0).requestRedeem(userShares / 2n, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        tx = await nativeTokenVault
+            .connect(user0)
+            .requestWithdraw(
+                await nativeTokenVault.convertToAssets(userShares - userShares / 2n),
+                user0,
+                user0,
+            );
+        const redeemEvent2 = await findRequestRedeemEventV2(tx);
+        expectEqual(await nativeTokenVault.pendingRedeemRequest(0, user0), userShares);
+
+        // fulfillRedeemRequests
+        await expect(
+            metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]),
+        ).to.be.rejectedWith('ENativeToken()');
+        await metaPoolTreasury.fulfillRedeemRequestsForNativeToken([
+            redeemEvent.operationId,
+            redeemEvent2.operationId,
+        ]);
+        expectEqual(await nativeTokenVault.claimableRedeemRequest(0, user0), userShares);
+        expectEqual(await nativeTokenVault.claimableRedeemAssets(user0), redeemAssets);
+
+        // redeem
+        const nativeBalance0 = await ethers.provider.getBalance(user1.address);
+        const redeemValue = await nativeTokenVault.claimableRedeemAssets(user0);
+        const redeemShares = await nativeTokenVault.claimableRedeemRequest(0, user0);
+        await nativeTokenVault.connect(user0).redeem(redeemShares, user1, user0);
+        const nativeBalance1 = await ethers.provider.getBalance(user1.address);
+        expectEqual(nativeBalance1 - nativeBalance0, redeemValue);
     });
 
     it('Should deposit and redeem #2', async () => {
@@ -164,9 +227,11 @@ describe('Core V2', () => {
     });
 
     it('Test getters / errors', async () => {
-        const { user0, user1, usdcVault, rebaseTokenV2 } = await loadFixture(deployCoreV2);
+        const { user0, user1, usdcVault, rebaseTokenV2, nativeTokenVault } =
+            await loadFixture(deployCoreV2);
 
         expect(await usdcVault.share()).to.be.equal(rebaseTokenV2);
+        expect(await nativeTokenVault.share()).to.be.equal(rebaseTokenV2);
         expect(await usdcVault.pendingDepositRequest(0, ethers.ZeroAddress)).to.be.equal(0);
         expect(await usdcVault.claimableDepositRequest(0, ethers.ZeroAddress)).to.be.equal(0);
         expect(await usdcVault.pendingRedeemRequest(1, ethers.ZeroAddress)).to.be.equal(0);
@@ -174,9 +239,15 @@ describe('Core V2', () => {
 
         expect(await usdcVault.maxDeposit(ethers.ZeroAddress)).to.be.equal(ethers.MaxUint256);
         expect(await usdcVault.maxMint(ethers.ZeroAddress)).to.be.equal(ethers.MaxUint256);
+        expect(await nativeTokenVault.maxDeposit(ethers.ZeroAddress)).to.be.equal(
+            ethers.MaxUint256,
+        );
+        expect(await nativeTokenVault.maxMint(ethers.ZeroAddress)).to.be.equal(ethers.MaxUint256);
 
         await expect(usdcVault.previewRedeem(0)).to.be.rejectedWith('EAsyncRedeem');
         await expect(usdcVault.previewWithdraw(0)).to.be.rejectedWith('EAsyncRedeem');
+        await expect(nativeTokenVault.previewRedeem(0)).to.be.rejectedWith('EAsyncRedeem');
+        await expect(nativeTokenVault.previewWithdraw(0)).to.be.rejectedWith('EAsyncRedeem');
 
         await expect(usdcVault.connect(user0).withdraw(0, user1, user1)).to.be.rejectedWith(
             'EInvalidOperator',
@@ -187,5 +258,24 @@ describe('Core V2', () => {
         await expect(usdcVault.connect(user0).setOperator(user0, true)).to.be.rejectedWith(
             'ESelfOperator',
         );
+    });
+
+    it('Native token supportsInterface', async () => {
+        const { nativeTokenVault } = await loadFixture(deployCoreV2);
+        expect(await nativeTokenVault.supportsInterface('0x2f0a18c5')).to.be.equal(true);
+        expect(await nativeTokenVault.supportsInterface('0x01ffc9a7')).to.be.equal(true);
+    });
+
+    it('Native token errors', async () => {
+        const { nativeTokenVault } = await loadFixture(deployCoreV2);
+        await expect(nativeTokenVault.fulfillRedeemRequests([], 0)).to.be.rejectedWith(
+            'ENotAuthorized(',
+        );
+        await expect(
+            nativeTokenVault.withdraw(0, ethers.ZeroAddress, ethers.ZeroAddress),
+        ).to.be.rejectedWith('EInvalidOperator(');
+        await expect(
+            nativeTokenVault.withdraw(0, ethers.ZeroAddress, ethers.ZeroAddress),
+        ).to.be.rejectedWith('EInvalidOperator(');
     });
 });

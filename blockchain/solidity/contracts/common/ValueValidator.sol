@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.23;
 
+import {ConstantsCoreV2} from "./../coreV2/Constants.sol";
+
 /// @title ValueValidator
 /// @notice Contract for validating common value-based conditions.
 /// @dev Provides modifiers to check for zero values, zero addresses, and `msg.value` conditions.
@@ -20,6 +22,9 @@ contract ValueValidator {
 
     /// @dev Error: Provided array is empty.
     error EEmptyArray();
+
+    /// @dev Error: Percentage is invalid.
+    error EInvalidPercentage();
 
     /**
      * @dev Ensures the function is called by the expected sender.
@@ -65,6 +70,16 @@ contract ValueValidator {
     modifier notEmpty(uint256 arrayLength) {
         if (arrayLength == 0) {
             revert EEmptyArray();
+        }
+        _;
+    }
+
+    /// @dev Modifier that validates if the basis points value is within the valid range (0-10000).
+    /// @param bps Basis points value to validate.
+    /// @custom:revert EInvalidPercentage Check if bps exceeds the maximum allowed value (10000).
+    modifier checkBPS(uint16 bps) {
+        if (bps > ConstantsCoreV2.PERCENTAGE_FACTOR) {
+            revert EInvalidPercentage();
         }
         _;
     }

@@ -11,6 +11,9 @@ abstract contract DelegatorStorage is IDelegator {
     /// @dev Maximum stake amount cap per validator.
     uint256 public constant STAKE_AMOUNT_NATIVE = 32 ether;
 
+    /// @dev EigenLayer Reward Coordinator contract's address.
+    address public rewardsCoordinator;
+
     /// @dev Deposit Manager contract's address.
     address public depositManager;
 

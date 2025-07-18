@@ -8,10 +8,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {IdGenerator} from "./../../common/IdGenerator.sol";
-import {RebaseERC20} from "./../../common/rebase/RebaseERC20.sol";
+import {IdGenerator} from "./../common/IdGenerator.sol";
+import {RebaseERC20} from "./../common/rebase/RebaseERC20.sol";
 import {IlmUSD} from "./interfaces/IlmUSD.sol";
-import {WMUSD} from "./wmUSD.sol";
+import {IwmUSD} from "./interfaces/IwmUSD.sol";
 
 /// @notice LMUSD allows users to lock their mUSD holdings for a fixed duration.
 // The duration works with an unlock period to unlock enhanced yield rates immediately.
@@ -24,7 +24,7 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
     RebaseERC20 public immutable MUSD;
 
     /// @inheritdoc IlmUSD
-    WMUSD public immutable WMUSD_TOKEN;
+    IwmUSD public immutable WMUSD_TOKEN;
 
     /// @inheritdoc IlmUSD
     mapping(uint256 tokenId => LockInfo) public lockInfos;
@@ -69,7 +69,7 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
         uint128[] memory periodMultiplier
     ) Ownable(owner) ERC721(name, symbol) {
         MUSD = RebaseERC20(mUSDAddress);
-        WMUSD_TOKEN = WMUSD(wmUSDAddress);
+        WMUSD_TOKEN = IwmUSD(wmUSDAddress);
 
         if (allowedPeriods.length != periodMultiplier.length) {
             revert EBadLength();

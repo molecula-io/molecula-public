@@ -87,12 +87,14 @@ export async function deployMetaEthWithoutInit() {
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
+        ethers.ZeroAddress,
     );
     const wETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
+        ethers.ZeroAddress,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');

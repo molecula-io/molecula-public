@@ -20,7 +20,7 @@
         "ui-tests/api-tests"
     ],
     "scripts": {
-        "bump": "yarn version --no-commit-hooks --no-git-tag-version && yarn bump-to && yarn workspace @molecula-monorepo/dev-expo-pool-admin bump",
+        "bump": "yarn version --no-commit-hooks --no-git-tag-version && yarn bump-to && yarn workspace @molecula-monorepo/pool-admin bump",
         "bump-to": "yarn workspaces run bump-to $npm_package_version",
         "prepare": "husky install",
         "preinstall": "yarn check-versions",
@@ -175,6 +175,8 @@
         "dpdm": "^3.13.1",
         "husky": "^8.0.1",
         "patch-package": "^6.4.7",
+        "prettier": "^3.2.5",
+        "prettier-plugin-solidity": "^1.4.1",
         "solhint": "^6.0.0",
         "ts-node": "^10.9.2",
         "turbo": "^2.5.2",

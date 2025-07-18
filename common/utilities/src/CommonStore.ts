@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import { action, computed, observable, when, makeObservable } from 'mobx';
 
-import { Log } from './Log';
+import { Log } from '@molecula-monorepo/common.logs';
 
 /**
  * Common store class with useful `load` and `unload` methods and their processing

@@ -15,7 +15,7 @@
     "main": "src/index.ts",
     "dependencies": {
         "@molecula-monorepo/common.evm-utilities": "*",
-        "@molecula-monorepo/common.utilities": "*",
+        "@molecula-monorepo/common.shared": "*",
         "@molecula-monorepo/solidity": "*",
         "bignumber.js": "^9.1.2",
         "ethers": "^6.13.5",

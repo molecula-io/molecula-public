@@ -26,6 +26,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         config.WETH_ADDRESS,
         config.STRATEGY_FACTORY,
         config.DELEGATION_MANAGER,
+        config.REWARDS_COORDINATOR,
         contractsConfig.eth.delegatorImplementation,
     ]);
 

@@ -127,6 +127,9 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
     /** DelegationManager contract address. */
     DELEGATION_MANAGER: '0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A',
 
+    /** RewardsCoordinator contract address. */
+    REWARDS_COORDINATOR: '0x7750d328b314EfFa365A0402CcfD489B80B0adda',
+
     /** StrategyFactory contract address. */
     STRATEGY_FACTORY: '0x5e4C39Ad7A3E881585e383dB9827EB4811f6F647',
 

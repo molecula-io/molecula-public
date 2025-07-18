@@ -3,7 +3,7 @@ import isEqual from 'lodash/isEqual';
 
 import { computed, makeObservable, observable } from 'mobx';
 
-import { Log } from '../Log';
+import { Log } from '@molecula-monorepo/common.logs';
 
 import { MemoStorageManager } from './MemoStorageManager';
 

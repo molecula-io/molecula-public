@@ -4,6 +4,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {_getDecimalsOr18} from "./../../common/Utils.sol";
 import {BaseTokenVault} from "./BaseTokenVault.sol";
 import {TokenVault} from "./TokenVault.sol";
 
@@ -20,7 +21,7 @@ abstract contract ERC20TokenVault is TokenVault {
         uint128 minRedeemShares_
     ) internal virtual override {
         super._init(asset_, minDepositAssets_, minRedeemShares_);
-        uint128 assetDecimals = IERC20Metadata(_asset).decimals();
+        uint128 assetDecimals = _getDecimalsOr18(_asset);
         uint128 shareDecimals = IERC20Metadata(_SHARE).decimals();
         pow10 = uint128(10) ** (shareDecimals - assetDecimals);
     }

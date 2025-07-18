@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IDelegationManager, IStrategy} from "../external/interfaces/IDelegationManager.sol";
-import {BeaconChainProofs} from "../external/libraries/BeaconChainProofs.sol";
+import {IDelegationManager, IStrategy} from "./../external/interfaces/IDelegationManager.sol";
+import {IRewardsCoordinatorTypes} from "./../external/interfaces/IRewardsCoordinator.sol";
+import {BeaconChainProofs} from "./../external/libraries/BeaconChainProofs.sol";
 
 /// @title Delegator's Interface
 /// @notice Defines the functions and events required for staking and restaking for the chosen operator.
@@ -11,18 +12,23 @@ interface IDelegator {
     /// @dev Error: `msg.sender` is not authorized for this function.
     error EBadSender();
 
-    /// @dev Error: incorrect pending ETH amount to restake.
+    /// @dev Error: Incorrect pending ETH amount to restake.
     error EIncorrectRestakeAmount();
+
+    /// @dev Error: Checkpoint is already active.
+    error ECheckpointAlreadyActive();
 
     /**
      * @dev Initialize function.
      * @param delegationManager_ EigenLayer's contract for delegation to the operator management.
+     * @param rewardsCoordinator_ EigenLayer's Reward Coordinator contract's address.
      * @param operator Account for delegation assets.
      * @param approverSignatureAndExpiry Optional. Operator's approver signature of this delegation.
      * @param approverSalt Optional. A unique single-use value tied to an individual signature.
      */
     function initialize(
         IDelegationManager delegationManager_,
+        address rewardsCoordinator_,
         address operator,
         IDelegationManager.SignatureWithExpiry calldata approverSignatureAndExpiry,
         bytes32 approverSalt
@@ -71,6 +77,21 @@ interface IDelegator {
     ) external;
 
     /**
+     * @dev Initiates a checkpoint proof by snapshotting both the pod's ETH balance and the current block's parent block root.
+     */
+    function startCheckpoint() external;
+
+    /**
+     * @dev Verifies checkpoint proofs for the currently active checkpoint and tracks exited validator balance.
+     * @param balanceContainerProof Proves the beacon's current balance container root against a checkpoint's `beaconBlockRoot`.
+     * @param proofs Proofs for one or more validator current balances against the `balanceContainerRoot`.
+     */
+    function verifyCheckpointProofs(
+        BeaconChainProofs.BalanceContainerProof calldata balanceContainerProof,
+        BeaconChainProofs.BalanceProof[] calldata proofs
+    ) external;
+
+    /**
      * @dev Reinitialize the new operator address for delegation and redelegate all shares.
      * @param newOperator Account for redelegation of assets.
      * @param approverSignatureAndExpiry Optional. Operator's approver signature of this delegation.
@@ -81,6 +102,12 @@ interface IDelegator {
         IDelegationManager.SignatureWithExpiry calldata approverSignatureAndExpiry,
         bytes32 approverSalt
     ) external;
+
+    /**
+     * @dev Claim rewards from EigenLayer.
+     * @param claim `RewardsMerkleClaim` object to process claim.
+     */
+    function claimRewards(IRewardsCoordinatorTypes.RewardsMerkleClaim calldata claim) external;
 
     /**
      * @dev Getter for the total amount of ETH staked into EigenLayer with the pending validator approval.

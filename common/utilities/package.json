@@ -13,6 +13,7 @@
     },
     "main": "src/index.ts",
     "dependencies": {
+        "@molecula-monorepo/common.logs": "*",
         "@react-native-async-storage/async-storage": "^1.23.1",
         "@sentry/browser": "^8.33.1",
         "@sentry/node": "^8.33.1",

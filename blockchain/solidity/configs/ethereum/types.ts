@@ -59,8 +59,10 @@ export type EthereumNetworkConfig = {
     AGENT_AUTHORIZED_LZ_CONFIGURATOR: EVMAddress;
 
     AAVE_POOL: EVMAddress;
+
     EIGEN_POD_MANAGER: EVMAddress;
     DELEGATION_MANAGER: EVMAddress;
+    REWARDS_COORDINATOR: EVMAddress;
     STRATEGY_FACTORY: EVMAddress;
     STRATEGY_BASE_STETH: EVMAddress;
     EIGENLAYER_OPERATOR: EVMAddress;

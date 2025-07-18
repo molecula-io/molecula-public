@@ -116,6 +116,14 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
             config.LMUSD_MULTIPLIERS,
         ]);
     }
+
+    if (contractsNitrogen.eth.rebaseTokenOwner !== '') {
+        await verifyContract(hre, 'RebaseTokenOwner', contractsNitrogen.eth.rebaseTokenOwner, [
+            config.OWNER, // Note: the owner is not deploy wallet
+            contractsNitrogen.eth.rebaseToken,
+            config.GUARDIAN_ADDRESS,
+        ]);
+    }
 }
 
 async function main() {

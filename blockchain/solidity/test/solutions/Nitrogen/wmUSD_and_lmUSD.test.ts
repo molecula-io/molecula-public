@@ -17,13 +17,13 @@ describe('Test wmUSD and lmUSD', () => {
                 moleculaPool,
                 rebaseToken,
                 wmusd,
-                authorizedYieldDistributor,
+                yieldDistributor,
                 agent,
                 user0,
                 USDT,
                 lmUSDHolder,
             } = await loadFixture(deployNitrogenWithUSDT);
-            await wmusd.setAuthorizedYieldDistributor(authorizedYieldDistributor);
+            await wmusd.setYieldDistributor(yieldDistributor);
 
             // deposit 100 USDT
             const depositValue = 100_000_000n - 1n;
@@ -65,9 +65,9 @@ describe('Test wmUSD and lmUSD', () => {
 
             // Distribute yield
             await wmusd
-                .connect(authorizedYieldDistributor)
+                .connect(yieldDistributor)
                 .distributeYield(lmUSDHolder.address, currentYieldShares / 3n);
-            expect(await wmusd.currentYieldShares()).to.be.equal((2n * currentYieldShares) / 3n);
+            expectEqual(await wmusd.currentYieldShares(), (2n * currentYieldShares) / 3n);
             expectEqual(await rebaseToken.sharesOf(lmUSDHolder), currentYieldShares / 3n);
 
             // Unwrap: convert wmUSD -> mUSD
@@ -150,8 +150,8 @@ describe('Test wmUSD and lmUSD', () => {
             expect(await rebaseToken.balanceOf(user0)).to.be.lessThan(mUSDUserBalance);
             expect(await wmusd.balanceOf(user0)).to.be.equal(0);
 
-            expect(await wmusd.mUSDWrappedValue()).to.be.equal(0);
-            expectEqual(await wmusd.mUSDWrappedShares(), 0n);
+            expect(await wmusd.totalSupply()).to.be.equal(0);
+            expectEqual(await wmusd.totalShares(), 0n);
         });
 
         it('Test conner cases', async () => {
@@ -165,17 +165,17 @@ describe('Test wmUSD and lmUSD', () => {
                 lmUSDHolder,
                 USDT,
                 moleculaPool,
-                authorizedYieldDistributor,
+                yieldDistributor,
             } = await loadFixture(deployNitrogenWithUSDT);
-            await wmusd.setAuthorizedYieldDistributor(authorizedYieldDistributor);
+            await wmusd.setYieldDistributor(yieldDistributor);
 
             // test distributeYield
             await expect(
                 wmusd.connect(randAccount).distributeYield(ethers.ZeroAddress, 0),
-            ).to.be.rejectedWith('ENotAuthorizedYieldDistributor(');
+            ).to.be.rejectedWith('ENotYieldDistributor(');
             await expect(
                 wmusd
-                    .connect(authorizedYieldDistributor)
+                    .connect(yieldDistributor)
                     .distributeYield(lmUSDHolder.address, ethers.MaxUint256),
             ).to.be.rejectedWith('ETooManyShares()');
 
@@ -193,15 +193,15 @@ describe('Test wmUSD and lmUSD', () => {
             // Generate income
             await grantERC20(moleculaPool.getAddress(), USDT, 500_000_000n);
 
-            // test setAuthorizedYieldDistributor
+            // test setYieldDistributor
             await expect(
-                wmusd.connect(randAccount).setAuthorizedYieldDistributor(randAccount),
+                wmusd.connect(randAccount).setYieldDistributor(randAccount),
             ).to.be.rejectedWith('OwnableUnauthorizedAccount');
             await expect(
-                wmusd.connect(poolOwner).setAuthorizedYieldDistributor(ethers.ZeroAddress),
+                wmusd.connect(poolOwner).setYieldDistributor(ethers.ZeroAddress),
             ).to.be.rejectedWith('EZeroAddress()');
-            await wmusd.connect(poolOwner).setAuthorizedYieldDistributor(randAccount);
-            expect(await wmusd.authorizedYieldDistributor()).to.be.equal(randAccount);
+            await wmusd.connect(poolOwner).setYieldDistributor(randAccount);
+            expect(await wmusd.yieldDistributor()).to.be.equal(randAccount);
         });
 
         it('Test voting', async () => {
@@ -268,6 +268,45 @@ describe('Test wmUSD and lmUSD', () => {
                 expect(await wmusd.supportsInterface(interfaceId)).to.be.equal(true);
             }
         });
+
+        it('wmUSD bridge', async () => {
+            const { moleculaPool, rebaseToken, wmusd, agent, user0, USDT } =
+                await loadFixture(deployNitrogenWithUSDT);
+
+            // deposit 100 USDT
+            const depositValue = 100_000_000n;
+            // Generated income
+            const income = 500_000_000n;
+
+            await USDT.connect(user0).approve(await agent.getAddress(), ethers.MaxUint256);
+            await rebaseToken.connect(user0).approve(wmusd.getAddress(), ethers.MaxUint256);
+
+            // generate income
+            await grantERC20(moleculaPool.getAddress(), USDT, income);
+
+            // User gets mUSD and wrap it
+            await grantERC20(user0, USDT, depositValue);
+            await rebaseToken.connect(user0).requestDeposit(depositValue, user0, user0);
+            await wmusd.connect(user0).wrap(await rebaseToken.balanceOf(user0));
+            const mUSDWrappedShares0 = await wmusd.totalShares();
+
+            // generate income
+            await grantERC20(moleculaPool.getAddress(), USDT, income);
+
+            // User gets mUSD and wrap it
+            await grantERC20(user0, USDT, depositValue);
+            await rebaseToken.connect(user0).requestDeposit(depositValue, user0, user0);
+            await wmusd.connect(user0).wrap(await rebaseToken.balanceOf(user0));
+            const mUSDWrappedShares1 = (await wmusd.totalShares()) - mUSDWrappedShares0;
+
+            // generate income
+            await grantERC20(moleculaPool.getAddress(), USDT, income);
+
+            // Check
+            const balance = await rebaseToken.balanceOf(wmusd);
+            const mUSDWrappedShares3 = await rebaseToken.convertToShares(balance);
+            expectEqual(mUSDWrappedShares3, mUSDWrappedShares0 + mUSDWrappedShares1);
+        });
     });
 
     describe('Test lmUSD', () => {
@@ -333,7 +372,7 @@ describe('Test wmUSD and lmUSD', () => {
             // Note: has only one nft
             expect(await lmusd['balanceOf(address)'](user0)).to.be.equal(1);
             await lmusd.connect(user0).unlock(tokenId);
-            expect(await wmusd.currentYield()).to.be.equal(0);
+            expectEqual(await wmusd.currentYield(), 0n);
             expectEqual(await rebaseToken.sharesOf(user0), dedicatedShares + lockedShares, 18, 16);
             expectEqual(await rebaseToken.balanceOf(user0), balanceLMUSD, 18, 16);
         });

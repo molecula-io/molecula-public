@@ -1,4 +1,8 @@
-import { DevnetContractsExecutor, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+import {
+    DevnetContractsExecutor,
+    MainBetaContractsExecutor,
+    EnvironmentType,
+} from '@molecula-monorepo/blockchain.addresses';
 
 import { ethMainnetBetaConfig } from '../ethereum/mainnetBetaTyped';
 import { sepoliaConfig } from '../ethereum/sepoliaTyped';
@@ -57,10 +61,9 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 10_000,
-            executorAddress:
-                !DevnetContractsExecutor.eth.executor || DevnetContractsExecutor.eth.executor === ''
-                    ? sepoliaConfig.LAYER_ZERO_EXECUTOR
-                    : DevnetContractsExecutor.eth.executor,
+            executorAddress: !DevnetContractsExecutor.eth.executor
+                ? sepoliaConfig.LAYER_ZERO_EXECUTOR
+                : DevnetContractsExecutor.eth.executor,
         },
     },
     // Shasta → Sepolia (devnet environment)
@@ -87,11 +90,9 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 10_000,
-            executorAddress:
-                !DevnetContractsExecutor.tron.executor ||
-                DevnetContractsExecutor.tron.executor === ''
-                    ? shastaConfig.LAYER_ZERO_TRON_EXECUTOR
-                    : DevnetContractsExecutor.tron.executor,
+            executorAddress: !DevnetContractsExecutor.tron.executor
+                ? shastaConfig.LAYER_ZERO_TRON_EXECUTOR
+                : DevnetContractsExecutor.tron.executor,
         },
     },
     // Ethereum mainnet → Tron mainnet (beta environment)
@@ -118,7 +119,9 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 999,
-            executorAddress: ethMainnetBetaConfig.LAYER_ZERO_EXECUTOR,
+            executorAddress: !MainBetaContractsExecutor.eth.executor
+                ? ethMainnetBetaConfig.LAYER_ZERO_EXECUTOR
+                : MainBetaContractsExecutor.eth.executor,
         },
     },
     // Tron mainnet → Ethereum mainnet (beta environment)
@@ -145,7 +148,9 @@ export const layerZeroDVNConfigs: Record<
         },
         executorConfig: {
             maxMessageSize: 999,
-            executorAddress: tronMainnetBetaConfig.LAYER_ZERO_TRON_EXECUTOR,
+            executorAddress: !MainBetaContractsExecutor.tron.executor
+                ? tronMainnetBetaConfig.LAYER_ZERO_TRON_EXECUTOR
+                : MainBetaContractsExecutor.tron.executor,
         },
     },
 };

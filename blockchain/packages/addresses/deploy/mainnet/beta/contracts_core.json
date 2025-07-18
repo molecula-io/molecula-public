@@ -1,7 +1,7 @@
 {
     "eth": {
         "supplyManager": "0xeFd445D91dBf0f3c44cC4c8d3986BB3f865020Bd",
-        "moleculaPool": "0x17779b18EA91c70b791b38C8d9AC85d56d57f234",
+        "moleculaPool": "0xf681d0d59816d82bf23dcbf130898d8e81d45f8c",
         "poolKeeper": "0xFA9113efcaD2e08F868b7B00dF67ed404Ec9a00c",
         "mUSDe": "",
         "ethena": {

@@ -10,23 +10,24 @@ import { FAUCET, grantERC20 } from '../../utils/grant';
 import { expectEqual } from '../../utils/math';
 
 describe('Test TokenVault', () => {
-    it('Should deposit and redeem via tokenUSDCVault', async () => {
-        const { tokenUSDCVault, USDC, user0, user1, user2, operator, rebaseToken } =
-            await loadFixture(deployNitrogenWithTokenVault);
+    it('Should deposit and redeem via usdcVault', async () => {
+        const { usdcVault, USDC, user0, user1, user2, operator, rebaseToken } = await loadFixture(
+            deployNitrogenWithTokenVault,
+        );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, 2n * depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, 2n * depositValue);
+        await USDC.connect(user0).approve(usdcVault, 2n * depositValue);
 
         // user0 sets operator and deposit tokens two times
-        await tokenUSDCVault.connect(user0).setOperator(operator, true);
-        await tokenUSDCVault
+        await usdcVault.connect(user0).setOperator(operator, true);
+        await usdcVault
             .connect(operator)
             ['deposit(uint256,address,address)'](depositValue, user1, user0);
-        await tokenUSDCVault
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user1, user0);
 
@@ -36,37 +37,37 @@ describe('Test TokenVault', () => {
         // user1 request redeem
         expect(await USDC.balanceOf(user1)).to.be.equal(0);
 
-        await tokenUSDCVault.connect(user1).redeemImmediately(shares, user1, user1);
+        await usdcVault.connect(user1).redeemImmediately(shares, user1, user1);
         expect(await rebaseToken.balanceOf(user1)).to.be.equal(shares);
         expect(await USDC.balanceOf(user1)).to.be.equal(depositValue);
         expect(await USDC.balanceOf(user2)).to.be.equal(0);
 
         // operator requests redeem on behalf of user1 and gives tokens to user2
-        await tokenUSDCVault.connect(user1).setOperator(operator, true);
-        await tokenUSDCVault.connect(operator).redeemImmediately(shares, user2, user1);
+        await usdcVault.connect(user1).setOperator(operator, true);
+        await usdcVault.connect(operator).redeemImmediately(shares, user2, user1);
         expect(await rebaseToken.balanceOf(user1)).to.be.equal(0);
         expect(await USDC.balanceOf(user1)).to.be.equal(depositValue);
         expect(await USDC.balanceOf(user2)).to.be.equal(depositValue);
 
         await expect(
-            tokenUSDCVault.connect(user0).redeemImmediately(1, user1, user1),
+            usdcVault.connect(user0).redeemImmediately(1, user1, user1),
         ).to.be.rejectedWith('EInvalidOperator');
     });
 
     it('Should deposit and redeemImmediately using claimableRedeemAssets', async () => {
-        const { tokenUSDCVault, USDC, user0, rebaseToken, moleculaPool } = await loadFixture(
+        const { usdcVault, USDC, user0, rebaseToken, moleculaPool } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         // user0 deposits tokens
-        await tokenUSDCVault
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
         const shares = 100n * 10n ** 18n;
@@ -76,26 +77,26 @@ describe('Test TokenVault', () => {
         expect(await rebaseToken.sharesOf(user0)).to.be.equal(shares);
 
         // See redeemImmediately `if (shares <= claimableRedeemShares) {`
-        expect(await tokenUSDCVault.claimableRedeemAssets(user0)).to.be.equal(0);
-        const tx = await tokenUSDCVault.connect(user0).requestRedeem(shares / 3n, user0, user0);
+        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.equal(0);
+        const tx = await usdcVault.connect(user0).requestRedeem(shares / 3n, user0, user0);
         const redeemEvent = await findRequestRedeemEvent(tx);
         await moleculaPool.redeem([redeemEvent.operationId]);
-        expect(await tokenUSDCVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
-        await tokenUSDCVault.connect(user0).redeemImmediately(shares / 4n, user0, user0);
-        expect(await tokenUSDCVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
+        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
+        await usdcVault.connect(user0).redeemImmediately(shares / 4n, user0, user0);
+        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
 
         // See redeemImmediately `if (shares <= claimableRedeemShares) {` is not true
         const restShares = await rebaseToken.sharesOf(user0);
-        await tokenUSDCVault.connect(user0).redeemImmediately(restShares, user0, user0);
-        expectEqual(await tokenUSDCVault.claimableRedeemAssets(user0), 0n);
+        await usdcVault.connect(user0).redeemImmediately(restShares, user0, user0);
+        expectEqual(await usdcVault.claimableRedeemAssets(user0), 0n);
 
         // Check user's balance
         expectEqual(await USDC.balanceOf(user0), 160n * 10n ** decimals, 18, 9);
     });
 
-    it('Should deposit and redeem in one transaction via tokenUSDCVault', async () => {
+    it('Should deposit and redeem in one transaction via usdcVault', async () => {
         const {
-            tokenUSDCVault,
+            usdcVault,
             USDC,
             user0,
             rebaseToken,
@@ -109,19 +110,19 @@ describe('Test TokenVault', () => {
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         // user0 deposits tokens
-        await tokenUSDCVault
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
         const shares = 100n * 10n ** 18n;
         expect(await rebaseToken.balanceOf(user0)).to.be.equal(shares);
 
         // user0 request redeem
-        let tx = await tokenUSDCVault.connect(user0).redeemImmediately(shares / 2n, user0, user0);
+        let tx = await usdcVault.connect(user0).redeemImmediately(shares / 2n, user0, user0);
         await tx.wait();
         let { operationId } = await findRequestRedeemEvent(tx);
         await expect(tx)
@@ -136,7 +137,7 @@ describe('Test TokenVault', () => {
         await getRidOf(moleculaPool, poolOwner, USDC, randAccount.address, poolKeeper);
 
         // user0 request redeem
-        tx = await tokenUSDCVault.connect(user0).requestRedeem(shares / 2n, user0, user0);
+        tx = await usdcVault.connect(user0).requestRedeem(shares / 2n, user0, user0);
         await tx.wait();
         const eventData = await findRequestRedeemEvent(tx);
         operationId = eventData.operationId;
@@ -152,93 +153,93 @@ describe('Test TokenVault', () => {
         expect(await USDC.balanceOf(user0)).to.be.equal(50_000_000);
 
         // user0 confirms redeem.
-        const claimableRedeemAssets = await tokenUSDCVault.claimableRedeemAssets(user0);
-        await tokenUSDCVault.connect(user0).withdraw(claimableRedeemAssets, user0, user0);
+        const claimableRedeemAssets = await usdcVault.claimableRedeemAssets(user0);
+        await usdcVault.connect(user0).withdraw(claimableRedeemAssets, user0, user0);
         // expect(await USDC.balanceOf(user0)).to.be.equal(50_000_000 + 33_333_333);
     });
 
     it('Test set min deposit / redeem value', async () => {
-        const { tokenUSDCVault, USDC, user0, rebaseToken } = await loadFixture(
+        const { usdcVault, USDC, user0, rebaseToken } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 5n * 10n ** (decimals - 1n);
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         // Fail to deposit, set new min deposit value and deposit
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(user0)
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('ETooLowDepositAssets(');
-        await tokenUSDCVault.setMinDepositAssets(depositValue);
-        await tokenUSDCVault
+        await usdcVault.setMinDepositAssets(depositValue);
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
         expect(await rebaseToken.balanceOf(user0)).to.be.greaterThan(0n);
 
-        await tokenUSDCVault.setMinRedeemShares(12345);
-        expect(await tokenUSDCVault.minRedeemShares()).to.be.equal(12345);
+        await usdcVault.setMinRedeemShares(12345);
+        expect(await usdcVault.minRedeemShares()).to.be.equal(12345);
     });
 
     it('Should pause/unpause', async () => {
-        const { tokenUSDCVault, USDC, user0, rebaseToken, poolOwner, guardian } = await loadFixture(
+        const { usdcVault, USDC, user0, rebaseToken, poolOwner, guardian } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         const depositQty = 2n;
         await grantERC20(user0, USDC, depositQty * depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositQty * depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositQty * depositValue);
 
         // pause and unpause request deposit and then call requestDeposit
-        await tokenUSDCVault.connect(guardian).pauseRequestDeposit();
+        await usdcVault.connect(guardian).pauseRequestDeposit();
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(user0)
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused(');
-        await tokenUSDCVault.connect(poolOwner).unpauseRequestDeposit();
-        await tokenUSDCVault
+        await usdcVault.connect(poolOwner).unpauseRequestDeposit();
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
 
         // pauseAll and unpauseAll and then call requestDeposit
-        await tokenUSDCVault.connect(guardian).pauseAll();
+        await usdcVault.connect(guardian).pauseAll();
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(user0)
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused("');
-        await tokenUSDCVault.connect(poolOwner).unpauseAll();
-        await tokenUSDCVault
+        await usdcVault.connect(poolOwner).unpauseAll();
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
 
         const shares = 100n * 10n ** 18n;
 
         // pause and unpause requestRedeem and then call redeemImmediately
-        await tokenUSDCVault.connect(guardian).pauseRequestRedeem();
+        await usdcVault.connect(guardian).pauseRequestRedeem();
         await expect(
-            tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0),
+            usdcVault.connect(user0).redeemImmediately(shares, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused("');
-        await tokenUSDCVault.connect(poolOwner).unpauseRequestRedeem();
-        await tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0);
+        await usdcVault.connect(poolOwner).unpauseRequestRedeem();
+        await usdcVault.connect(user0).redeemImmediately(shares, user0, user0);
 
         // pauseAll and unpauseAll and then call redeemImmediately
-        await tokenUSDCVault.connect(guardian).pauseAll();
+        await usdcVault.connect(guardian).pauseAll();
         await expect(
-            tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0),
+            usdcVault.connect(user0).redeemImmediately(shares, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused("');
-        await tokenUSDCVault.connect(poolOwner).unpauseAll();
-        await tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0);
+        await usdcVault.connect(poolOwner).unpauseAll();
+        await usdcVault.connect(user0).redeemImmediately(shares, user0, user0);
 
         // check user0's balances
         expect(await rebaseToken.balanceOf(user0)).to.be.equal(0);
@@ -283,29 +284,27 @@ describe('Test TokenVault', () => {
     });
 
     it('Should remove token', async () => {
-        const { tokenUSDCVault, rebaseTokenOwner, USDC, user0 } = await loadFixture(
+        const { usdcVault, rebaseTokenOwner, USDC, user0 } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         // Remove token
-        await rebaseTokenOwner.removeTokenVault(tokenUSDCVault);
+        await rebaseTokenOwner.removeTokenVault(usdcVault);
         await expect(rebaseTokenOwner.removeTokenVault(USDC)).to.be.rejectedWith('ENoTokenVault(');
         await expect(
-            tokenUSDCVault
-                .connect(user0)
-                ['deposit(uint256,address,address)'](10n ** 6n, user0, user0),
+            usdcVault.connect(user0)['deposit(uint256,address,address)'](10n ** 6n, user0, user0),
         ).to.be.rejectedWith('TokenVaultNotAllowed(');
     });
 
-    it('Distribute yield via tokenUSDCVault tokenUSDCVault', async () => {
-        const { tokenUSDCVault, rebaseToken, USDC, user1, supplyManager, moleculaPool } =
+    it('Distribute yield via usdcVault usdcVault', async () => {
+        const { usdcVault, rebaseToken, USDC, user1, supplyManager, moleculaPool } =
             await loadFixture(deployNitrogenWithTokenVault);
 
         // generate income
@@ -321,7 +320,7 @@ describe('Test TokenVault', () => {
                     portion: 10n ** 18n,
                 },
             ],
-            agent: tokenUSDCVault,
+            agent: usdcVault,
             ethValue: 0n,
         };
         expect(await rebaseToken.balanceOf(user1)).to.equal(0);
@@ -329,11 +328,11 @@ describe('Test TokenVault', () => {
         expect(await rebaseToken.balanceOf(user1)).to.greaterThan(0);
     });
 
-    it('White list for agents in the tokenUSDCVault', async () => {
+    it('White list for agents in the usdcVault', async () => {
         const { rebaseToken, rebaseTokenOwner, guardian, randAccount, supplyManager, DAI } =
             await loadFixture(deployNitrogenWithTokenVault);
 
-        // Create new dai tokenUSDCVault and add it in tokenUSDCVault
+        // Create new dai usdcVault and add it in usdcVault
         const TokenVault = await ethers.getContractFactory('NitrogenTokenVault');
         const daiTokenVault = await TokenVault.connect(randAccount).deploy(
             randAccount,
@@ -341,13 +340,14 @@ describe('Test TokenVault', () => {
             supplyManager,
             rebaseTokenOwner,
             guardian,
+            ethers.ZeroAddress,
         );
         await daiTokenVault.connect(randAccount).init(DAI, 10n ** 6n, 10n ** 18n);
 
         // Add TokenVault into RebaseTokenOwner
         await rebaseTokenOwner.addTokenVault(daiTokenVault);
 
-        // Remove dia tokenUSDCVault
+        // Remove dia usdcVault
         await rebaseTokenOwner.removeTokenVault(daiTokenVault);
 
         // Remove code hash from whitelist
@@ -363,92 +363,88 @@ describe('Test TokenVault', () => {
         );
     });
 
-    it('Test tokenUSDCVault.{deposit,redeem} errors', async () => {
-        const { user0, user1, tokenUSDCVault, USDC } = await loadFixture(
-            deployNitrogenWithTokenVault,
-        );
+    it('Test usdcVault.{deposit,redeem} errors', async () => {
+        const { user0, user1, usdcVault, USDC } = await loadFixture(deployNitrogenWithTokenVault);
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, depositValue);
+        await USDC.connect(user0).approve(usdcVault, depositValue);
 
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(user1)
                 ['deposit(uint256,address,address)'](depositValue, user1, user0),
         ).to.be.rejectedWith('EInvalidOperator(');
-        await tokenUSDCVault
+        await expect(
+            usdcVault.connect(user1)['mint(uint256,address,address)'](depositValue, user1, user0),
+        ).to.be.rejectedWith('EInvalidOperator(');
+        await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
 
         const shares = 100n * 10n ** 18n;
 
         await expect(
-            tokenUSDCVault.connect(user1).requestRedeem(shares, user1, user0),
+            usdcVault.connect(user1).requestRedeem(shares, user1, user0),
         ).to.be.rejectedWith('EInvalidOperator(');
-        await expect(
-            tokenUSDCVault.connect(user0).requestRedeem(1, user0, user0),
-        ).to.be.rejectedWith('ETooLowRequestRedeemShares(');
+        await expect(usdcVault.connect(user0).requestRedeem(1, user0, user0)).to.be.rejectedWith(
+            'ETooLowRequestRedeemShares(',
+        );
 
-        const restShares = await tokenUSDCVault.maxRedeem(user0);
-        const tx = await tokenUSDCVault.connect(user0).requestRedeem(restShares, user0, user0);
+        const restShares = await usdcVault.maxRedeem(user0);
+        const tx = await usdcVault.connect(user0).requestRedeem(restShares, user0, user0);
         const operationId0 = (await findRequestRedeemEvent(tx)).operationId;
 
         await expect(
-            tokenUSDCVault['redeem(address,uint256[],uint256[],uint256)'](
-                user0,
-                [operationId0],
-                [1],
-                1,
-            ),
+            usdcVault['redeem(address,uint256[],uint256[],uint256)'](user0, [operationId0], [1], 1),
         ).to.be.rejectedWith('ENotAuthorized(');
     });
 
     it('Test rebaseTokenOwner pause', async () => {
-        const { tokenUSDCVault, USDC, user0, rebaseTokenOwner, rebaseToken } = await loadFixture(
+        const { usdcVault, USDC, user0, rebaseTokenOwner, rebaseToken } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, 2n * depositValue);
-        await USDC.connect(user0).approve(tokenUSDCVault, 2n * depositValue);
+        await USDC.connect(user0).approve(usdcVault, 2n * depositValue);
 
         // user0 deposits tokens
         await rebaseTokenOwner.pauseMint();
         await expect(
-            tokenUSDCVault.connect(user0).requestDeposit(depositValue, user0, user0),
+            usdcVault.connect(user0).requestDeposit(depositValue, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused("');
         await rebaseTokenOwner.unpauseMint();
-        await tokenUSDCVault.connect(user0).requestDeposit(depositValue, user0, user0);
+        await usdcVault.connect(user0).requestDeposit(depositValue, user0, user0);
 
         await rebaseTokenOwner.pauseAll();
         await expect(
-            tokenUSDCVault.connect(user0).requestDeposit(depositValue, user0, user0),
+            usdcVault.connect(user0).requestDeposit(depositValue, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused("');
         await rebaseTokenOwner.unpauseAll();
-        await tokenUSDCVault.connect(user0).requestDeposit(depositValue, user0, user0);
+        await usdcVault.connect(user0).requestDeposit(depositValue, user0, user0);
 
         const shares = (await rebaseToken.balanceOf(user0)) / 2n;
         // user0 redeem tokens
         await rebaseTokenOwner.pauseBurn();
         await expect(
-            tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0),
+            usdcVault.connect(user0).redeemImmediately(shares, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused(');
         await rebaseTokenOwner.unpauseBurn();
-        await tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0);
+        await usdcVault.connect(user0).redeemImmediately(shares, user0, user0);
 
         await rebaseTokenOwner.pauseAll();
         await expect(
-            tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0),
+            usdcVault.connect(user0).redeemImmediately(shares, user0, user0),
         ).to.be.rejectedWith('EFunctionPaused(');
         await rebaseTokenOwner.unpauseAll();
-        await tokenUSDCVault.connect(user0).redeemImmediately(shares, user0, user0);
+        await usdcVault.connect(user0).redeemImmediately(shares, user0, user0);
 
         await expect(rebaseTokenOwner.connect(user0).pauseMint()).to.be.rejectedWith(
             'ENotAuthorizedForPause(',
@@ -467,7 +463,7 @@ describe('Test TokenVault', () => {
     it('Test rebaseTokenOwner errors', async () => {
         const {
             supplyManager,
-            tokenUSDCVault,
+            usdcVault,
             randAccount,
             USDC,
             rebaseToken,
@@ -475,7 +471,7 @@ describe('Test TokenVault', () => {
             guardian,
         } = await loadFixture(deployNitrogenWithTokenVault);
 
-        await expect(rebaseTokenOwner.addTokenVault(tokenUSDCVault)).to.be.rejectedWith(
+        await expect(rebaseTokenOwner.addTokenVault(usdcVault)).to.be.rejectedWith(
             'EHasTokenVaultForAsset(',
         );
 
@@ -487,6 +483,7 @@ describe('Test TokenVault', () => {
             supplyManager,
             rebaseTokenOwner,
             guardian,
+            ethers.ZeroAddress,
         );
 
         await expect(
@@ -500,14 +497,14 @@ describe('Test TokenVault', () => {
             rebaseTokenOwner.connect(randAccount).callRebaseToken('0x'),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
 
-        await expect(tokenUSDCVault.connect(randAccount).setMinDepositAssets(0)).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).setMinDepositAssets(0)).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
-        await expect(tokenUSDCVault.connect(randAccount).setMinRedeemShares(0)).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).setMinRedeemShares(0)).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
         await expect(
-            rebaseTokenOwner.connect(randAccount).removeTokenVault(tokenUSDCVault),
+            rebaseTokenOwner.connect(randAccount).removeTokenVault(usdcVault),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
         await expect(rebaseTokenOwner.connect(randAccount).mint(randAccount, 1)).to.be.rejectedWith(
             'TokenVaultNotAllowed(',
@@ -535,31 +532,31 @@ describe('Test TokenVault', () => {
             ),
         ).to.be.rejectedWith('EBadSelector(');
 
-        await expect(tokenUSDCVault.connect(randAccount).changeGuardian(USDC)).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).changeGuardian(USDC)).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
-        await expect(tokenUSDCVault.changeGuardian(ethers.ZeroAddress)).to.be.rejectedWith(
+        await expect(usdcVault.changeGuardian(ethers.ZeroAddress)).to.be.rejectedWith(
             'EZeroAddress(',
         );
 
-        await expect(tokenUSDCVault.connect(randAccount).pauseRequestDeposit()).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).pauseRequestDeposit()).to.be.rejectedWith(
             'ENotAuthorizedForPause(',
         );
-        await expect(
-            tokenUSDCVault.connect(randAccount).unpauseRequestDeposit(),
-        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
-
-        await expect(tokenUSDCVault.connect(randAccount).pauseRequestRedeem()).to.be.rejectedWith(
-            'ENotAuthorizedForPause(',
-        );
-        await expect(tokenUSDCVault.connect(randAccount).unpauseRequestRedeem()).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).unpauseRequestDeposit()).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
 
-        await expect(tokenUSDCVault.connect(randAccount).pauseAll()).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).pauseRequestRedeem()).to.be.rejectedWith(
             'ENotAuthorizedForPause(',
         );
-        await expect(tokenUSDCVault.connect(randAccount).unpauseAll()).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).unpauseRequestRedeem()).to.be.rejectedWith(
+            'OwnableUnauthorizedAccount(',
+        );
+
+        await expect(usdcVault.connect(randAccount).pauseAll()).to.be.rejectedWith(
+            'ENotAuthorizedForPause(',
+        );
+        await expect(usdcVault.connect(randAccount).unpauseAll()).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
 
@@ -568,63 +565,61 @@ describe('Test TokenVault', () => {
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
     });
 
-    it('Test tokenUSDCVault errors', async () => {
-        const { tokenUSDCVault, randAccount, USDC, poolOwner } = await loadFixture(
+    it('Test usdcVault errors', async () => {
+        const { usdcVault, randAccount, USDC, poolOwner } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
         await expect(
-            tokenUSDCVault.connect(poolOwner).init(ethers.ZeroAddress, 0, 0),
+            usdcVault.connect(poolOwner).init(ethers.ZeroAddress, 0, 0),
         ).to.be.rejectedWith('EZeroAddress()');
-        await expect(tokenUSDCVault.connect(randAccount).init(USDC, 1, 1)).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).init(USDC, 1, 1)).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
-        await expect(tokenUSDCVault.init(USDC, 1, 1)).to.be.rejectedWith('EAlreadyInitialized()');
+        await expect(usdcVault.init(USDC, 1, 1)).to.be.rejectedWith('EAlreadyInitialized()');
 
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(randAccount)
                 ['deposit(uint256,address,address)'](0, ethers.ZeroAddress, ethers.ZeroAddress),
         ).to.be.rejectedWith('EInvalidOperator(');
 
         await expect(
-            tokenUSDCVault
-                .connect(randAccount)
-                .requestRedeem(0, ethers.ZeroAddress, ethers.ZeroAddress),
+            usdcVault.connect(randAccount).requestRedeem(0, ethers.ZeroAddress, ethers.ZeroAddress),
         ).to.be.rejectedWith('EInvalidOperator(');
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(randAccount)
                 .requestWithdraw(0, ethers.ZeroAddress, ethers.ZeroAddress),
         ).to.be.rejectedWith('EInvalidOperator(');
 
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(randAccount)
                 ['redeem(address,uint256[],uint256[],uint256)'](ethers.ZeroAddress, [], [], 0),
         ).to.be.rejectedWith('ENotAuthorized()');
 
         await expect(
-            tokenUSDCVault.connect(randAccount).distribute([], [], { value: 1n }),
+            usdcVault.connect(randAccount).distribute([], [], { value: 1n }),
         ).to.be.rejectedWith('EMsgValueIsNotZero()');
         await expect(
-            tokenUSDCVault
+            usdcVault
                 .connect(randAccount)
                 [
                     'redeem(address,uint256[],uint256[],uint256)'
                 ](ethers.ZeroAddress, [], [], 0, { value: 1n }),
         ).to.be.rejectedWith('EMsgValueIsNotZero()');
-        await expect(tokenUSDCVault.connect(randAccount).distribute([], [])).to.be.rejectedWith(
+        await expect(usdcVault.connect(randAccount).distribute([], [])).to.be.rejectedWith(
             'ENotAuthorized()',
         );
     });
 
-    it('Test tokenUSDCVault transfer ownership ', async () => {
-        const { tokenUSDCVault, rebaseTokenOwner, user1, poolOwner } = await loadFixture(
+    it('Test usdcVault transfer ownership ', async () => {
+        const { usdcVault, rebaseTokenOwner, user1, poolOwner } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
-        for (const ownableContract of [tokenUSDCVault, rebaseTokenOwner]) {
+        for (const ownableContract of [usdcVault, rebaseTokenOwner]) {
             await ownableContract.transferOwnership(user1);
             expect(await ownableContract.owner()).to.be.equal(poolOwner);
             await ownableContract.connect(user1).acceptOwnership();
@@ -633,23 +628,21 @@ describe('Test TokenVault', () => {
     });
 
     it('Should support interface', async () => {
-        const { tokenUSDCVault, rebaseTokenOwner } = await loadFixture(
-            deployNitrogenWithTokenVault,
-        );
+        const { usdcVault, rebaseTokenOwner } = await loadFixture(deployNitrogenWithTokenVault);
 
         // https://eips.ethereum.org/EIPS/eip-7540
-        expect(await tokenUSDCVault.supportsInterface('0xe3bc4e65')).to.be.equal(true);
-        expect(await tokenUSDCVault.supportsInterface('0xce3bbe50')).to.be.equal(true);
-        expect(await tokenUSDCVault.supportsInterface('0x620ee8e4')).to.be.equal(true);
+        expect(await usdcVault.supportsInterface('0xe3bc4e65')).to.be.equal(true);
+        expect(await usdcVault.supportsInterface('0xce3bbe50')).to.be.equal(true);
+        expect(await usdcVault.supportsInterface('0x620ee8e4')).to.be.equal(true);
 
         // https://eips.ethereum.org/EIPS/eip-7575
-        expect(await tokenUSDCVault.supportsInterface('0x2f0a18c5')).to.be.equal(true);
+        expect(await usdcVault.supportsInterface('0x2f0a18c5')).to.be.equal(true);
         expect(await rebaseTokenOwner.supportsInterface('0xf815c03d')).to.be.equal(true);
-        expect(await tokenUSDCVault.supportsInterface('0x01ffc9a7')).to.be.equal(true);
+        expect(await usdcVault.supportsInterface('0x01ffc9a7')).to.be.equal(true);
         expect(await rebaseTokenOwner.supportsInterface('0x01ffc9a7')).to.be.equal(true);
 
         // Just bad ids
-        expect(await tokenUSDCVault.supportsInterface('0x11223344')).to.be.equal(false);
+        expect(await usdcVault.supportsInterface('0x11223344')).to.be.equal(false);
         expect(await rebaseTokenOwner.supportsInterface('0x11223344')).to.be.equal(false);
     });
 
@@ -660,64 +653,60 @@ describe('Test TokenVault', () => {
             randAccount,
             supplyManager,
             rebaseToken,
-            tokenUSDCVault,
-            tokenSUSDEVault,
+            usdcVault,
+            susdeVault,
             moleculaPool,
             USDC,
-            SUSDE,
+            sUSDe,
             user0,
         } = await loadFixture(deployNitrogenWithTokenVault);
 
         // Generate yield
         await grantERC20(moleculaPool, USDC, 10n ** 6n - 1n);
-        await grantERC20(moleculaPool, SUSDE, 10n ** 18n - 1n, FAUCET.sUSDe);
+        await grantERC20(moleculaPool, sUSDe, 10n ** 18n - 1n, FAUCET.sUSDe);
 
         const { pool: totalPool, shares: totalShares } = await supplyManager.getTotalSupply();
         const shares = 10n ** 18n;
 
         // Test totalAssets
-        expect(await tokenUSDCVault.totalAssets()).to.be.equal(await USDC.balanceOf(moleculaPool));
-        expect(await tokenSUSDEVault.totalAssets()).to.be.equal(
-            await SUSDE.balanceOf(moleculaPool),
-        );
+        expect(await usdcVault.totalAssets()).to.be.equal(await USDC.balanceOf(moleculaPool));
+        expect(await susdeVault.totalAssets()).to.be.equal(await sUSDe.balanceOf(moleculaPool));
 
-        // Test tokenUSDCVault
-        const usdcAmount = await tokenUSDCVault.convertToAssets(shares);
+        // Test usdcVault
+        const usdcAmount = await usdcVault.convertToAssets(shares);
         expect(usdcAmount).to.be.equal((shares * totalPool) / totalShares / 10n ** 12n);
-        expect(await tokenUSDCVault.convertToShares(usdcAmount)).to.be.equal(
+        expect(await usdcVault.convertToShares(usdcAmount)).to.be.equal(
             (usdcAmount * 10n ** 12n * totalShares) / totalPool,
         );
 
         // Test tokenUSDEVault
-        const susdeAmount = await tokenSUSDEVault.convertToAssets(shares);
+        const susdeAmount = await susdeVault.convertToAssets(shares);
         expect(susdeAmount).to.be.equal(
-            await SUSDE.connect(user0).convertToShares((shares * totalPool) / totalShares),
+            await sUSDe.connect(user0).convertToShares((shares * totalPool) / totalShares),
         );
-        expect(await tokenSUSDEVault.convertToShares(susdeAmount)).to.be.equal(
-            ((await SUSDE.connect(user0).convertToAssets(susdeAmount)) * totalShares) / totalPool,
+        expect(await susdeVault.convertToShares(susdeAmount)).to.be.equal(
+            ((await sUSDe.connect(user0).convertToAssets(susdeAmount)) * totalShares) / totalPool,
         );
 
         // User0 deposits sUSDe. Then we check user0's shares with the expected amount
-        await grantERC20(user0, SUSDE, susdeAmount, FAUCET.sUSDe);
+        await grantERC20(user0, sUSDe, susdeAmount, FAUCET.sUSDe);
         expect(await rebaseToken.sharesOf(user0)).to.be.equal(0);
-        await SUSDE.connect(user0).approve(tokenSUSDEVault, susdeAmount);
-        await tokenSUSDEVault.connect(user0).requestDeposit(susdeAmount, user0, user0);
+        await sUSDe.connect(user0).approve(susdeVault, susdeAmount);
+        await susdeVault.connect(user0).requestDeposit(susdeAmount, user0, user0);
         const userShares = await rebaseToken.sharesOf(user0);
-        expect(userShares).to.be.equal(await tokenSUSDEVault.convertToShares(susdeAmount));
+        expect(userShares).to.be.equal(await susdeVault.convertToShares(susdeAmount));
 
         // user0 redeems their shares
-        const userSUSDE = await tokenSUSDEVault.connect(user0).convertToAssets(userShares);
-        await tokenSUSDEVault.connect(user0).redeemImmediately(userShares, user0, user0);
-        expectEqual(await SUSDE.connect(user0).balanceOf(user0), userSUSDE, 18, 6);
+        const userSUSDE = await susdeVault.connect(user0).convertToAssets(userShares);
+        await susdeVault.connect(user0).redeemImmediately(userShares, user0, user0);
+        expectEqual(await sUSDe.connect(user0).balanceOf(user0), userSUSDE, 18, 6);
 
         // Get rid of USDC, USDE from moleculaPool, remove tokens and test errors
         await getRidOf(moleculaPool, poolOwner, USDC, randAccount.address, poolKeeper);
-        await getRidOf(moleculaPool, poolOwner, SUSDE, randAccount.address, poolKeeper);
+        await getRidOf(moleculaPool, poolOwner, sUSDe, randAccount.address, poolKeeper);
         await moleculaPool.removeToken(USDC);
-        await moleculaPool.removeToken(SUSDE);
-        await expect(tokenUSDCVault.convertToAssets(shares)).to.be.rejectedWith('ETokenNotExist()');
-        await expect(tokenSUSDEVault.convertToShares(shares)).to.be.rejectedWith(
-            'ETokenNotExist()',
-        );
+        await moleculaPool.removeToken(sUSDe);
+        await expect(usdcVault.convertToAssets(shares)).to.be.rejectedWith('ETokenNotExist()');
+        await expect(susdeVault.convertToShares(shares)).to.be.rejectedWith('ETokenNotExist()');
     });
 });

@@ -1,6 +1,6 @@
 import { TronWeb } from 'tronweb';
 
-import { Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
 
 const signTemplate = `$url wants you to sign in with your Tron account:
     $account

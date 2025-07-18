@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.23;
 
-import {IAccountant} from "../common/interfaces/IAccountant.sol";
-import {IRebaseToken} from "../common/interfaces/IRebaseToken.sol";
-import {IRebaseTokenErrors} from "../common/interfaces/IRebaseTokenErrors.sol";
-import {IRebaseTokenEvents} from "../common/interfaces/IRebaseTokenEvents.sol";
-import {RebaseERC20Permit} from "../common/rebase/RebaseERC20Permit.sol";
-import {RedeemOperationInfo, DepositOperationInfo} from "../common/rebase/structures/OperationInfo7540.sol";
-import {OperationStatus} from "../common/rebase/structures/OperationStatus.sol";
+import {IAccountant} from "../../common/interfaces/IAccountant.sol";
+import {IRebaseToken} from "../../common/interfaces/IRebaseToken.sol";
+import {IRebaseTokenErrors} from "../../common/interfaces/IRebaseTokenErrors.sol";
+import {IRebaseTokenEvents} from "../../common/interfaces/IRebaseTokenEvents.sol";
+import {RebaseERC20Permit} from "../../common/rebase/RebaseERC20Permit.sol";
+import {RedeemOperationInfo, DepositOperationInfo} from "../../common/rebase/structures/OperationInfo7540.sol";
+import {OperationStatus} from "../../common/rebase/structures/OperationStatus.sol";
 
 contract MockRebaseTokenCommon is
     IRebaseToken,

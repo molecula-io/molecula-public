@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 
 import {IMoleculaPoolV2WithNativeToken} from "./../../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {IDelegationManager, IStrategy} from "./../external/interfaces/IDelegationManager.sol";
+import {IRewardsCoordinatorTypes} from "./../external/interfaces/IRewardsCoordinator.sol";
 import {BeaconChainProofs} from "./../external/libraries/BeaconChainProofs.sol";
 import {IDepositManagerTypes} from "./IDepositManagerTypes.sol";
 import {IStrategyLib} from "./IStrategyLib.sol";
@@ -37,6 +38,49 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @param newValue New value.
     event IsStakePausedChanged(bool indexed newValue);
 
+    /// @dev Emitted when an operator is removed from the system.
+    /// @param operator Address of the removed operator.
+    event OperatorRemoved(address indexed operator);
+
+    /// @dev Emitted when the operator delegation portions are changed.
+    /// @param newOperatorsArray Array of operators with new portions.
+    /// @param delegationPortions Array of delegation portions for each operator.
+    event OperatorsPortionsChanged(address[] newOperatorsArray, uint64[] delegationPortions);
+
+    /// @dev Emitted when Pools are configured.
+    /// @param pools Array of Pool addresses.
+    /// @param newPoolsData Array of Pool configuration data.
+    /// @param auth Array of boolean flags indicating the add or remove operations.
+    event PoolsSet(address[] pools, PoolData[] newPoolsData, bool[] auth);
+
+    /// @dev Emitted when the buffer percentage is changed.
+    /// @param newBufferPercentage New buffer percentage value.
+    event BufferPercentageChanged(uint16 indexed newBufferPercentage);
+
+    /// @dev Emitted when the delegator implementation address is changed.
+    /// @param newDelegatorImplementation New delegator implementation address.
+    event DelegatorImplementationChanged(address indexed newDelegatorImplementation);
+
+    /// @dev Emitted when the authorized staker address is changed.
+    /// @param newAuthorizedStaker New authorized staker address.
+    event AuthorizedStakerChanged(address indexed newAuthorizedStaker);
+
+    /// @dev Emitted when a new operator is added to the system.
+    /// @param operator Added operator's address.
+    /// @param delegator Deployed delegator contract's address.
+    event OperatorAdded(address indexed operator, address indexed delegator);
+
+    /// @dev Emitted when a new strategy is added for a token.
+    /// @param token Address of the token for which the strategy is added.
+    /// @param strategy Strategy contract's address.
+    /// @param strategyLibrary Strategy library contract's address.
+    event StrategyAdded(address indexed token, IStrategy strategy, IStrategyLib strategyLibrary);
+
+    /// @dev Emitted when a single Pool is configured.
+    /// @param setPoolData SetPoolData struct.
+    event PoolSet(SetPoolData setPoolData);
+
+    /// @dev Error indicating the Deposit Manager is already initialized.
     /// @dev Error: The `Pause` status has been already set.
     error EPauseAlreadySet();
 
@@ -64,9 +108,6 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @dev Error: Sum of portions is not equal to `1`.
     error EWrongPortion();
 
-    /// @dev Error: Buffer percentage is invalid.
-    error EInvalidPercentage();
-
     /// @dev Error: The `stake` and `delegate` functions are called while being paused as the `isStakePaused` flag is set.
     error EStakePaused();
 
@@ -91,19 +132,15 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @dev Error: Predicted clone address does not match the deployed clone.
     error EIncorrectPredictedAddress();
 
+    /// @dev Error: Expected pool length is incorrect.
+    error EIncorrectExpectedPoolLength();
+
     /**
      * @dev Initialize function.
      * @param bufferPercent_ Percentage from the TVL to be stored in the Pools.
-     * @param pools_ Array of Pools' addresses.
-     * @param poolData_ Array of `PoolData` structs.
-     * @param auth_ Array of boolean add types.
+     * @param setPoolData_ Array of SetPoolData structs.
      */
-    function initialize(
-        uint16 bufferPercent_,
-        address[] calldata pools_,
-        PoolData[] calldata poolData_,
-        bool[] calldata auth_
-    ) external;
+    function initialize(uint16 bufferPercent_, SetPoolData[] calldata setPoolData_) external;
 
     /**
      * @dev Process a deposit into the EigenLayer.
@@ -144,6 +181,24 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     ) external;
 
     /**
+     * @dev Initiates a checkpoint proof by snapshotting both the pod's ETH balance and the current block's parent block root.
+     * @param operator Operator's address.
+     */
+    function startCheckpoint(address operator) external;
+
+    /**
+     * @dev Verifies checkpoint proofs for the currently active checkpoint and tracks the exited validator balance.
+     * @param operator Operator's address.
+     * @param balanceContainerProof Proves the beacon's current balance container root against a checkpoint's `beaconBlockRoot`.
+     * @param proofs Proofs for one or more validator current balances against `balanceContainerRoot`.
+     */
+    function verifyCheckpointProofs(
+        address operator,
+        BeaconChainProofs.BalanceContainerProof calldata balanceContainerProof,
+        BeaconChainProofs.BalanceProof[] calldata proofs
+    ) external;
+
+    /**
      * @dev Undelegate shares from the old AVS operator to a new AVS operator.
      * @param oldOperator Address of the old operator to remove delegation.
      * @param newOperator Address of new operator for delegation.
@@ -155,6 +210,33 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
         address newOperator,
         IDelegationManager.SignatureWithExpiry calldata approverSignatureAndExpiry,
         bytes32 approverSalt
+    ) external;
+
+    /**
+     * @dev Claims rewards from EigenLayer for the specified operator using the provided merkle claim.
+     * @param operator Operator's address.
+     * @param claim `RewardsMerkleClaim` object to process claim.
+     */
+    function claimRewards(
+        address operator,
+        IRewardsCoordinatorTypes.RewardsMerkleClaim calldata claim
+    ) external;
+
+    /**
+     * @dev Restakes tokens into the configured Pools.
+     * @param tokens Tokens to restake.
+     * @param values Amounts of tokens to restake.
+     */
+    function restakeRewards(address[] calldata tokens, uint256[] calldata values) external;
+
+    /**
+     * @dev Claims rewards from EigenLayer and automatically restakes them into the protocol.
+     * @param operator Operator's address.
+     * @param claim RewardsMerkleClaim object to process claim.
+     */
+    function claimRewardsAndRestake(
+        address operator,
+        IRewardsCoordinatorTypes.RewardsMerkleClaim calldata claim
     ) external;
 
     /**
@@ -188,6 +270,16 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
      * @return bufferedTvl Total ETH supply in buffer.
      */
     function totalBufferedSupply() external view returns (uint256 bufferedTvl);
+
+    /**
+     * @dev Calculates the available amount of WETHto deposit into the pools.
+     * @return availableAmounts Array of available amounts for each pool.
+     * @return totalAvailableAmount Total available amount of WETH to deposit.
+     */
+    function getAvailableAmountToDeposit()
+        external
+        view
+        returns (uint256[] memory availableAmounts, uint256 totalAvailableAmount);
 
     /**
      * @dev calculates the yield on the increased balances of staked.
@@ -243,7 +335,7 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
      * @dev Setter Strategy contract for the token.
      * @param tokens array of LRT tokens addresses.
      * @param _strategies array of Strategy contracts' addresses.
-     * @param strategyLibraries Array of strategy libraries used to convert token balances into ETH
+     * @param strategyLibraries Array of strategy libraries used to convert token balances into ETH.
      */
     function addStrategies(
         address[] calldata tokens,
@@ -261,15 +353,10 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
 
     /**
      * @dev Authorizes new Pools.
-     * @param pools Array of Pools' addresses.
-     * @param newPoolsData Array of new Pools' data.
-     * @param auth Array of boolean flags indicating for adding or removing the Pool.
+     * @param setPoolData Array of SetPoolData structs.
+     * @param expectedPoolLength Expected length of the poolsArray after adding and removing.
      */
-    function setPools(
-        address[] calldata pools,
-        PoolData[] calldata newPoolsData,
-        bool[] calldata auth
-    ) external;
+    function setPools(SetPoolData[] calldata setPoolData, uint256 expectedPoolLength) external;
 
     /**
      * @dev Changes poolPortions and rebalances the Buffer.

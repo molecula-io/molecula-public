@@ -10,7 +10,7 @@ import {
     type Hex,
 } from '@molecula-monorepo/common.evm-utilities';
 
-import { jsonStringifyBigint } from '@molecula-monorepo/common.utilities';
+import { jsonStringifyBigint } from '@molecula-monorepo/common.shared';
 
 import type { TypedContractMethod } from '../types';
 

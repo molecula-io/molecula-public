@@ -61,6 +61,9 @@ describe('Meta ETH', () => {
         expect(await stETHVault.maxWithdraw(user0)).to.be.equal(redeemAssets);
         const tx = await stETHVault.connect(user0).requestRedeem(userShares - 1n, user0, user0);
         expectEqual(await stETHVault.pendingRedeemRequest(0, user0), userShares);
+        expect(await stETHVault.pendingRedeemRequest(0, user0)).to.be.equal(
+            await stETHVault.pendingRedeemShares(user0),
+        );
         const redeemEvent = await findRequestRedeemEventV2(tx);
 
         // fulfillRedeemRequests
@@ -89,10 +92,17 @@ describe('Meta ETH', () => {
         ).to.be.rejectedWith('ENotInWhiteList(');
         await metaPoolTreasury.addInWhiteList(stETH);
 
+        await expect(metaPoolTreasury.connect(user0).pauseExecute()).to.be.rejectedWith(
+            'ENotAuthorizedForPause()',
+        );
         await metaPoolTreasury.pauseExecute();
+        expect(await metaPoolTreasury.isExecutePaused()).to.be.equal(true);
         await expect(
             metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf),
         ).to.be.rejectedWith('EFunctionPaused(');
+        await expect(metaPoolTreasury.connect(user0).unpauseExecute()).to.be.rejectedWith(
+            'OwnableUnauthorizedAccount(',
+        );
         await metaPoolTreasury.unpauseExecute();
 
         await metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf);
@@ -298,5 +308,108 @@ describe('Meta ETH', () => {
         await expect(metaPoolTreasury.addInWhiteList(user0)).to.be.rejectedWith(
             'EAlreadyAddedInWhiteList()',
         );
+
+        await expect(metaPoolTreasury.removeToken(ethers.ZeroAddress)).to.be.rejectedWith(
+            'ETokenNotExist()',
+        );
+        await expect(metaPoolTreasury.addToken(NATIVE_TOKEN)).to.be.rejectedWith(
+            'EDuplicatedToken()',
+        );
+    });
+
+    it('Test deposit errors', async () => {
+        const {
+            user0,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            nativeTokenVault,
+            minDepositAssets,
+            rebaseTokenV2,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand USD and approve tokens for stETHVault
+        await grantERC20(user0, stETH, 2n * depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, 2n * depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Remove token
+        await metaPoolTreasury.removeToken(stETH);
+        await metaPoolTreasury.removeToken(NATIVE_TOKEN);
+
+        // Fail to deposit/redeem tokens
+        await expect(
+            stETHVault.connect(user0).requestDeposit(depositValue, user0, user0),
+        ).to.be.rejectedWith('ETokenNotExist()');
+        await expect(
+            nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue }),
+        ).to.be.rejectedWith('ETokenNotExist()');
+        await expect(
+            nativeTokenVault.connect(user0).requestRedeem(depositValue, user0, user0),
+        ).to.be.rejectedWith('ETokenNotExist()');
+
+        // Remove token vaults
+        await rebaseTokenV2.removeTokenVault(stETHVault);
+        await rebaseTokenV2.removeTokenVault(nativeTokenVault);
+    });
+
+    it('Test deposit errors 2', async () => {
+        const { user0, metaPoolTreasury, stETHVault, stETH, minDepositAssets } =
+            await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand USD and approve tokens for stETHVault
+        await grantERC20(user0, stETH, 2n * depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, 2n * depositValue);
+
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+        const tx = await stETHVault.connect(user0).requestRedeem(depositValue, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        await metaPoolTreasury.setBlockToken(stETH, true);
+        await expect(
+            metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]),
+        ).to.be.rejectedWith('ETokenBlocked()');
+        await expect(metaPoolTreasury.removeToken(stETH)).to.be.rejectedWith(
+            'ENotZeroValueToRedeemOfRemovedToken()',
+        );
+    });
+
+    it('Check price for stETH', async () => {
+        const { stETHVault, stETH, user0, poolOwner } = await loadFixture(deployMetaEth);
+
+        const decimals: bigint = await stETH.decimals();
+        const depositValue = 100n * 10n ** decimals;
+
+        // Grand USD and approve tokens for vault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // STETH / ETH
+        const stETHFeed = '0x86392dC19c0b719886221c78AB11eb8Cf5c52812';
+        const PriceChecker = await ethers.getContractFactory('PriceChecker');
+        const priceChecker = await PriceChecker.connect(poolOwner).deploy(
+            stETH,
+            stETHFeed,
+            false,
+            0,
+            poolOwner,
+        );
+        await stETHVault.setPriceChecker(priceChecker);
+        //
+        await expect(
+            stETHVault
+                .connect(user0)
+                ['deposit(uint256,address,address)'](depositValue, user0, user0),
+        ).to.be.rejectedWith('EAssetPriceNotCloseToExpected(');
+
+        await priceChecker.setPriceDeviationBps((5 * 10_000) / 100); // 5%
+        await stETHVault
+            .connect(user0)
+            ['deposit(uint256,address,address)'](depositValue, user0, user0);
     });
 });

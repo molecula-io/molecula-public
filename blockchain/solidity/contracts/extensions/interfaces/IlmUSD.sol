@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.24;
 
-import {RebaseERC20} from "../../../common/rebase/RebaseERC20.sol";
-import {WMUSD} from "../wmUSD.sol";
+import {RebaseERC20} from "../../common/rebase/RebaseERC20.sol";
+import {IwmUSD} from "./IwmUSD.sol";
 
 interface IlmUSD {
     /**
@@ -40,7 +40,7 @@ interface IlmUSD {
     /// @dev Returns wmUSD token address.
     /// @return wmUSD token address.
     // solhint-disable-next-line func-name-mixedcase
-    function WMUSD_TOKEN() external returns (WMUSD);
+    function WMUSD_TOKEN() external returns (IwmUSD);
 
     /// @dev Mapping `tokenId` to the lock information.
     /// See also the `LockInfo` structure.

@@ -36,7 +36,9 @@ contract DepositManagerMathTest is MrEthSetup {
      */
     function setUp() public override {
         string memory url = vm.rpcUrl("mainnet");
-        vm.createSelectFork(url);
+        uint256 blockNumber = vm.envUint("FORK_BLOCK_NUMBER");
+        // Create a fork from mainnet at choosen block number.
+        vm.createSelectFork(url, blockNumber);
         super.setUp();
 
         // Setup test users
@@ -288,30 +290,49 @@ contract DepositManagerMathTest is MrEthSetup {
         );
     }
 
+    /**
+     * @dev Test: Aave buffer interactor cap caluclation
+     */
+    function test_getAvailableAmountToDeposit() public view {
+        (uint256[] memory availableAmounts, ) = depositManager.getAvailableAmountToDeposit();
+        assertEq(availableAmounts.length, 1);
+    }
+
     // ============ HELPER FUNCTIONS ============
 
     function setPools(uint16[2] memory poolPortions) public {
         vm.startPrank(owner);
+
+        IDepositManagerTypes.SetPoolData[]
+            memory setPoolData = new IDepositManagerTypes.SetPoolData[](2);
+
+        poolsArray.push(cWETHv3Address);
+
         // Pool 1: AAVE pool (portion[0])
-        poolDataArray[0] = IDepositManagerTypes.PoolData({
-            poolToken: awethAddress,
-            poolLib: address(aaveBufferInteractor),
-            poolPortion: poolPortions[0],
-            poolId: 0
+        setPoolData[0] = IDepositManagerTypes.SetPoolData({
+            pool: poolsArray[0],
+            auth: true,
+            newPoolData: IDepositManagerTypes.PoolData({
+                poolToken: awethAddress,
+                poolLib: address(AaveBufferLib),
+                poolPortion: poolPortions[0],
+                poolId: 0
+            })
         });
+
         // Pool 2: Compound pool (portion[1])
-        poolDataArray.push(
-            IDepositManagerTypes.PoolData({
+        setPoolData[1] = IDepositManagerTypes.SetPoolData({
+            pool: cWETHv3Address,
+            auth: true,
+            newPoolData: IDepositManagerTypes.PoolData({
                 poolToken: cWETHv3Address,
-                poolLib: address(compoundBufferInteractor),
+                poolLib: address(CompoundBufferLib),
                 poolPortion: poolPortions[1],
                 poolId: 1
             })
-        );
-        poolsArray.push(cWETHv3Address);
-        authArray.push(true);
+        });
 
-        depositManager.setPools(poolsArray, poolDataArray, authArray);
+        depositManager.setPools(setPoolData, 2);
         vm.stopPrank();
     }
 

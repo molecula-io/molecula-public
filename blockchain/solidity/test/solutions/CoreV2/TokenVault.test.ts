@@ -30,7 +30,7 @@ describe('Token Vault', () => {
         const decimals: bigint = await USDC.decimals();
         const depositValue = 100n * 10n ** decimals;
 
-        // Grand USD and approve tokens for tokenUSDCVault
+        // Grand USD and approve tokens for usdcVault
         await grantERC20(user0, USDC, depositValue);
         await USDC.connect(user0).approve(usdcVault, depositValue);
 
@@ -100,6 +100,23 @@ describe('Token Vault', () => {
         await nativeTokenVault.connect(user0).withdraw(claimableAssets, user1, user0);
         expect(await provider.getBalance(user1)).to.be.equal(
             user1Balance + redeemEvent.redeemValue,
+        );
+    });
+
+    it('Test native token vault errors', async () => {
+        const { nativeTokenVault, user0, user1 } = await loadFixture(deployCoreV2WithoutInit);
+
+        await expect(nativeTokenVault.connect(user0).init(user0, 0, 0)).to.be.rejectedWith(
+            'OwnableUnauthorizedAccount(',
+        );
+        await expect(nativeTokenVault.init(user0, 0, 0)).to.be.rejectedWith(
+            'EWrongNativeAddress()',
+        );
+        await expect(
+            nativeTokenVault.connect(user1).requestWithdraw(0, user0, user0),
+        ).to.be.rejectedWith('EInvalidOperator(');
+        await expect(nativeTokenVault.connect(user1).redeem(0, user0, user0)).to.be.rejectedWith(
+            'EInvalidOperator(',
         );
     });
 });

@@ -14,6 +14,7 @@
     "main": "src/index.ts",
     "dependencies": {
         "@ethereumjs/util": "^9.1.0",
+        "@molecula-monorepo/common.logs": "*",
         "@molecula-monorepo/common.utilities": "*",
         "ethers": "^6.13.5",
         "p-queue": "6.6.2",

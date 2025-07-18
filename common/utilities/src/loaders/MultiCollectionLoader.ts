@@ -1,7 +1,7 @@
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
-import { Log } from '../Log';
+import { Log } from '@molecula-monorepo/common.logs';
 
 import type { BaseCollectionItem, CollectionLoader, CollectionLoaderListener } from './types';
 

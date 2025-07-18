@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.23;
 
-import {LZMsgCodec} from "../common/layerzero/LZMsgCodec.sol";
+import {LZMsgCodec} from "../../common/layerzero/LZMsgCodec.sol";
 
 /// @notice A combined wrapper contract to expose LZMsgCodec encoding and decoding functions for testing.
 contract MockLZMessageDecoder {

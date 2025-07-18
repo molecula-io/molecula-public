@@ -2,7 +2,7 @@ import { hashMessage, recoverAddress } from 'ethers';
 
 import { SiweMessage } from 'siwe';
 
-import { Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
 
 const log = new Log('Evm verify signature');
 

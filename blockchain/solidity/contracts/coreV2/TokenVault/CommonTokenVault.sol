@@ -141,7 +141,7 @@ abstract contract CommonTokenVault is BaseTokenVault, IERC7575, IERC7540Deposit 
     }
 
     /// @inheritdoc IERC7575
-    function asset() external view virtual override returns (address) {
+    function asset() public view virtual override returns (address) {
         return _asset;
     }
 

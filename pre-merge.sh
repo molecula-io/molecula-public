@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./install_utils.sh
+
 if [ "$(uname | tr '[:upper:]' '[:lower:]' | grep -o 'linux')" ] ; then
   echo "Set shell option 'set -e'"
   # Exit immediately if a command exits with a non-zero status
@@ -57,6 +59,7 @@ if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^blockchain/'; th
 fi
 
 if [[ "${IS_BLOCKCHAIN}" == true ]]; then
+  install_lintspec_if_needed
 
   echo "🔍 Running solidity code quality checks..."
   yarn turbo run lintspec:check --filter=@molecula-monorepo/solidity \
@@ -103,5 +106,5 @@ if [[ "${IS_BLOCKCHAIN}" == true && -n "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" 
   cd /builds/datsteam/molecula/molecula-monorepo/blockchain/solidity
   forge install
   forge build
-  forge test
+  yarn test:forge
 fi

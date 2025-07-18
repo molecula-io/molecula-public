@@ -18,6 +18,9 @@ abstract contract DepositManagerStorage is IDepositManagerTypes {
     /// @dev EigenLayer restaking contract's address.
     IDelegationManager public immutable DELEGATION_MANAGER;
 
+    /// @dev EigenLayer Reward Coordinator contract's address.
+    address public immutable REWARDS_COORDINATOR;
+
     /// @dev EigenLayer strategy factory contract's address.
     IStrategyFactory public immutable STRATEGY_FACTORY;
 

@@ -14,6 +14,7 @@ import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {IMoleculaPoolV2} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {DepositManagerStorage, IDelegationManager, IStrategyFactory} from "./DepositManagerStorage.sol";
 import {IEigenPodManager} from "./external/interfaces/IEigenPodManager.sol";
+import {IRewardsCoordinatorTypes} from "./external/interfaces/IRewardsCoordinator.sol";
 import {IStrategy, IStrategyManager} from "./external/interfaces/IStrategyManager.sol";
 import {IWETH} from "./external/interfaces/IWETH.sol";
 import {IBufferInteractor} from "./interfaces/IBufferInteractor.sol";
@@ -60,6 +61,7 @@ contract DepositManager is
      * @param weth_ Wrapped ETH contract's address.
      * @param strategyFactory_ Strategy Factory contract's address.
      * @param delegationManager_ Delegation Manager contract's address.
+     * @param rewardsCoordinator_ Reward Coordinator contract's address.
      * @param delegatorImplementation_ Delegator implementation contract's address.
      * @custom:revert Check if any of the addresses is zero.
      */
@@ -71,6 +73,7 @@ contract DepositManager is
         address weth_,
         address strategyFactory_,
         address delegationManager_,
+        address rewardsCoordinator_,
         address delegatorImplementation_
     )
         notZeroAddress(authorizedStaker_)
@@ -78,6 +81,7 @@ contract DepositManager is
         notZeroAddress(weth_)
         notZeroAddress(strategyFactory_)
         notZeroAddress(delegationManager_)
+        notZeroAddress(rewardsCoordinator_)
         notZeroAddress(delegatorImplementation_)
         Ownable(initialOwner_)
         Guardian(guardian_)
@@ -87,22 +91,23 @@ contract DepositManager is
         WETH = weth_;
         STRATEGY_FACTORY = IStrategyFactory(strategyFactory_);
         DELEGATION_MANAGER = IDelegationManager(delegationManager_);
+        REWARDS_COORDINATOR = rewardsCoordinator_;
         delegatorImplementation = delegatorImplementation_;
     }
 
     /// @inheritdoc IDepositManager
     function initialize(
         uint16 bufferPercent_,
-        address[] calldata pools_,
-        PoolData[] calldata poolData_,
-        bool[] calldata auth_
-    ) external onlyOwner initializer {
+        SetPoolData[] calldata setPoolData_
+    ) external onlyOwner initializer checkBPS(bufferPercent_) {
         // Set initial buffer percentage.
-        _checkPercentage(bufferPercent_);
         bufferPercentage = bufferPercent_;
 
-        _setPools(pools_, poolData_, auth_);
+        // Set initial pools.
+        _setPools(setPoolData_, setPoolData_.length);
     }
+
+    // ============ STAKE FUNCTIONS ============
 
     /// @inheritdoc IMoleculaPoolV2
     function deposit(
@@ -115,17 +120,9 @@ contract DepositManager is
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(vault, address(this), value);
 
-        if (token == WETH) {
-            // Deposit WETH into the configured Pools.
-            _depositIntoPools(value);
-        } else {
-            // For non-WETH tokens, delegate to an operator.
-            address delegator = chooseDelegatorForDeposit();
-            IERC20(token).forceApprove(delegator, value);
-
-            // Delegate deposited LRT tokens for the chosen operator.
-            IDelegator(delegator).stakeToken(getStrategy(token), IERC20(token), value);
-        }
+        // Deposit WETH into the configured Pools.
+        // Delegate deposited LRT tokens for the chosen operator.
+        _restakeTokens(token, value);
 
         // Emit the request deposit event.
         emit Deposit(token, vault, value);
@@ -223,6 +220,80 @@ contract DepositManager is
         );
     }
 
+    // ============ UPDATE YIELD FUNCTIONS ============
+
+    /// @inheritdoc IDepositManager
+    function startCheckpoint(address operator) external only(authorizedStaker) {
+        address delegator = operatorsDelegators[operator].delegator;
+
+        // Claim rewards by the EigenLayer's delegator.
+        IDelegator(delegator).startCheckpoint();
+    }
+
+    /// @inheritdoc IDepositManager
+    function verifyCheckpointProofs(
+        address operator,
+        BeaconChainProofs.BalanceContainerProof calldata balanceContainerProof,
+        BeaconChainProofs.BalanceProof[] calldata proofs
+    ) external only(authorizedStaker) {
+        address delegator = operatorsDelegators[operator].delegator;
+
+        // Claim rewards by the EigenLayer's delegator.
+        IDelegator(delegator).verifyCheckpointProofs(balanceContainerProof, proofs);
+    }
+
+    /// @inheritdoc IDepositManager
+    function claimRewards(
+        address operator,
+        IRewardsCoordinatorTypes.RewardsMerkleClaim calldata claim
+    ) public only(authorizedStaker) {
+        address delegator = operatorsDelegators[operator].delegator;
+
+        // Claim rewards by the EigenLayer's delegator.
+        IDelegator(delegator).claimRewards(claim);
+    }
+
+    /// @inheritdoc IDepositManager
+    function restakeRewards(
+        address[] calldata tokens,
+        uint256[] calldata values
+    ) external only(authorizedStaker) {
+        uint256 length = tokens.length;
+
+        if (length != values.length) {
+            revert EIncorrectLength();
+        }
+
+        for (uint256 i = 0; i < length; ++i) {
+            _restakeTokens(tokens[i], values[i]);
+        }
+    }
+
+    /// @inheritdoc IDepositManager
+    function claimRewardsAndRestake(
+        address operator,
+        IRewardsCoordinatorTypes.RewardsMerkleClaim calldata claim
+    ) external only(authorizedStaker) {
+        // Claim rewards from EigenLayer.
+        claimRewards(operator, claim);
+
+        uint256 length = claim.tokenLeaves.length;
+
+        // Process claimed rewards — i.e., restake them if the asset is a supported collateral;
+        // Otherwise, forward to the reward destination.
+        for (uint256 i = 0; i < length; ++i) {
+            // Get the token and its balance.
+            address token = address(claim.tokenLeaves[i].token);
+            uint256 value = IERC20(token).balanceOf(address(this));
+
+            // Deposit WETH rewards into the configured Pools.
+            // Delegate LRT tokens rewards for the chosen operator.
+            _restakeTokens(token, value);
+        }
+    }
+
+    // ============ REDEEM AND REDELEGATE FUNCTIONS ============
+
     /// @inheritdoc IDepositManager
     function redelegate(
         address oldOperator,
@@ -243,6 +314,8 @@ contract DepositManager is
     /// @inheritdoc IMoleculaPoolV2
     // solhint-disable-next-line no-empty-blocks
     function requestRedeem(uint256, address, uint256) external returns (uint256 values) {}
+
+    // ============ VIEW FUNCTIONS ============
 
     /// @inheritdoc IDepositManager
     function chooseDelegatorForDeposit() public view stakeNotPaused returns (address) {
@@ -380,6 +453,69 @@ contract DepositManager is
         }
     }
 
+    /**
+     * @dev Converter token balance into ETH.
+     * @param value Amount of tokens to convert.
+     * @param strategy Strategy contract's address.
+     * @return convertedValueToETH Amount of ETH converted from the token value.
+     */
+    function _convertTokenToETH(IStrategy strategy, uint256 value) internal view returns (uint256) {
+        IStrategyLib strategyLib = strategies[address(strategy)].strategyLib;
+
+        return address(strategyLib) != address(0) ? strategyLib.getEthBalance(value) : value;
+    }
+
+    /**
+     * @dev Validates that a token Vault is properly configured for the system.
+     * @param tokenVault Address of the token vault to validate.
+     */
+    function _validateTokenVault(address tokenVault) internal view only(SUPPLY_MANAGER) {
+        address token = IERC7575(tokenVault).asset();
+
+        //TO:DO Add checks for the restaked zero balance or removes restaked balance for the deleted token.
+        // Validate that a strategy exists for the token Vault's value.
+        // Skip the check for WETH and ETH, as they have a different flow than LRT.
+        if (
+            address(getStrategy(token)) == address(0) &&
+            token != WETH &&
+            token != ConstantsCoreV2.NATIVE_TOKEN
+        ) {
+            revert EStrategyNotExists();
+        }
+    }
+
+    /// @inheritdoc IDepositManager
+    function getAvailableAmountToDeposit()
+        external
+        view
+        returns (uint256[] memory availableAmounts, uint256 totalAvailableAmount)
+    {
+        uint256 length = poolsArray.length;
+
+        availableAmounts = new uint256[](length);
+
+        for (uint256 i = 0; i < length; ++i) {
+            address pool = poolsArray[i];
+            PoolData memory _poolData = poolData[pool];
+
+            // Get available amount to deposit for each pool
+            uint256 availableAmount = IBufferInteractor(_poolData.poolLib)
+                .getAvailableAmountToDeposit(pool, WETH, _poolData.poolToken);
+
+            // Increment availableAmounts for each pool
+            availableAmounts[i] = availableAmount;
+
+            // Increment totalAvailableAmount for each pool, if it's reached the max value, set it to max value
+            if (availableAmount == type(uint256).max || totalAvailableAmount == type(uint256).max) {
+                totalAvailableAmount = type(uint256).max;
+            } else {
+                totalAvailableAmount += availableAmount;
+            }
+        }
+    }
+
+    // ============ SETTERS FUNCTIONS ============
+
     /// @inheritdoc IDepositManager
     function addOperator(
         address operator,
@@ -419,10 +555,13 @@ contract DepositManager is
         // Initialize a clone.
         IDelegator(cloneAddress).initialize(
             DELEGATION_MANAGER,
+            REWARDS_COORDINATOR,
             operator,
             approverSignatureAndExpiry,
             approverSalt
         );
+
+        emit OperatorAdded(operator, cloneAddress);
     }
 
     /// @inheritdoc IDepositManager
@@ -453,6 +592,8 @@ contract DepositManager is
 
         // Update the delegation portions for the remaining operators.
         setOperatorsPortions(newOperatorsArray, newDelegationPortions);
+
+        emit OperatorRemoved(operator);
     }
 
     /// @inheritdoc IDepositManager
@@ -478,6 +619,8 @@ contract DepositManager is
         if (portionsSum != ConstantsCoreV2.PERCENTAGE_FACTOR) {
             revert EWrongPortion();
         }
+
+        emit OperatorsPortionsChanged(newOperatorsArray, delegationPortions);
     }
 
     /// @inheritdoc IDepositManager
@@ -523,87 +666,97 @@ contract DepositManager is
         if (!strategyManager.strategyIsWhitelistedForDeposit(strategy)) {
             revert EInvalidStrategyConfiguration("Strategy not whitelisted");
         }
+
+        emit StrategyAdded(token, newStrategy, strategyLibrary);
     }
 
     /// @inheritdoc IDepositManager
     function setPools(
-        address[] calldata pools,
-        PoolData[] calldata newPoolsData,
-        bool[] calldata auth
+        SetPoolData[] calldata setPoolData,
+        uint256 expectedPoolLength
     ) external onlyOwner {
-        uint256 balanceEthToRebalance = _setPools(pools, newPoolsData, auth);
-        _rebalanceBuffer(newPoolsData, balanceEthToRebalance);
+        (PoolData[] memory filteredPoolsData, uint256 balanceEthToRebalance) = _setPools(
+            setPoolData,
+            expectedPoolLength
+        );
+        _rebalanceBuffer(filteredPoolsData, balanceEthToRebalance);
     }
 
     /**
      * @dev Sets configuration for a single Pool.
-     * @param pool Pool's address.
-     * @param newPoolData New Pool's configuration.
-     * @param auth Details on whether to add or remove the Pool.
+     * @param setPoolData SetPoolData struct.
      * @return balanceEthToRebalance Amount of ETH to rebalance.
      */
     function _setPool(
-        address pool,
-        PoolData memory newPoolData,
-        bool auth
+        SetPoolData memory setPoolData
     ) internal returns (uint256 balanceEthToRebalance) {
-        if (auth) {
-            if (poolData[pool].poolPortion == 0) {
-                poolsArray.push(pool);
+        if (setPoolData.auth) {
+            if (poolData[setPoolData.pool].poolPortion == 0) {
+                poolsArray.push(setPoolData.pool);
             }
 
-            poolData[pool] = newPoolData;
+            poolData[setPoolData.pool] = setPoolData.newPoolData;
         } else {
-            PoolData memory _poolData = poolData[pool];
-
+            PoolData memory _poolData = poolData[setPoolData.pool];
             poolsArray[_poolData.poolId] = poolsArray[poolsArray.length - 1];
-            // slither-disable-next-line costly-loop
+
             poolsArray.pop();
 
             // Get the Pool's balance.
             balanceEthToRebalance = IBufferInteractor(_poolData.poolLib).getEthBalance(
-                pool,
+                setPoolData.pool,
                 _poolData.poolToken,
                 address(this)
             );
 
             // Withdraws the deleted Pool's balance.
-            _executeWithdraw(pool, balanceEthToRebalance);
+            if (balanceEthToRebalance > 0) {
+                _executeWithdraw(setPoolData.pool, balanceEthToRebalance);
+            }
 
-            delete poolData[pool];
+            delete poolData[setPoolData.pool];
         }
+
+        emit PoolSet(setPoolData);
     }
 
     /**
      * @dev Authorizes new Pools.
-     * @param pools actual Array with Pools' addresses.
-     * @param newPoolsData Array of new Pools' data.
-     * @param auth Array of boolean flags indicating for adding or removing the Pool.
+     * @param setPoolData Array of SetPoolData structs.
+     * @param expectedPoolLength Expected length of the poolsArray after adding and removing pools.
+     * @return filteredPoolsData Array of Pools' data after filtering by auth true.
      * @return balanceEthToRebalance Total amount of ETH withdrawn from the LPs.
      */
     function _setPools(
-        address[] memory pools,
-        PoolData[] memory newPoolsData,
-        bool[] memory auth
-    ) internal returns (uint256 balanceEthToRebalance) {
-        // Length of a new `poolsArray`.
-        uint256 length = pools.length;
+        SetPoolData[] memory setPoolData,
+        uint256 expectedPoolLength
+    ) internal returns (PoolData[] memory filteredPoolsData, uint256 balanceEthToRebalance) {
+        uint256 length = setPoolData.length;
 
-        // Validate the length of `newPoolsData`.
-        if (length != newPoolsData.length || length != auth.length) {
+        // ExpectedPoolLength could not be greater than the length of the setPoolData, because of the removed pools.
+        if (expectedPoolLength > length) {
             revert EIncorrectLength();
         }
 
+        filteredPoolsData = new PoolData[](expectedPoolLength);
+
         uint256 portionsSum = 0;
+        uint256 j = 0;
 
         for (uint256 i = 0; i < length; ++i) {
-            balanceEthToRebalance += _setPool(pools[i], newPoolsData[i], auth[i]);
+            SetPoolData memory _setPoolData = setPoolData[i];
+            balanceEthToRebalance += _setPool(_setPoolData);
 
-            portionsSum += newPoolsData[i].poolPortion;
+            if (_setPoolData.auth) {
+                filteredPoolsData[j] = _setPoolData.newPoolData;
+                portionsSum += _setPoolData.newPoolData.poolPortion;
 
-            // `poolId` must match the position in the array.
-            if (newPoolsData[i].poolId != i) {
-                revert EWrongPoolId();
+                if (_setPoolData.pool != poolsArray[_setPoolData.newPoolData.poolId]) {
+                    revert EWrongPoolId();
+                }
+                unchecked {
+                    ++j;
+                }
             }
         }
 
@@ -611,7 +764,83 @@ contract DepositManager is
         if (portionsSum != ConstantsCoreV2.PERCENTAGE_FACTOR) {
             revert EWrongPortion();
         }
+
+        // Check if the poolsArray length is equal to the expectedPoolLength.
+        if (poolsArray.length != expectedPoolLength) {
+            revert EIncorrectExpectedPoolLength();
+        }
     }
+
+    /// @inheritdoc IMoleculaPoolV2
+    function addTokenVault(address tokenVault) external view {
+        _validateTokenVault(tokenVault);
+    }
+
+    /// @inheritdoc IMoleculaPoolV2
+    function removeTokenVault(address tokenVault) external view {
+        _validateTokenVault(tokenVault);
+    }
+
+    /// @inheritdoc IDepositManager
+    function setBufferPercentage(
+        uint16 newBufferPercentage
+    ) external checkBPS(newBufferPercentage) onlyOwner {
+        bufferPercentage = newBufferPercentage;
+
+        emit BufferPercentageChanged(newBufferPercentage);
+    }
+
+    /// @inheritdoc IDepositManager
+    function setDelegatorImplementation(
+        address newDelegatorImplementation
+    ) external onlyOwner notZeroAddress(newDelegatorImplementation) {
+        delegatorImplementation = newDelegatorImplementation;
+
+        emit DelegatorImplementationChanged(newDelegatorImplementation);
+    }
+
+    /// @inheritdoc IDepositManager
+    function setAuthorizedStaker(
+        address newAuthorizedStaker
+    ) external onlyOwner notZeroAddress(newAuthorizedStaker) {
+        authorizedStaker = newAuthorizedStaker;
+
+        emit AuthorizedStakerChanged(newAuthorizedStaker);
+    }
+
+    /// @dev Set a new value for the `isRedeemPaused` flag.
+    /// @param newValue New value.
+    function _setStakePaused(bool newValue) private {
+        if (isStakePaused == newValue) {
+            revert EPauseAlreadySet();
+        }
+        isStakePaused = newValue;
+        emit IsStakePausedChanged(newValue);
+    }
+
+    /// @inheritdoc IDepositManager
+    function pauseStake() external onlyAuthForPause {
+        _setStakePaused(true);
+    }
+
+    /// @inheritdoc IDepositManager
+    function unpauseStake() external onlyOwner {
+        _setStakePaused(false);
+    }
+
+    /// @inheritdoc Ownable2Step
+    function _transferOwnership(address newOwner) internal virtual override(Ownable, Ownable2Step) {
+        // Transfer ownership to the new owner.
+        super._transferOwnership(newOwner);
+    }
+
+    /// @inheritdoc Ownable2Step
+    function transferOwnership(address newOwner) public virtual override(Ownable, Ownable2Step) {
+        // Initiate ownership transfer.
+        super.transferOwnership(newOwner);
+    }
+
+    // ============ BUFFER DEPOSIT, WITHDRAW AND RESTAKE FUNCTIONS ============
 
     /// @inheritdoc IDepositManager
     function rebalanceBuffer(PoolData[] calldata newPoolsData) external onlyOwner {
@@ -623,7 +852,7 @@ contract DepositManager is
      * @param newPoolsData Array of new Pool configurations.
      * @param extraValue Additional value to consider in rebalancing.
      */
-    function _rebalanceBuffer(PoolData[] calldata newPoolsData, uint256 extraValue) internal {
+    function _rebalanceBuffer(PoolData[] memory newPoolsData, uint256 extraValue) internal {
         // Length of a new `poolsArray`.
         uint256 length = poolsArray.length;
 
@@ -798,106 +1027,22 @@ contract DepositManager is
         pool.functionCall(data);
     }
 
-    /// @inheritdoc IMoleculaPoolV2
-    function addTokenVault(address tokenVault) external view {
-        _validateTokenVault(tokenVault);
-    }
-
-    /// @inheritdoc IMoleculaPoolV2
-    function removeTokenVault(address tokenVault) external view {
-        _validateTokenVault(tokenVault);
-    }
-
     /**
-     * @dev Validates that a token Vault is properly configured for the system.
-     * @param tokenVault Address of the token vault to validate.
+     * @dev Restakes tokens into the configured Pools.
+     * @param token Token to restake.
+     * @param value Token amount to restake.
      */
-    function _validateTokenVault(address tokenVault) internal view only(SUPPLY_MANAGER) {
-        address token = IERC7575(tokenVault).asset();
+    function _restakeTokens(address token, uint256 value) internal {
+        if (token == WETH) {
+            // Deposit WETH into the configured Pools.
+            _depositIntoPools(value);
+        } else if (address(getStrategy(token)) != address(0)) {
+            // For non-WETH tokens, delegate to an operator.
+            address delegator = chooseDelegatorForDeposit();
+            IERC20(token).forceApprove(delegator, value);
 
-        //TO:DO Add checks for the restaked zero balance or remove restaked balance for the deleted token.
-        // Validate that a strategy exists for the token Vault's value.
-        // Skip the check for WETH and ETH, as they have a different flow than LRT.
-        if (
-            address(getStrategy(token)) == address(0) &&
-            token != WETH &&
-            token != ConstantsCoreV2.NATIVE_TOKEN
-        ) {
-            revert EStrategyNotExists();
+            // Delegate deposited LRT tokens for the chosen operator.
+            IDelegator(delegator).stakeToken(getStrategy(token), IERC20(token), value);
         }
-    }
-
-    /**
-     * @dev Validate Percentage.
-     * @param percentage All needed percentages.
-     */
-    function _checkPercentage(uint16 percentage) internal pure {
-        if (percentage > ConstantsCoreV2.PERCENTAGE_FACTOR) {
-            revert EInvalidPercentage();
-        }
-    }
-
-    /**
-     * @dev Converter token balance to ETH.
-     * @param value Amount of tokens to convert.
-     * @param strategy Strategy contract's address.
-     * @return convertedValueToETH Amount of ETH converted from the token value.
-     */
-    function _convertTokenToETH(IStrategy strategy, uint256 value) internal view returns (uint256) {
-        IStrategyLib strategyLib = strategies[address(strategy)].strategyLib;
-
-        return address(strategyLib) != address(0) ? strategyLib.getEthBalance(value) : value;
-    }
-
-    /// @inheritdoc IDepositManager
-    function setBufferPercentage(uint16 newBufferPercentage) external onlyOwner {
-        _checkPercentage(newBufferPercentage);
-        bufferPercentage = newBufferPercentage;
-    }
-
-    /// @inheritdoc IDepositManager
-    function setDelegatorImplementation(
-        address newDelegatorImplementation
-    ) external onlyOwner notZeroAddress(newDelegatorImplementation) {
-        delegatorImplementation = newDelegatorImplementation;
-    }
-
-    /// @inheritdoc IDepositManager
-    function setAuthorizedStaker(
-        address newAuthorizedStaker
-    ) external onlyOwner notZeroAddress(newAuthorizedStaker) {
-        authorizedStaker = newAuthorizedStaker;
-    }
-
-    /// @dev Set a new value for the `isRedeemPaused` flag.
-    /// @param newValue New value.
-    function _setStakePaused(bool newValue) private {
-        if (isStakePaused == newValue) {
-            revert EPauseAlreadySet();
-        }
-        isStakePaused = newValue;
-        emit IsStakePausedChanged(newValue);
-    }
-
-    /// @inheritdoc IDepositManager
-    function pauseStake() external onlyAuthForPause {
-        _setStakePaused(true);
-    }
-
-    /// @inheritdoc IDepositManager
-    function unpauseStake() external onlyOwner {
-        _setStakePaused(false);
-    }
-
-    /// @inheritdoc Ownable2Step
-    function _transferOwnership(address newOwner) internal virtual override(Ownable, Ownable2Step) {
-        // Transfer ownership to the new owner.
-        super._transferOwnership(newOwner);
-    }
-
-    /// @inheritdoc Ownable2Step
-    function transferOwnership(address newOwner) public virtual override(Ownable, Ownable2Step) {
-        // Initiate ownership transfer.
-        super.transferOwnership(newOwner);
     }
 }

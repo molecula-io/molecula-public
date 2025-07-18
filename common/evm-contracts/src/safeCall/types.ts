@@ -1,6 +1,10 @@
 import type { ContractRunner, Provider } from 'ethers';
 
-import type { Executor, MoleculaPoolTreasury } from '@molecula-monorepo/solidity/typechain-types';
+import type {
+    Executor,
+    IMoleculaPoolV2,
+    MoleculaPoolTreasury,
+} from '@molecula-monorepo/solidity/typechain-types';
 
 import type {
     AgentLZ,
@@ -56,6 +60,7 @@ export type EvmContractSafeCall<Contract extends PickFunctions<Contract>, Respon
 ) => Promise<Response>;
 
 export type AllEvmContracts =
+    | IMoleculaPoolV2
     | MoleculaPoolTreasury
     | AgentLZ
     | AccountantAgent

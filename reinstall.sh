@@ -40,7 +40,7 @@ yarn install --frozen-lockfile --network-concurrency 3 --network-timeout 300000
 
 install_or_update_slither
 
-install_lintspec
+install_lintspec_if_needed
 
 echo "Revealing secrets..."
 if [ -x "$(command -v osascript)" ]

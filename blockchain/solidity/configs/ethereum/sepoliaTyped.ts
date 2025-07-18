@@ -124,6 +124,9 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     /** DelegationManager contract address. */
     DELEGATION_MANAGER: '0xD4A7E1Bd8015057293f0D0A557088c286942e84b',
 
+    /** RewardsCoordinator contract address. */
+    REWARDS_COORDINATOR: '0x5ae8152fb88c26ff9ca5C014c94fca3c68029349',
+
     /** StrategyFactory contract address. */
     STRATEGY_FACTORY: '0x066cF95c1bf0927124DFB8B02B401bc23A79730D',
 

@@ -1,0 +1,10 @@
+{
+    "eth": {
+        "executorFeeLib": "0x1bE4D20457073840121c4d32C36DE9F325763C5a",
+        "executor": "0x8473fDD574831aD833E5106182e6F46DDB63B25F"
+    },
+    "tron": {
+        "executorFeeLib": "TA28xvN5YHUV77sgXVYvtBhSCeKRj97mG9",
+        "executor": "0xb89f3d75932659bced75d7682381d6e28e9ca16a"
+    }
+}

@@ -19,6 +19,8 @@ import {
     Executor__factory,
     RebaseTokenV2__factory,
     MoleculaPoolTreasuryV2__factory,
+    SupplyManagerV2__factory,
+    IMoleculaPoolV2__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -40,12 +42,14 @@ const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     RebaseToken: RebaseToken__factory.abi,
     RebaseTokenV2: RebaseTokenV2__factory.abi,
     SupplyManager: SupplyManager__factory.abi,
+    SupplyManagerV2: SupplyManagerV2__factory.abi,
     AgentLZ: AgentLZ__factory.abi,
     ERC20: ERC20__factory.abi,
     ERC4626: ERC4626__factory.abi,
     IERC20Basic: IERC20Basic__factory.abi,
     IERC20Metadata: IERC20Metadata__factory.abi,
     MUSDE: MUSDE__factory.abi,
+    IMoleculaPoolV2: IMoleculaPoolV2__factory.abi,
     MoleculaPoolTreasury: MoleculaPoolTreasury__factory.abi,
     MoleculaPoolTreasuryV2: MoleculaPoolTreasuryV2__factory.abi,
     MUSDLock: MUSDLock__factory.abi,

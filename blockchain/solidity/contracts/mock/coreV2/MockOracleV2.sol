@@ -5,13 +5,12 @@ pragma solidity ^0.8.23;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // solhint-disable-next-line no-unused-import
-import {ISetterOracle, IOracle} from "../common/interfaces/ISetterOracle.sol";
+import {IOracleV2} from "../../coreV2/interfaces/IOracleV2.sol";
 
 /**
  * @title MockOracle
- * @dev Contract for managing shares and pool information, implementing the ISetterOracle interface.
  */
-contract MockOracle is Ownable, ISetterOracle {
+contract MockOracleV2 is Ownable, IOracleV2 {
     /// @dev Total pool value tracked by the Oracle.
     uint256 private _pool;
 
@@ -33,46 +32,42 @@ contract MockOracle is Ownable, ISetterOracle {
         _shares = initialShares;
     }
 
-    /**
-     * @inheritdoc ISetterOracle
-     */
     function setTotalPoolSupply(uint256 pool) external onlyOwner {
         _pool = pool;
     }
 
-    /**
-     * @inheritdoc ISetterOracle
-     */
     function setTotalSharesSupply(uint256 shares) external onlyOwner {
         _shares = shares;
     }
 
-    /**
-     * @inheritdoc ISetterOracle
-     */
     function setTotalSupply(uint256 pool, uint256 shares) external onlyOwner {
         _pool = pool;
         _shares = shares;
     }
 
-    /**
-     * @inheritdoc IOracle
-     */
     function getTotalPoolSupply() external view returns (uint256 pool) {
         return _pool;
     }
 
-    /**
-     * @inheritdoc IOracle
-     */
     function getTotalSharesSupply() external view returns (uint256 shares) {
         return _shares;
     }
 
-    /**
-     * @inheritdoc IOracle
-     */
-    function getTotalSupply() external view returns (uint256 pool, uint256 shares) {
+    function getTotalSupply() public view returns (uint256 pool, uint256 shares) {
         return (_pool, _shares);
+    }
+
+    function convertToShares(
+        uint256 assets
+    ) external view virtual override returns (uint256 shares) {
+        (uint256 pool, uint256 poolShares) = getTotalSupply();
+        shares = (assets * poolShares) / pool;
+    }
+
+    function convertToAssets(
+        uint256 shares
+    ) external view virtual override returns (uint256 assets) {
+        (uint256 pool, uint256 poolShares) = getTotalSupply();
+        assets = (shares * pool) / poolShares;
     }
 }

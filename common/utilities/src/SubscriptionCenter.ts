@@ -1,4 +1,4 @@
-import { Log } from './Log';
+import { Log } from '@molecula-monorepo/common.logs';
 
 export type Listener<Notification, Result = void> = (
     notification: Notification,

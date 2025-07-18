@@ -2,7 +2,7 @@
 
 import type { Contract as TronContract, EventResponse, GetEventResultOptions } from 'tronweb';
 
-import type { Log } from '@molecula-monorepo/common.utilities';
+import type { Log } from '@molecula-monorepo/common.logs';
 
 import type { TronBaseEvent, TronEventsLoadOptions, InternalTronEvent } from '../types';
 

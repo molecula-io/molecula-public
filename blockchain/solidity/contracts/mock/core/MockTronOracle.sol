@@ -5,7 +5,7 @@ pragma solidity ^0.8.23;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // solhint-disable-next-line no-unused-import
-import {ISetterOracle, IOracle} from "../common/interfaces/ISetterOracle.sol";
+import {ISetterOracle, IOracle} from "../../common/interfaces/ISetterOracle.sol";
 
 /**
  * @title TronOracle

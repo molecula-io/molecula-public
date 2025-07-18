@@ -79,6 +79,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         rebaseTokenV2,
         supplyManagerV2,
         config.META_GUARDIAN,
+        hre.ethers.ZeroAddress,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await stETHVault.waitForDeployment();
@@ -90,6 +91,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         rebaseTokenV2,
         supplyManagerV2,
         config.META_GUARDIAN,
+        hre.ethers.ZeroAddress,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await wETHVault.waitForDeployment();

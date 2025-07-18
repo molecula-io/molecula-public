@@ -43,4 +43,17 @@ interface IBufferInteractor {
         address asset,
         address owner
     ) external view returns (uint256);
+
+    /**
+     * @dev Gets the available amount to deposit into a Pool.
+     * @param pool Address of the protocol's balance storage.
+     * @param token Deposit token's address.
+     * @param poolToken Pool token's address.
+     * @return uint256 Available amount to deposit.
+     */
+    function getAvailableAmountToDeposit(
+        address pool,
+        address token,
+        address poolToken
+    ) external view returns (uint256);
 }

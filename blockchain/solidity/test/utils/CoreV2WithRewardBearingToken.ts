@@ -70,12 +70,14 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
         rewardBearingToken,
         supplyManagerV2,
         guardian,
+        ethers.ZeroAddress,
     );
     const usdeVault = await TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rewardBearingToken,
         supplyManagerV2,
         guardian,
+        ethers.ZeroAddress,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');

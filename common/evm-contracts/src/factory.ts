@@ -12,12 +12,14 @@ import {
     ILayerZeroEndpointV2__factory,
     IERC20Basic__factory,
     IERC20Metadata__factory,
+    IMoleculaPoolV2__factory,
     MoleculaPoolTreasury__factory,
     ICurveStableSwapFactoryNG__factory,
     ICurveStableSwapNG__factory,
     UsdtOFT__factory,
     Executor__factory,
     MoleculaPoolTreasuryV2__factory,
+    SupplyManagerV2__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -47,6 +49,7 @@ import type {
     MUSDLock,
     IOracle,
     AccountantAgent,
+    IMoleculaPoolV2,
     MoleculaPoolTreasury,
     MoleculaPoolTreasuryV2,
     StakedUSDe,
@@ -65,6 +68,7 @@ import type {
     UsdtOFT,
     Aragon,
     ReceiveULN,
+    SupplyManagerV2,
 } from './types';
 
 export const EvmContractSafeFactory = {
@@ -92,6 +96,16 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<SupplyManager>(
             {
                 factory: SupplyManager__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+
+    SupplyManagerV2: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<SupplyManagerV2>(
+            {
+                factory: SupplyManagerV2__factory,
                 address,
             },
             rpcProvider,
@@ -150,6 +164,16 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<MUSDE>(
             {
                 factory: MUSDE__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+
+    IMoleculaPoolV2: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<IMoleculaPoolV2>(
+            {
+                factory: IMoleculaPoolV2__factory,
                 address,
             },
             rpcProvider,

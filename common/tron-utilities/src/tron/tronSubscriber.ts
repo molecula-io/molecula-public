@@ -2,7 +2,7 @@ import type { GetEventResultOptions, Contract as TronContract } from 'tronweb';
 
 import { BlockKeeper } from '@molecula-monorepo/common.evm-utilities/src/helpers';
 
-import { Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
 
 import type { TronEventCallback, TronEventsLoadOptions, InternalTronEvent } from '../types';
 

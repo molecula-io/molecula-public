@@ -83,7 +83,6 @@ contract Ownable {
  * @dev see https://github.com/ethereum/EIPs/issues/20
  */
 contract ERC20Basic {
-    // solhint-disable-next-line private-vars-leading-underscore
     uint256 public _totalSupply;
     function totalSupply() public constant returns (uint256);
     function balanceOf(address who) public constant returns (uint256);
@@ -302,7 +301,6 @@ contract BlackList is Ownable, BasicToken {
         require(isBlackListed[_blackListedUser]);
         uint256 dirtyFunds = balanceOf(_blackListedUser);
         balances[_blackListedUser] = 0;
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply -= dirtyFunds;
         DestroyedBlackFunds(_blackListedUser, dirtyFunds);
     }
@@ -348,7 +346,6 @@ contract UsdtEthereum is Pausable, StandardToken, BlackList {
         string _symbol,
         uint256 _decimals
     ) public {
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply = _initialSupply;
         name = _name;
         symbol = _symbol;
@@ -432,7 +429,6 @@ contract UsdtEthereum is Pausable, StandardToken, BlackList {
         if (deprecated) {
             return StandardToken(upgradedAddress).totalSupply();
         } else {
-            // solhint-disable-next-line private-vars-leading-underscore
             return _totalSupply;
         }
     }
@@ -442,13 +438,12 @@ contract UsdtEthereum is Pausable, StandardToken, BlackList {
     //
     // @param _amount Number of tokens to be issued
     function issue(address to, uint256 amount) public {
-        // solhint-disable-next-line private-vars-leading-underscore, reason-string
+        // solhint-disable-next-line reason-string
         require(_totalSupply + amount > _totalSupply);
         // solhint-disable-next-line reason-string
         require(balances[to] + amount > balances[to]);
 
         balances[to] += amount;
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply += amount;
         Issue(amount);
     }
@@ -459,12 +454,11 @@ contract UsdtEthereum is Pausable, StandardToken, BlackList {
     // or the call will fail.
     // @param _amount Number of tokens to be issued
     function redeem(uint256 amount) public onlyOwner {
-        // solhint-disable-next-line private-vars-leading-underscore, reason-string
+        // solhint-disable-next-line reason-string
         require(_totalSupply >= amount);
         // solhint-disable-next-line reason-string
         require(balances[owner] >= amount);
 
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply -= amount;
         balances[owner] -= amount;
         Redeem(amount);

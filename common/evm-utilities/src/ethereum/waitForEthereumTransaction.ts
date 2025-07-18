@@ -1,6 +1,7 @@
 import type { ethers, Provider, TransactionReceipt } from 'ethers';
 
-import { Async, Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
+import { Async } from '@molecula-monorepo/common.utilities';
 
 import { evmQueue } from '../helpers';
 
@@ -38,6 +39,10 @@ export async function waitForEthereumTransaction(
     options: Options = {},
 ): Promise<ethers.TransactionReceipt> {
     const { silent = false, signal } = options;
+
+    if (!transactionId.startsWith('0x')) {
+        throw new Error(`Invalid transaction ID: ${transactionId}`);
+    }
 
     // Get the transaction info
     let info: TransactionReceipt | null | undefined;

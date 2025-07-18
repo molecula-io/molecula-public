@@ -17,7 +17,8 @@ import type {
 
 import { normalizeAddress, type Hex } from '@molecula-monorepo/common.evm-utilities';
 
-import { jsonStringifyBigint, Log } from '@molecula-monorepo/common.utilities';
+import { Log } from '@molecula-monorepo/common.logs';
+import { jsonStringifyBigint } from '@molecula-monorepo/common.shared';
 
 import { TronSubscriber, waitForTronTransaction } from '../tron';
 

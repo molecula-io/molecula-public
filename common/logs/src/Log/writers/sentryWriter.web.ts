@@ -2,7 +2,8 @@
 /* eslint-disable max-classes-per-file */
 import * as sentry from '@sentry/browser';
 
-import { argsToString } from '../../ArgsToString';
+import { argsToString } from '@molecula-monorepo/common.shared';
+
 import type { LogWriter } from '../types';
 
 class SentryLogger {

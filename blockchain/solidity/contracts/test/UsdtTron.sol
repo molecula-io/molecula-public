@@ -167,7 +167,7 @@ contract ERC20Basic {
 contract BasicToken is ERC20Basic {
     using SafeMath for uint256;
 
-    // solhint-disable-next-line private-vars-leading-underscore, state-visibility
+    // solhint-disable-next-line state-visibility
     mapping(address => uint256) balances;
 
     /**
@@ -240,7 +240,6 @@ contract ERC20 is ERC20Basic {
  * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
 contract StandardToken is ERC20, BasicToken {
-    // solhint-disable-next-line private-vars-leading-underscore
     mapping(address => mapping(address => uint256)) internal allowed;
 
     /**
@@ -254,7 +253,7 @@ contract StandardToken is ERC20, BasicToken {
         require(_to != address(0));
         // solhint-disable-next-line reason-string
         require(_value <= balances[_from]);
-        // solhint-disable-next-line private-vars-leading-underscore, reason-string
+        // solhint-disable-next-line reason-string
         require(_value <= allowed[_from][msg.sender]);
 
         balances[_from] = balances[_from].sub(_value);
@@ -318,20 +317,19 @@ contract StandardTokenWithFees is StandardToken, Ownable {
     // Additional variables for use if transaction fees ever became necessary
     uint256 public basisPointsRate;
     uint256 public maximumFee;
-    // solhint-disable-next-line private-vars-leading-underscore, state-visibility
+    // solhint-disable-next-line state-visibility
     uint256 constant MAX_SETTABLE_BASIS_POINTS = 20;
-    // solhint-disable-next-line private-vars-leading-underscore, state-visibility
+    // solhint-disable-next-line state-visibility
     uint256 constant MAX_SETTABLE_FEE = 50;
 
     string public name;
     string public symbol;
     uint8 public decimals;
-    // solhint-disable-next-line private-vars-leading-underscore
     uint256 public _totalSupply;
 
     uint256 public constant MAX_UINT = 2 ** 256 - 1;
 
-    // solhint-disable-next-line private-vars-leading-underscore, func-visibility
+    // solhint-disable-next-line func-visibility
     function calcFee(uint256 _value) public constant returns (uint256) {
         uint256 fee = (_value.mul(basisPointsRate)).div(10000);
         if (fee > maximumFee) {
@@ -341,7 +339,6 @@ contract StandardTokenWithFees is StandardToken, Ownable {
     }
 
     function transfer(address _to, uint256 _value) public returns (bool) {
-        // solhint-disable-next-line private-vars-leading-underscore
         uint256 fee = calcFee(_value);
         uint256 sendAmount = _value.sub(fee);
 
@@ -359,7 +356,6 @@ contract StandardTokenWithFees is StandardToken, Ownable {
         // solhint-disable-next-line reason-string
         require(_value <= allowed[_from][msg.sender]);
 
-        // solhint-disable-next-line private-vars-leading-underscore
         uint256 fee = calcFee(_value);
         uint256 sendAmount = _value.sub(fee);
 
@@ -378,9 +374,9 @@ contract StandardTokenWithFees is StandardToken, Ownable {
 
     function setParams(uint256 newBasisPoints, uint256 newMaxFee) public onlyOwner {
         // Ensure transparency by hardcoding limit beyond which fees can never be added
-        // solhint-disable-next-line private-vars-leading-underscore, reason-string
+        // solhint-disable-next-line reason-string
         require(newBasisPoints < MAX_SETTABLE_BASIS_POINTS);
-        // solhint-disable-next-line private-vars-leading-underscore, reason-string
+        // solhint-disable-next-line reason-string
         require(newMaxFee < MAX_SETTABLE_FEE);
 
         basisPointsRate = newBasisPoints;
@@ -396,7 +392,6 @@ contract StandardTokenWithFees is StandardToken, Ownable {
 contract UpgradedStandardToken is StandardToken {
     // those methods are called by the legacy contract
     // and they must ensure msg.sender to be the contract address
-    // solhint-disable-next-line private-vars-leading-underscore
     uint256 public _totalSupply;
     function transferByLegacy(address from, address to, uint256 value) public returns (bool);
     function transferFromByLegacy(
@@ -436,7 +431,6 @@ contract UsdtTron is Pausable, StandardTokenWithFees, BlackList {
         string _symbol,
         uint8 _decimals
     ) public {
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply = _initialSupply;
         name = _name;
         symbol = _symbol;
@@ -565,7 +559,6 @@ contract UsdtTron is Pausable, StandardTokenWithFees, BlackList {
         if (deprecated) {
             return StandardToken(upgradedAddress).totalSupply();
         } else {
-            // solhint-disable-next-line private-vars-leading-underscore
             return _totalSupply;
         }
     }
@@ -576,7 +569,6 @@ contract UsdtTron is Pausable, StandardTokenWithFees, BlackList {
     // @param _amount Number of tokens to be issued
     function issue(address to, uint256 amount) public {
         balances[to] = balances[to].add(amount);
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply = _totalSupply.add(amount);
         Issue(amount);
         Transfer(address(0), to, amount);
@@ -588,7 +580,6 @@ contract UsdtTron is Pausable, StandardTokenWithFees, BlackList {
     // or the call will fail.
     // @param _amount Number of tokens to be issued
     function redeem(uint256 amount) public onlyOwner {
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply = _totalSupply.sub(amount);
         balances[owner] = balances[owner].sub(amount);
         Redeem(amount);
@@ -600,7 +591,6 @@ contract UsdtTron is Pausable, StandardTokenWithFees, BlackList {
         require(isBlackListed[_blackListedUser]);
         uint256 dirtyFunds = balanceOf(_blackListedUser);
         balances[_blackListedUser] = 0;
-        // solhint-disable-next-line private-vars-leading-underscore
         _totalSupply = _totalSupply.sub(dirtyFunds);
         DestroyedBlackFunds(_blackListedUser, dirtyFunds);
     }

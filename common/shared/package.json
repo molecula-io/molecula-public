@@ -1,0 +1,36 @@
+{
+    "name": "@molecula-monorepo/common.shared",
+    "description": "Molecula-monorepo shared utilities",
+    "version": "1.0.0",
+    "private": true,
+    "main": "src/index.ts",
+    "scripts": {
+        "bump-to": "yarn version --no-commit-hooks --no-git-tag-version --new-version",
+        "tsc": "tsc",
+        "prettier:check": "prettier --check .",
+        "prettier:fix": "prettier --write .",
+        "eslint:check": "eslint . --resolve-plugins-relative-to .",
+        "eslint:fix": "eslint --fix . --resolve-plugins-relative-to ."
+    },
+    "exports": {
+        ".": {
+            "default": "./src/index.ts"
+        },
+        "./jsonStringifyBigint": {
+            "default": "./src/jsonStringifyBigint.ts"
+        },
+        "./ArgsToString": {
+            "default": "./src/ArgsToString.ts"
+        }
+    },
+    "dependencies": {},
+    "peerDependencies": {},
+    "devDependencies": {
+        "@molecula-monorepo/eslint-config-shared": "*",
+        "@molecula-monorepo/prettier-config-shared": "*",
+        "@molecula-monorepo/tsconfig-shared": "*"
+    },
+    "volta": {
+        "extends": "../../package.json"
+    }
+}

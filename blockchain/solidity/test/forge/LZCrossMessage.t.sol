@@ -11,16 +11,16 @@ import {MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.so
 import {MessagingReceipt} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppSender.sol";
 
 // Import the mock AccountantLZ, UsdtOFT, and USDT contracts for testing cross-chain operations
-import {MockAccountantLZ} from "../../contracts/mock/MockAccountantLZ.sol";
-import {MockRebaseTokenCommon} from "../../contracts/mock/MockRebaseTokenCommon.sol";
-import {MockTronOracle} from "../../contracts/mock/MockTronOracle.sol";
+import {MockAccountantLZ} from "../../contracts/mock/lz/MockAccountantLZ.sol";
+import {MockRebaseTokenCommon} from "../../contracts/mock/core/MockRebaseTokenCommon.sol";
+import {MockTronOracle} from "../../contracts/mock/core/MockTronOracle.sol";
 import {MockUsdtOFT} from "../../contracts/mock/USDT/MockUsdtOFT.sol";
 import {MockUSDT} from "../../contracts/mock/USDT/MockUsdt.sol";
 import {MoleculaPoolTreasuryV2} from "../../contracts/core/MoleculaPoolTreasuryV2.sol";
 
 // Import options builder and test helper utility functions
 import {OptionsBuilder} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OptionsBuilder.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/TestHelperOz5.sol";
 
 // Import LayerZero Packet interface for cross-chain message verification

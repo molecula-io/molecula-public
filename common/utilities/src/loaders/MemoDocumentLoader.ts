@@ -1,6 +1,6 @@
 import isEqual from 'lodash/isEqual';
 
-import { Log } from '../Log';
+import { Log } from '@molecula-monorepo/common.logs';
 
 import type { AsyncStorage } from '../types';
 

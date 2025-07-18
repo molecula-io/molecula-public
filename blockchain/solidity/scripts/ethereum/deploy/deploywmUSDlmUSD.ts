@@ -13,7 +13,7 @@ export async function deploywmUSDlmUSD(
 ) {
     const { account, config } = await getConfig(hre, environment);
 
-    const wmUSDFactory = await hre.ethers.getContractFactory('WMUSD');
+    const wmUSDFactory = await hre.ethers.getContractFactory('WMUSDCandy');
     const lmUSDFactory = await hre.ethers.getContractFactory('LMUSD');
 
     // calc future addresses

@@ -7,9 +7,6 @@ import {DepositManager} from "../../contracts/solutions/mrETH/DepositManager.sol
 import {DepositManagerStorage} from "../../contracts/solutions/mrETH/DepositManagerStorage.sol";
 import {IDepositManagerTypes} from "../../contracts/solutions/mrETH/interfaces/IDepositManagerTypes.sol";
 import {IStrategyLib} from "../../contracts/solutions/mrETH/interfaces/IStrategyLib.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AaveBufferLib} from "../../contracts/solutions/mrETH/libraries/AaveBufferLib.sol";
-import {CompoundBufferLib} from "../../contracts/solutions/mrETH/libraries/CompoundBufferLib.sol";
 import {IDelegationManager, IStrategy} from "../../contracts/solutions/mrETH/external/interfaces/IDelegationManager.sol";
 import {ISignatureUtilsMixinTypes} from "../../contracts/solutions/mrETH/external/interfaces/ISignatureUtilsMixin.sol";
 import {IWETH} from "../../contracts/solutions/mrETH/external/interfaces/IWETH.sol";
@@ -24,7 +21,10 @@ import {IMoleculaPoolV2} from "../../contracts/coreV2/interfaces/IMoleculaPoolV2
 import {IBufferInteractor} from "../../contracts/solutions/mrETH/interfaces/IBufferInteractor.sol";
 import {ConstantsCoreV2} from "../../contracts/coreV2/Constants.sol";
 import {AaveBufferLib} from "../../contracts/solutions/mrETH/libraries/AaveBufferLib.sol";
-import {CompoundBufferLib} from "../../contracts/solutions/mrETH/libraries/CompoundBufferLib.sol";
+import {ICompoundAssetDataProvider} from "../../contracts/solutions/mrETH/external/interfaces/ICompoundAssetDataProvider.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {MockRewardsCoordinator} from "../../contracts/mock/mrETH/MockRewardsCoordinator.sol";
+import {IAaveV3Pool} from "../../contracts/solutions/mrETH/external/interfaces/IAaveV3Pool.sol";
 
 interface ILido is IERC20 {
     function getTotalPooledEther() external view returns (uint256);
@@ -36,116 +36,6 @@ interface ILido is IERC20 {
 }
 
 /**
- * @title Aave Buffer Interactor
- * @notice Wrapper contract that implements IBufferInteractor and delegates to AaveBufferLib
- */
-contract AaveBufferInteractor {
-    /// @dev Constant for the selector of the the AAVE's `deposit` function.
-    // solhint-disable-next-line private-vars-leading-underscore
-    bytes4 internal constant SUPPLY_SELECTOR =
-        bytes4(keccak256("supply(address,uint256,address,uint16)"));
-
-    /// @dev Constant for the selector of the AAVE's `withdraw` function.
-    // solhint-disable-next-line private-vars-leading-underscore
-    bytes4 internal constant WITHDRAW_SELECTOR =
-        bytes4(keccak256("withdraw(address,uint256,address)"));
-
-    /**
-     * @dev Encodes the data for depositing into an AAVE Pool.
-     * @param asset Deposit token's address.
-     * @param receiver LP token receiver's address.
-     * @param amount Amount to deposit.
-     * @return bytes Encoded message for the deposit transaction.
-     */
-    function encodeSupply(
-        address asset,
-        address receiver,
-        uint256 amount
-    ) external pure returns (bytes memory) {
-        return abi.encodeWithSelector(SUPPLY_SELECTOR, asset, amount, receiver, 0);
-    }
-
-    /**
-     * @dev Encodes data for withdrawing from an AAVE Pool.
-     * @param asset Deposit token's address.
-     * @param receiver Address of the LP token receiver.
-     * @param amount Amount to withdraw.
-     * @return bytes Encoded message for the withdrawal transaction.
-     */
-    function encodeWithdraw(
-        address asset,
-        address receiver,
-        uint256 amount
-    ) external pure returns (bytes memory) {
-        return abi.encodeWithSelector(WITHDRAW_SELECTOR, asset, amount, receiver);
-    }
-
-    /**
-     * @dev Gets the withdrawable ETH balance.
-     * @param asset Deposit token's address.
-     * @param owner LP token owner's address.
-     * @return uint256 Withdrawable ETH balance.
-     */
-    function getEthBalance(address, address asset, address owner) external view returns (uint256) {
-        return IERC20(asset).balanceOf(owner);
-    }
-}
-
-/**
- * @title Compound Buffer Interactor
- * @notice Wrapper contract that implements IBufferInteractor and delegates to CompoundBufferLib
- */
-contract CompoundBufferInteractor {
-    /// @dev Constant for the selector of Compound's `deposit` function.
-    // solhint-disable-next-line private-vars-leading-underscore
-    bytes4 internal constant COMPOUND_SUPPLY_SELECTOR =
-        bytes4(keccak256("supply(address,uint256)"));
-
-    /// @dev Constant for the selector of Compound's withdraw function.
-    // solhint-disable-next-line private-vars-leading-underscore
-    bytes4 internal constant COMPOUND_WITHDRAW_SELECTOR =
-        bytes4(keccak256("withdraw(address,uint256)"));
-
-    /**
-     * @dev Encodes data for depositing into a Compound Pool.
-     * @param asset Deposit token's address.
-     * @param amount Amount to deposit.
-     * @return bytes Encoded message for the deposit transaction.
-     */
-    function encodeSupply(
-        address asset,
-        address,
-        uint256 amount
-    ) external pure returns (bytes memory) {
-        return abi.encodeWithSelector(COMPOUND_SUPPLY_SELECTOR, asset, amount);
-    }
-
-    /**
-     * @dev Encodes data for withdrawing from a Compound Pool.
-     * @param asset Deposit token's address.
-     * @param amount Amount to withdraw.
-     * @return bytes Encoded message for the withdrawal transaction.
-     */
-    function encodeWithdraw(
-        address asset,
-        address,
-        uint256 amount
-    ) external pure returns (bytes memory) {
-        return abi.encodeWithSelector(COMPOUND_WITHDRAW_SELECTOR, asset, amount);
-    }
-
-    /**
-     * @dev Gets the withdrawable ETH balance.
-     * @param asset Deposit token's address.
-     * @param owner LP token owner's address.
-     * @return uint256 Withdrawable ETH balance.
-     */
-    function getEthBalance(address, address asset, address owner) external view returns (uint256) {
-        return IERC20(asset).balanceOf(owner);
-    }
-}
-
-/**
  * @title MrETH Setup Contract
  * @notice Setup contract for mrETH system testing
  * @dev Provides deployment and initialization functions for mrETH contracts
@@ -153,12 +43,13 @@ contract CompoundBufferInteractor {
 contract MrEthSetup is Test {
     // Constants from mrETH.ts
     bytes32 constant APPROVER_SALT = bytes32(0);
-    ISignatureUtilsMixinTypes.SignatureWithExpiry public approverSignatureAndExpiry;
     address constant NATIVE_TOKEN = ConstantsCoreV2.NATIVE_TOKEN;
     uint64 constant GWEI = 1e9;
     uint16 public constant PERCENTAGE_FACTOR = 10_000;
     uint256 constant MAX_UINT256 = type(uint256).max;
     uint256 constant MAX_UINT16 = type(uint16).max;
+
+    ISignatureUtilsMixinTypes.SignatureWithExpiry public approverSignatureAndExpiry;
 
     // Admin wallets
     address public owner;
@@ -167,14 +58,14 @@ contract MrEthSetup is Test {
 
     // Main contracts
     DepositManager public depositManager;
-    AaveBufferInteractor public aaveBufferInteractor;
-    CompoundBufferInteractor public compoundBufferInteractor;
-    IWETH public weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    IStrategyFactory public strategyFactory =
-        IStrategyFactory(0x5e4C39Ad7A3E881585e383dB9827EB4811f6F647);
-    IDelegationManager public delegationManager =
-        IDelegationManager(0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A);
+    MockRewardsCoordinator public rewardsCoordinator;
     Delegator public delegatorImplementation;
+
+    IWETH public constant weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    IStrategyFactory public constant strategyFactory =
+        IStrategyFactory(0x5e4C39Ad7A3E881585e383dB9827EB4811f6F647);
+    IDelegationManager public constant delegationManager =
+        IDelegationManager(0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A);
 
     // Core V2 contracts
     ISupplyManagerV2 public supplyManagerV2;
@@ -185,17 +76,18 @@ contract MrEthSetup is Test {
 
     // Pool configuration
     IDepositManagerTypes.PoolData[] public poolDataArray;
+    IDepositManagerTypes.SetPoolData[] public setPoolData;
     address[] public operatorsArray;
     address[] public poolsArray;
     bool[] public authArray;
 
     // Strategy and operator addresses (from mainnet config)
-    IStrategy public stEthStrategy = IStrategy(0x93c4b944D05dfe6df7645A86cd2206016c51564D);
-    address public defaultOperator = 0x5ACCC90436492F24E6aF278569691e2c942A676d;
-    address public aavePool = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
-    address public awethAddress = 0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
-    address public cWETHv3Address = 0xA17581A9E3356d9A858b789D68B4d866e593aE94;
-    ILido public stEth = ILido(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
+    IStrategy public constant stEthStrategy = IStrategy(0x93c4b944D05dfe6df7645A86cd2206016c51564D);
+    address public constant defaultOperator = 0x5ACCC90436492F24E6aF278569691e2c942A676d;
+    address public constant aavePool = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
+    address public constant awethAddress = 0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
+    address public constant cWETHv3Address = 0xA17581A9E3356d9A858b789D68B4d866e593aE94;
+    ILido public constant stEth = ILido(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
 
     uint16 constant APY_FORMATTER = 8_000;
     string constant MRETH_TOKEN_NAME = "mrETH release candidate";
@@ -225,23 +117,21 @@ contract MrEthSetup is Test {
         // Deploy delegator implementation
         delegatorImplementation = new Delegator();
 
-        // Deploy AaveBufferInteractor
-        aaveBufferInteractor = new AaveBufferInteractor();
-
-        // Deploy CompoundBufferInteractor
-        compoundBufferInteractor = new CompoundBufferInteractor();
+        // Deploy MockRewardsCoordinator
+        rewardsCoordinator = new MockRewardsCoordinator();
 
         // Calculate future contract addresses for proper initialization
         uint256 transactionCount = vm.getNonce(owner);
 
-        // Predict SupplyManagerV2 address (nonce + 5) - after mock pool
+        // Calculate the correct addresses based on the deployment order
+        // After DepositManager deployment, the next contract will be SupplyManagerV2
         address supplyManagerFutureAddress = vm.computeCreateAddress(owner, transactionCount + 1);
 
-        // Predict RebaseTokenV2 address (nonce + 6) - after SupplyManagerV2
+        // Predict RebaseTokenV2 address (nonce + 2) - after SupplyManagerV2
         address rebaseERC20V2FutureAddress = vm.computeCreateAddress(owner, transactionCount + 2);
 
         // Deploy DepositManager with predicted SupplyManager address
-        vm.startPrank(owner);
+        vm.startPrank(owner, owner);
         depositManager = new DepositManager(
             owner,
             authorizedStaker,
@@ -250,6 +140,7 @@ contract MrEthSetup is Test {
             address(weth),
             address(strategyFactory),
             address(delegationManager),
+            address(rewardsCoordinator),
             address(delegatorImplementation)
         );
 
@@ -271,25 +162,27 @@ contract MrEthSetup is Test {
         delete poolsArray;
         delete authArray;
 
-        // Pool 1: AAVE pool (100%)
-        poolDataArray.push(
-            IDepositManagerTypes.PoolData({
-                poolToken: awethAddress,
-                poolLib: address(aaveBufferInteractor),
-                poolPortion: 10_000, // 100%
-                poolId: 0
-            })
-        );
-
         poolsArray.push(aavePool);
         authArray.push(true);
+
+        // Pool 1: AAVE pool (portion[0])
+        setPoolData.push(
+            IDepositManagerTypes.SetPoolData({
+                pool: poolsArray[0],
+                auth: true,
+                newPoolData: IDepositManagerTypes.PoolData({
+                    poolToken: awethAddress,
+                    poolLib: address(AaveBufferLib),
+                    poolPortion: 10_000, // 100%
+                    poolId: 0
+                })
+            })
+        );
 
         // Initialize DepositManager with AAVE pool
         depositManager.initialize(
             0, // buffer percentage
-            poolsArray,
-            poolDataArray,
-            authArray
+            setPoolData
         );
 
         setupCompleteMrEthSystem();
@@ -364,12 +257,14 @@ contract MrEthSetup is Test {
 
         // Add token vaults to whitelist and register them
         // Get deployed code hash for asset token vaults (WETH and stETH use the same type)
-        bytes32 assetTokenVaultCodeHash = address(tokenVaultWETH).codehash;
-        bytes32 nativeTokenVaultCodeHash = address(tokenVaultETH).codehash;
+        {
+            bytes32 assetTokenVaultCodeHash = address(tokenVaultWETH).codehash;
+            bytes32 nativeTokenVaultCodeHash = address(tokenVaultETH).codehash;
 
-        // Set code hashes for both vault types
-        rebaseTokenV2.setCodeHash(assetTokenVaultCodeHash, true);
-        rebaseTokenV2.setCodeHash(nativeTokenVaultCodeHash, true);
+            // Set code hashes for both vault types
+            rebaseTokenV2.setCodeHash(assetTokenVaultCodeHash, true);
+            rebaseTokenV2.setCodeHash(nativeTokenVaultCodeHash, true);
+        }
 
         // Register all vaults
         rebaseTokenV2.addTokenVault(vaultWETH);

@@ -2,6 +2,7 @@
 import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
+import { keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 
 import { deployCoreV2 } from '../../utils/CoreV2';
@@ -171,5 +172,31 @@ describe('RebaseTokenV2', () => {
         await rebaseTokenV2.DOMAIN_SEPARATOR();
         expect(await rebaseTokenV2.nonces(user0.address)).to.be.equal(1);
         expect(await rebaseTokenV2.nonces(user1.address)).to.be.equal(0);
+    });
+
+    it('Test RebaseToken without SupplyManager', async () => {
+        const signers = await ethers.getSigners();
+        const poolOwner = signers.at(1)!;
+
+        const MockOracle = await ethers.getContractFactory('MockOracleV2');
+        const mockOracle = await MockOracle.connect(poolOwner).deploy(150, 100, poolOwner);
+
+        const RebaseTokenV2 = await ethers.getContractFactory('RebaseTokenV2');
+        const rebaseTokenV2 = await RebaseTokenV2.connect(poolOwner).deploy(
+            mockOracle,
+            poolOwner,
+            'Test Molecula Rebase Token V2',
+            'TMRTV2',
+            18,
+            ethers.ZeroAddress,
+        );
+
+        const MockVault = await ethers.getContractFactory('MockVault');
+        const mockVault = await MockVault.connect(poolOwner).deploy(poolOwner, rebaseTokenV2);
+
+        const codeHash = keccak256((await mockVault.getDeployedCode())!);
+        await rebaseTokenV2.setCodeHash(codeHash, true);
+        await rebaseTokenV2.addTokenVault(mockVault);
+        await rebaseTokenV2.removeTokenVault(mockVault);
     });
 });
