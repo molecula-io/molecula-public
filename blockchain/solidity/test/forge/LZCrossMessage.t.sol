@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 // Import the AgentLZ contract and its interface
 import {AgentLZ} from "../../contracts/solutions/Carbon/ethereum/AgentLZ.sol";

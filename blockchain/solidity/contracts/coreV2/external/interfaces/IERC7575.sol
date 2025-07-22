@@ -3,7 +3,7 @@
 
 // See  https://github.com/OpenZeppelin/openzeppelin-contracts/pull/5294/files
 
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 /// @title IERC7575.
 /// @notice Interface for managing ERC7575 vault operations.

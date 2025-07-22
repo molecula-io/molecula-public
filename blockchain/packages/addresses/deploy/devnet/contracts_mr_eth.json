@@ -7,5 +7,14 @@
         "vaultStETH": "0x833f0e0f97B5cacCc6E8f04CaBFDB3FB205AC283",
         "depositManager": "0xE58824a25A5277677F695f56303117573f9E3033",
         "delegatorImplementation": "0x77e0F32d52a32d8783965cda9636B6E8201821d4"
+    },
+    "holesky": {
+        "supplyManagerV2": "0xDB3bbBe531aeD6FABaE34a234751BC87B75a729A",
+        "mrETH": "0x7D8A7762Eb22053DB267bf026f59Dbd3c1A720F8",
+        "vaultWETH": "0x047aa63A7B861c13b6D278328A463bfB1accDe35",
+        "vaultETH": "0xa1e43221E418299C8519b70Eb9eDBF8F35651FDD",
+        "vaultStETH": "0xc39f843DBd512eBB0F74f65D56FfB8c3274C57E5",
+        "depositManager": "0x06cAf67D1ACAe5A7125eD31D2Dce985f9D1A52Be",
+        "delegatorImplementation": "0x7B9A91CE89B5a198501be538B4AB605AE8aff76D"
     }
 }

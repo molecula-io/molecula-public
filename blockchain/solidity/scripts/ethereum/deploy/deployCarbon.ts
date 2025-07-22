@@ -2,7 +2,7 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum/constants';
+import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum';
 import { getConfig, getEthereumAddress } from '../../utils/deployUtils';
 
 export async function deployCarbon(

@@ -1,37 +1,14 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax */
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
-import { TronWeb } from 'tronweb';
 
 import { type EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronEnvironmentConfig } from '../../utils/deployUtils';
+import { getTronWeb } from '../../utils/deployUtils';
 
 import { deployAccountantLZ, setUnderlyingToken } from './deployAccountantLZ';
 import { deployOracle, setOracleAccountant } from './deployOracle';
 import { deployRebaseToken } from './deployRebaseToken';
 import { deploymUSDLock } from './deploymUSDLock';
-
-export async function getTronWeb(mnemonic: string, path: string, network: EnvironmentType) {
-    // get config
-    const config = getTronEnvironmentConfig(network);
-
-    // Create TronWeb instance
-    const tronWeb = new TronWeb({
-        fullHost: config.RPC_URL,
-    });
-
-    const accountInfo = tronWeb.fromMnemonic(mnemonic, path);
-
-    if (accountInfo instanceof Error) {
-        throw new Error('Invalid account information returned from fromMnemonic.');
-    }
-
-    const privateKey = accountInfo.privateKey.substring(2);
-
-    console.log('Deploy wallet address: ', accountInfo.address);
-
-    return { config, tronWeb, privateKey };
-}
 
 export async function deployCarbon(
     hre: HardhatRuntimeEnvironment,
@@ -73,7 +50,7 @@ export async function deployCarbon(
         usdtOFTAddress: config.USDT_OFT,
         oracleAddress: oracle,
     });
-    console.log('Swap Accountant LZ deployed:', accountantLZ);
+    console.log('Accountant LZ deployed:', accountantLZ);
 
     // Set Accountant to Oracle
     await setOracleAccountant(tronWeb, privateKey, oracle, accountantLZ);

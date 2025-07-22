@@ -231,10 +231,17 @@ ethereumMajorScope
 
         const environment = getEnvironment(hre, taskArgs.environment);
 
-        const eth = await deployMrEth(hre, environment);
-        const result = { eth };
+        const deployedMrEth = await deployMrEth(hre, environment);
 
-        writeToFile(`${environment}/contracts_mr_eth.json`, result);
+        const contractsMrEth = await readFromFile(`${environment}/contracts_mr_eth.json`);
+
+        if (hre.network.name === 'holesky') {
+            contractsMrEth.holesky = deployedMrEth;
+        } else {
+            contractsMrEth.eth = deployedMrEth;
+        }
+
+        writeToFile(`${environment}/contracts_mr_eth.json`, contractsMrEth);
         console.log('Deployment and file write completed successfully.');
     });
 

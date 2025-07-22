@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.30;
 
 import {IMoleculaPoolV2WithNativeToken} from "./../../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {IDelegationManager, IStrategy} from "./../external/interfaces/IDelegationManager.sol";

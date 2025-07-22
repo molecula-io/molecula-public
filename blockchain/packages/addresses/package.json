@@ -21,7 +21,7 @@
         "@molecula-monorepo/prettier-config-shared": "*",
         "@molecula-monorepo/solidity": "*",
         "@molecula-monorepo/tsconfig-shared": "*",
-        "ethers": "^6.13.5",
+        "ethers": "^6.15.0",
         "tronweb": "^6.0.3",
         "ts-node": "^10.9.2"
     },

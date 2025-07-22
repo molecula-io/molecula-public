@@ -4,11 +4,11 @@ import { keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 
 import {
+    ethMrEthMainnetBetaConfig,
     APPROVER_SIGNATURE_AND_EXPIRY,
     APPROVER_SALT,
     NATIVE_TOKEN,
-} from '../../configs/ethereum/constants';
-import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
+} from '../../configs/ethereum';
 
 import { FAUCET, grantERC20 } from './grant';
 
@@ -25,10 +25,13 @@ export async function deployMrETh() {
     const user2 = signers.at(3)!;
 
     // Initialize token contracts
-    const stETH = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.STETH_ADDRESS);
-    const WETH = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.WETH_ADDRESS);
-    const aWETH = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.AWETH_ADDRESS);
-    const cWETHv3 = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.CWETH_V3);
+    const stETH = await ethers.getContractAt(
+        'IERC20Metadata',
+        ethMrEthMainnetBetaConfig.STETH_ADDRESS,
+    );
+    const WETH = await ethers.getContractAt('IERC20', ethMrEthMainnetBetaConfig.WETH_ADDRESS);
+    const aWETH = await ethers.getContractAt('IERC20', ethMrEthMainnetBetaConfig.AWETH_ADDRESS);
+    const cWETHv3 = await ethers.getContractAt('IERC20', ethMrEthMainnetBetaConfig.CWETH_V3);
 
     // Grant test tokens to owner and user0
     await grantERC20(owner, WETH, ethers.parseEther('100'));
@@ -41,7 +44,7 @@ export async function deployMrETh() {
     // Deploy buffer libraries
     const AaveBufferLib = await ethers.getContractFactory('AaveBufferLib');
     const aaveBufferLib = await AaveBufferLib.connect(owner!).deploy();
-    const aavePool = ethMainnetBetaConfig.AAVE_POOL;
+    const aavePool = ethMrEthMainnetBetaConfig.AAVE_POOL;
 
     const CompoundBufferLib = await ethers.getContractFactory('CompoundBufferLib');
     const compoundBufferLib = await CompoundBufferLib.connect(owner!).deploy();
@@ -77,9 +80,9 @@ export async function deployMrETh() {
         owner.address,
         owner.address,
         supplyManagerFutureAddress,
-        ethMainnetBetaConfig.WETH_ADDRESS,
-        ethMainnetBetaConfig.STRATEGY_FACTORY,
-        ethMainnetBetaConfig.DELEGATION_MANAGER,
+        ethMrEthMainnetBetaConfig.WETH_ADDRESS,
+        ethMrEthMainnetBetaConfig.STRATEGY_FACTORY,
+        ethMrEthMainnetBetaConfig.DELEGATION_MANAGER,
         rewardsCoordinator,
         delegatorImplementation,
     );
@@ -89,7 +92,7 @@ export async function deployMrETh() {
             {
                 pool: aavePool,
                 newPoolData: {
-                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolToken: ethMrEthMainnetBetaConfig.AWETH_ADDRESS,
                     poolLib: aaveBufferLib,
                     poolPortion: 10_000n,
                     poolId: 0,
@@ -104,7 +107,7 @@ export async function deployMrETh() {
         {
             pool: aavePool,
             newPoolData: {
-                poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                poolToken: ethMrEthMainnetBetaConfig.AWETH_ADDRESS,
                 poolLib: aaveBufferLib,
                 poolPortion: 10_000n,
                 poolId: 0,
@@ -136,7 +139,7 @@ export async function deployMrETh() {
     );
     expect(rebaseTokenV2).to.be.equal(rebaseERC20V2FutureAddress);
 
-    const defaultOperator = ethMainnetBetaConfig.EIGENLAYER_OPERATOR;
+    const defaultOperator = ethMrEthMainnetBetaConfig.EIGENLAYER_OPERATOR;
 
     await expect(depositManager.chooseDelegatorForDeposit()).to.be.rejectedWith(
         'EOperatorNotExists()',
@@ -151,15 +154,15 @@ export async function deployMrETh() {
         [10_000n],
     );
     await depositManager.addStrategies(
-        [ethMainnetBetaConfig.STETH_ADDRESS],
-        [ethMainnetBetaConfig.STRATEGY_BASE_STETH],
+        [ethMrEthMainnetBetaConfig.STETH_ADDRESS],
+        [ethMrEthMainnetBetaConfig.STRATEGY_BASE_STETH],
         [ethers.ZeroAddress],
     );
 
     await expect(
         depositManager.addStrategies(
             [WETH],
-            [ethMainnetBetaConfig.STRATEGY_BASE_STETH],
+            [ethMrEthMainnetBetaConfig.STRATEGY_BASE_STETH],
             [ethers.ZeroAddress],
         ),
     ).to.be.rejectedWith('EInvalidStrategyConfiguration("Underlying token mismatch")');
@@ -260,7 +263,7 @@ export async function deployMrETh() {
             {
                 pool: aavePool,
                 newPoolData: {
-                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolToken: ethMrEthMainnetBetaConfig.AWETH_ADDRESS,
                     poolLib: aaveBufferLib,
                     poolPortion: 10_000n,
                     poolId: 0,
@@ -275,7 +278,7 @@ export async function deployMrETh() {
             {
                 pool: aavePool,
                 newPoolData: {
-                    poolToken: ethMainnetBetaConfig.AWETH_ADDRESS,
+                    poolToken: ethMrEthMainnetBetaConfig.AWETH_ADDRESS,
                     poolLib: aaveBufferLib,
                     poolPortion: 10_000n,
                     poolId: 0,

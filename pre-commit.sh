@@ -8,6 +8,8 @@ yarn run check-versions
 
 FULL_CHECK=false
 
+SKIP_CLEAN_DISABLED=false
+
 IS_BLOCKCHAIN=false
 
 if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^blockchain/'; then
@@ -20,6 +22,9 @@ for arg in "$@"; do
 		FULL_CHECK=true
 		break
 	fi
+  if [ "$arg" == "--no-skip-clean" ]; then
+        SKIP_CLEAN_DISABLED=true
+    fi
 done
 
 # [Re-]generate all required types in parallel first.
@@ -30,8 +35,14 @@ yarn turbo run compile gql:generate --affected || { echo "❌ pre-commit code ge
 if [[ "${IS_BLOCKCHAIN}" == true ]]; then
   echo "🔍 Running pre-commit slither check..."
   if command -v slither >/dev/null 2>&1; then
-    yarn turbo run slither --affected || { echo "❌ pre-commit slither failed"; exit 1; }
-else
+    if [ "$SKIP_CLEAN_DISABLED" == true ]; then
+      echo "ℹ️ Running Slither without --skip-clean"
+      yarn turbo run slither --affected || { echo "❌ pre-commit slither failed"; exit 1; }
+    else
+      echo "ℹ️ Running Slither with --skip-clean"
+      yarn turbo run slither:skip-clean-rpc-cache --affected || { echo "❌ pre-commit slither (skip clean) failed"; exit 1; }
+    fi
+  else
     echo "ℹ️ Slither not found, skipping Solidity static analysis"
   fi
 fi

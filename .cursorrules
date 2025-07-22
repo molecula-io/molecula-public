@@ -6,6 +6,7 @@ Main Principles
 -   Any code changes must be covered by tests.
 -   Linting and tests must pass before code is considered complete.
 -   Keep writing code until linters and tests are passing.
+-   Never use "any" type
 
 Node.js / Express
 

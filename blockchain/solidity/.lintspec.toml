@@ -11,7 +11,7 @@ exclude = [
 ]
 inheritdoc = false
 notice_or_dev = false
-skip_version_detection = false
+skip_version_detection = true
 
 [output]
 json = false

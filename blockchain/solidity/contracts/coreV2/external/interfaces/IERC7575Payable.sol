@@ -3,7 +3,7 @@
 
 // See  https://github.com/OpenZeppelin/openzeppelin-contracts/pull/5294/files
 
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 /// @title IERC7575Payable.
 /// @notice ERC7575 extension where all deposit functions can receive native token.

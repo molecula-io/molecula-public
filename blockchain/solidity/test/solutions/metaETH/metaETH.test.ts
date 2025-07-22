@@ -4,7 +4,7 @@ import { expect } from 'chai';
 
 import { ethers } from 'hardhat';
 
-import { NATIVE_TOKEN } from '../../../configs/ethereum/constants';
+import { NATIVE_TOKEN } from '../../../configs/ethereum';
 import { findRequestRedeemEventV2 } from '../../utils/event';
 import { FAUCET, grantERC20, grantETH } from '../../utils/grant';
 import { expectEqual } from '../../utils/math';

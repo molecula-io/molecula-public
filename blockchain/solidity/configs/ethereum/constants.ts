@@ -1,7 +1,7 @@
 /**
  * Gas limit for contract deploy (Gas limit is increased due to the large smart-contract).
  */
-export const DEPLOY_GAS_LIMIT = 5_000_000;
+export const DEPLOY_GAS_LIMIT = 5_500_000;
 
 /**
  * Default approver signature and expiry for operator delegation.

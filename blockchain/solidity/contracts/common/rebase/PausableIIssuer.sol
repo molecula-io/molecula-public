@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 import {PausableContract} from "./../../common/pausable/PausableContract.sol";
 import {IIssuer} from "./../../coreV2/interfaces/IIssuer.sol";

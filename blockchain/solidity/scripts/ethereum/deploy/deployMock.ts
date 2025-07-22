@@ -2,11 +2,11 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum/constants';
+import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum';
 import { getConfig } from '../../utils/deployUtils';
 import { verifyContract } from '../../verification/verificationUtils';
 
-async function deployUSDT(hre: HardhatRuntimeEnvironment) {
+export async function deployUSDT(hre: HardhatRuntimeEnvironment) {
     // deploy USDT
     const USDT = await hre.ethers.getContractFactory('UsdtEthereum');
     const usdt = await USDT.deploy(hre.ethers.formatUnits(1000000, 6), 'Tether token', 'USDT', 6, {
@@ -19,7 +19,7 @@ async function deployUSDT(hre: HardhatRuntimeEnvironment) {
     await verifyContract(hre, 'USDT', usdtAddress, []);
 }
 
-async function deployUsdtOFT(hre: HardhatRuntimeEnvironment) {
+export async function deployUsdtOFT(hre: HardhatRuntimeEnvironment) {
     const { config, account } = await getConfig(hre, EnvironmentType.devnet);
 
     // deploy UsdtOFT
@@ -51,12 +51,23 @@ async function deployUsdtOFT(hre: HardhatRuntimeEnvironment) {
     ]);
 }
 
+export async function deploymrETHMockAavePool(hre: HardhatRuntimeEnvironment) {
+    const mrETHMockAavePool = await hre.ethers.getContractFactory('MockAavePool');
+    const mrETHMock = await mrETHMockAavePool.deploy();
+    await mrETHMock.waitForDeployment();
+    const mrETHMockAddress = await mrETHMock.getAddress();
+    console.log('mrETHMock deployed: ', mrETHMockAddress);
+
+    await verifyContract(hre, 'MockAavePool', mrETHMockAddress, []);
+}
+
 async function main() {
     const hardhat = await import('hardhat');
     const hre: HardhatRuntimeEnvironment = hardhat.default;
 
     await deployUSDT(hre);
     await deployUsdtOFT(hre);
+    await deploymrETHMockAavePool(hre);
 }
 
 main().catch(error => {

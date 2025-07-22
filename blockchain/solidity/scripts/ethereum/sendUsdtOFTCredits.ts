@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 
-import { sepoliaConfig } from '../../configs/ethereum/sepoliaTyped';
+import { sepoliaConfig } from '../../configs/ethereum';
 
 async function sendUSDTCreditsCrossChain() {
     const amountToSend = ethers.parseUnits('1000', 6); // 1000 USDT (6 decimals)

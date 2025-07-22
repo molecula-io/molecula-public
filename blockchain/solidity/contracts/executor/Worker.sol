@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LZBL-1.2
 // copied from https://github.com/LayerZero-Labs/LayerZero-v2/blob/main/packages/layerzero-v2/evm/messagelib/contracts/Worker.sol
-pragma solidity 0.8.23;
+pragma solidity ^0.8.24;
 
 import {IWorker} from "@layerzerolabs/lz-evm-messagelib-v2/contracts/interfaces/IWorker.sol";
 import {ISendLib} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ISendLib.sol";

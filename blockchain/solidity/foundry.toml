@@ -24,7 +24,7 @@ remappings = [
 ]
 
 compilation_restrictions = [
-    { paths="contracts/solutions/Carbon/", version = "=0.8.23" },
+    { paths="contracts/solutions/Carbon/", version = "=0.8.24" },
     { paths="contracts/test/UsdtTron.sol", version = "=0.4.20" },
     { paths="contracts/test/UsdtEthereum.sol", version = "=0.4.18" },
 ]

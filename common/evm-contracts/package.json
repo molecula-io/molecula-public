@@ -18,7 +18,7 @@
         "@molecula-monorepo/common.shared": "*",
         "@molecula-monorepo/solidity": "*",
         "bignumber.js": "^9.1.2",
-        "ethers": "^6.13.5",
+        "ethers": "^6.15.0",
         "ethers-decode-error": "^2.1.3",
         "p-queue": "6.6.2"
     },

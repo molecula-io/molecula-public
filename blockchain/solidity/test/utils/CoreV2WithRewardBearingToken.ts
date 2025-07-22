@@ -3,8 +3,7 @@ import { expect } from 'chai';
 import { keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { NATIVE_TOKEN } from '../../configs/ethereum/constants';
-import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
+import { ethMainnetBetaConfig, NATIVE_TOKEN } from '../../configs/ethereum';
 
 import { generateRandomWallet } from './Common';
 

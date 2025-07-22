@@ -22,6 +22,16 @@ const config: HardhatUserConfig = {
     solidity: {
         compilers: [
             {
+                version: '0.8.30', // using in evm contracts
+                settings: {
+                    evmVersion: 'prague',
+                    optimizer: {
+                        enabled: true,
+                        runs: 400,
+                    },
+                },
+            },
+            {
                 version: '0.8.28', // using in evm contracts
                 settings: {
                     evmVersion: 'cancun',
@@ -42,20 +52,16 @@ const config: HardhatUserConfig = {
                 },
             },
             {
-                version: '0.8.23', // used for contracts targeting the Tron network
+                version: '0.4.18', // using in mock tether token contracts
                 settings: {
-                    evmVersion: 'shanghai',
-                    optimizer: {
-                        enabled: true,
-                        runs: 400,
-                    },
+                    evmVersion: 'byzantium',
                 },
             },
             {
-                version: '0.4.18', // using in mock tether token contracts
-            },
-            {
                 version: '0.4.20', // using in mock tether token contracts
+                settings: {
+                    evmVersion: 'byzantium',
+                },
             },
         ],
         overrides: {
@@ -95,6 +101,18 @@ const config: HardhatUserConfig = {
                     },
                 },
             }),
+        ...(process.env.ETHEREUM_SEED_PHRASE && {
+            holesky: {
+                url: 'https://1rpc.io/holesky', // public rpc no need to store in env
+                accounts: {
+                    mnemonic: process.env.ETHEREUM_SEED_PHRASE,
+                    path: "m/44'/60'/0'/0",
+                    initialIndex: 0,
+                    count: 20,
+                    passphrase: '',
+                },
+            },
+        }),
         ...(process.env.JSON_RPC_URL &&
             process.env.ETHEREUM_SEED_PHRASE && {
                 ethereum: {
@@ -138,6 +156,7 @@ const config: HardhatUserConfig = {
             apiKey: {
                 sepolia: process.env.ETHEREUM_API_KEY,
                 ethereum: process.env.ETHEREUM_API_KEY,
+                holesky: process.env.ETHEREUM_API_KEY,
             },
         },
     }),

@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 
 import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses';
 
-import { sepoliaConfig } from '../../configs/ethereum/sepoliaTyped';
+import { sepoliaConfig } from '../../configs/ethereum';
 
 /**
  * This script is for test/devnet configuration only.

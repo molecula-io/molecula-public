@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 /// @title IRebaseERC20V2.
 /// @notice Interface for managing token shares and conversions.

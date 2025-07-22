@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 
 import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses/deploy';
 
-import { sepoliaConfig } from '../../configs/ethereum/sepoliaTyped';
+import { sepoliaConfig } from '../../configs/ethereum';
 
 async function getExecutorParams() {
     const executor = await ethers.getContractAt('Executor', DevnetContractsExecutor.eth.executor);

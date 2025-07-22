@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 import {ValueValidator} from "./../../common/ValueValidator.sol";
 import {IERC7575} from "./../external/interfaces/IERC7575.sol";

@@ -4,7 +4,7 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EVMAddress, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum/constants';
+import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum';
 
 import { getConfig, increaseBalance } from '../../utils/deployUtils';
 

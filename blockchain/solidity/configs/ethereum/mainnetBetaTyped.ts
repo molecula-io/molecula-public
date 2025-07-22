@@ -62,12 +62,6 @@ export const ethMainnetBetaConfig: EthereumNetworkConfig = {
     /** Wrapped ETH (WETH) token address on Ethereum Mainnet. */
     WETH_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
 
-    /** AAVE Token for WETH (AToken) token address on Ethereum Mainnet. */
-    AWETH_ADDRESS: '0x4d5f47fa6a74757f35c14fd3a6ef8e3c9bc514e8',
-
-    /** Compound Token for WETH (cWETHv3) token address on Ethereum Mainnet. */
-    CWETH_V3: '0xA17581A9E3356d9A858b789D68B4d866e593aE94',
-
     /** Lido LRT Token address on Ethereum Mainnet. */
     STETH_ADDRESS: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
 
@@ -120,27 +114,6 @@ export const ethMainnetBetaConfig: EthereumNetworkConfig = {
     AGENT_AUTHORIZED_LZ_CONFIGURATOR:
         evmAuthorizedAddresses.AGENT_AUTHORIZED_LZ_CONFIGURATOR[EVMChainIDs.Mainnet].beta,
 
-    /** AAVE v3 Pool Address. */
-    AAVE_POOL: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
-
-    /** EigenPodManager contract address. */
-    EIGEN_POD_MANAGER: '0x91E677b07F7AF907ec9a428aafA9fc14a0d3A338',
-
-    /** DelegationManager contract address. */
-    DELEGATION_MANAGER: '0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A',
-
-    /** RewardsCoordinator contract address. */
-    REWARDS_COORDINATOR: '0x7750d328b314EfFa365A0402CcfD489B80B0adda',
-
-    /** StrategyFactory contract address. */
-    STRATEGY_FACTORY: '0x5e4C39Ad7A3E881585e383dB9827EB4811f6F647',
-
-    /** StETH Strategy contract address. */
-    STRATEGY_BASE_STETH: '0x93c4b944D05dfe6df7645A86cd2206016c51564D',
-
-    /** EigenLayer default operator address. */
-    EIGENLAYER_OPERATOR: '0x5accc90436492f24e6af278569691e2c942a676d',
-
     WMUSD_TOKEN_NAME: 'Wrapped mUSD beta',
     WMUSD_TOKEN_SYMBOL: 'wmUSDb',
 
@@ -148,21 +121,6 @@ export const ethMainnetBetaConfig: EthereumNetworkConfig = {
     LMUSD_TOKEN_SYMBOL: 'lmUSDb',
     LMUSD_PERIODS: [],
     LMUSD_MULTIPLIERS: [],
-
-    /** mrETH token name. */
-    MRETH_TOKEN_NAME: 'mrETH release candidate',
-
-    /** mrETH token symbol. */
-    MRETH_TOKEN_SYMBOL: 'mrETHrec',
-
-    /** mrETH token decimals. */
-    MRETH_TOKEN_DECIMALS: 18,
-
-    /** mrETH token minimum deposit. */
-    MRETH_TOKEN_MIN_DEPOSIT: 1_000_000n,
-
-    /** mrETH token minimum redeem. */
-    MRETH_TOKEN_MIN_REDEEM: 10n ** 18n,
 
     // ===================== MetaETH Solution =====================
 

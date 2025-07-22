@@ -8,20 +8,31 @@ import { TronWeb } from 'tronweb';
 
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
-import { ethMainnetProdConfig } from '../../configs/ethereum/mainnetProdTyped';
-import { sepoliaConfig } from '../../configs/ethereum/sepoliaTyped';
+import {
+    holeskyMrEthConfig,
+    ethMainnetBetaConfig,
+    ethMrEthMainnetBetaConfig,
+    ethMainnetProdConfig,
+    ethMrEthMainnetProdConfig,
+    sepoliaConfig,
+    sepoliaMrEthConfig,
+} from '../../configs/ethereum';
+
 import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
 import { tronMainnetProdConfig } from '../../configs/tron/mainnetProdTyped';
 import { shastaConfig } from '../../configs/tron/shastaTyped';
 import type { IERC20 } from '../../typechain-types';
 
 export function verifyEnvironment(network: string, environment: string) {
-    if ((network === 'sepolia' || network === 'shasta') && environment !== 'devnet') {
+    if (
+        (network === 'sepolia' || network === 'shasta' || network === 'holesky') &&
+        environment !== 'devnet'
+    ) {
         throw new Error(
             `Expected network and environment set correctly: network ${network} couldn't be used in this environment ${environment}`,
         );
     }
+
     if (
         (network === 'ethereum' || network === 'tron') &&
         environment !== 'mainnet/beta' &&
@@ -111,6 +122,26 @@ export function getEnvironmentConfig(network: EnvironmentType) {
     }
 }
 
+export function getMrEthEnvironmentConfig(network: EnvironmentType, networkName: string) {
+    switch (network) {
+        case EnvironmentType['mainnet/beta']:
+            return ethMrEthMainnetBetaConfig;
+        case EnvironmentType['mainnet/prod']:
+            return ethMrEthMainnetProdConfig;
+        case EnvironmentType.devnet:
+            switch (networkName) {
+                case 'sepolia':
+                    return sepoliaMrEthConfig;
+                case 'holesky':
+                    return holeskyMrEthConfig;
+                default:
+                    throw new Error('Unsupported networkName type!');
+            }
+        default:
+            throw new Error('Unsupported network type!');
+    }
+}
+
 export function getTronEnvironmentConfig(network: EnvironmentType) {
     switch (network) {
         case EnvironmentType['mainnet/beta']:
@@ -142,6 +173,43 @@ export async function getConfig(hre: HardhatRuntimeEnvironment, network: Environ
         account,
         USDT,
     };
+}
+
+export async function getMrEthConfig(
+    hre: HardhatRuntimeEnvironment,
+    network: EnvironmentType,
+    networkName: string,
+) {
+    const config = getMrEthEnvironmentConfig(network, networkName);
+    const account = (await hre.ethers.getSigners())[0]!;
+
+    return { config, account };
+}
+
+export async function getTronWeb(
+    mnemonic: string,
+    derivationPath: string,
+    network: EnvironmentType,
+) {
+    // get config
+    const config = getTronEnvironmentConfig(network);
+
+    // Create TronWeb instance
+    const tronWeb = new TronWeb({
+        fullHost: config.RPC_URL,
+    });
+
+    const accountInfo = tronWeb.fromMnemonic(mnemonic, derivationPath);
+
+    if (accountInfo instanceof Error) {
+        throw new Error('Invalid account information returned from fromMnemonic.');
+    }
+
+    const privateKey = accountInfo.privateKey.substring(2);
+
+    console.log('Deploy wallet address: ', accountInfo.address);
+
+    return { config, tronWeb, privateKey };
 }
 
 // If `target` does not have enough erc20Token tokens, then transfer them

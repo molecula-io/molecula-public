@@ -31,8 +31,6 @@ export type EthereumNetworkConfig = {
     USDE_ADDRESS: EVMAddress;
     SUSDE_ADDRESS: EVMAddress;
     WETH_ADDRESS: EVMAddress;
-    AWETH_ADDRESS: EVMAddress;
-    CWETH_V3: EVMAddress;
     STETH_ADDRESS: EVMAddress;
 
     // Deploy params
@@ -58,14 +56,6 @@ export type EthereumNetworkConfig = {
 
     AGENT_AUTHORIZED_LZ_CONFIGURATOR: EVMAddress;
 
-    AAVE_POOL: EVMAddress;
-
-    EIGEN_POD_MANAGER: EVMAddress;
-    DELEGATION_MANAGER: EVMAddress;
-    REWARDS_COORDINATOR: EVMAddress;
-    STRATEGY_FACTORY: EVMAddress;
-    STRATEGY_BASE_STETH: EVMAddress;
-    EIGENLAYER_OPERATOR: EVMAddress;
     WMUSD_TOKEN_NAME: string;
     WMUSD_TOKEN_SYMBOL: string;
 
@@ -73,12 +63,6 @@ export type EthereumNetworkConfig = {
     LMUSD_TOKEN_SYMBOL: string;
     LMUSD_PERIODS: [];
     LMUSD_MULTIPLIERS: [];
-
-    MRETH_TOKEN_NAME: string;
-    MRETH_TOKEN_SYMBOL: string;
-    MRETH_TOKEN_DECIMALS: number;
-    MRETH_TOKEN_MIN_DEPOSIT: bigint;
-    MRETH_TOKEN_MIN_REDEEM: bigint;
 
     META_OWNER: EVMAddress;
     META_POOL_KEEPER: EVMAddress;

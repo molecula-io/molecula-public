@@ -3,68 +3,76 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 import type { ContractsMrEth } from '@molecula-monorepo/blockchain.addresses/deploy';
 
-import { readFromFile, getEnvironmentConfig } from '../utils/deployUtils';
+import { readFromFile, getMrEthEnvironmentConfig } from '../utils/deployUtils';
 
 import { verifyContract } from './verificationUtils';
 
 export async function runVerify(hre: HardhatRuntimeEnvironment) {
     const envType =
-        hre.network.name === 'sepolia' ? EnvironmentType.devnet : EnvironmentType['mainnet/beta'];
-    const config = getEnvironmentConfig(envType);
+        hre.network.name === 'holesky' || hre.network.name === 'sepolia'
+            ? EnvironmentType.devnet
+            : EnvironmentType['mainnet/beta'];
+    const config = getMrEthEnvironmentConfig(envType, hre.network.name);
 
     const contractsConfig: ContractsMrEth = await readFromFile(`${envType}/contracts_mr_eth.json`);
 
+    // Select the appropriate contract configuration based on network
+    const contractToVerify =
+        hre.network.name === 'holesky' && 'holesky' in contractsConfig
+            ? contractsConfig.holesky
+            : contractsConfig.eth;
+
     const account = (await hre.ethers.getSigners())[0]!;
 
-    await verifyContract(hre, 'Delegator', contractsConfig.eth.delegatorImplementation, []);
+    await verifyContract(hre, 'Delegator', contractToVerify.delegatorImplementation, []);
 
-    await verifyContract(hre, 'DepositManager', contractsConfig.eth.depositManager, [
+    await verifyContract(hre, 'DepositManager', contractToVerify.depositManager, [
         account.address,
         account.address,
         account.address,
-        contractsConfig.eth.supplyManagerV2,
+        contractToVerify.supplyManagerV2,
         config.WETH_ADDRESS,
         config.STRATEGY_FACTORY,
         config.DELEGATION_MANAGER,
         config.REWARDS_COORDINATOR,
-        contractsConfig.eth.delegatorImplementation,
+        contractToVerify.delegatorImplementation,
     ]);
 
-    await verifyContract(hre, 'SupplyManagerV2WithNative', contractsConfig.eth.supplyManagerV2, [
+    await verifyContract(hre, 'SupplyManagerV2WithNative', contractToVerify.supplyManagerV2, [
         account.address,
         account.address,
-        contractsConfig.eth.depositManager,
+        contractToVerify.depositManager,
         config.APY_FORMATTER,
-        contractsConfig.eth.mrETH,
+        contractToVerify.mrETH,
     ]);
 
-    await verifyContract(hre, 'RebaseTokenV2', contractsConfig.eth.mrETH, [
-        contractsConfig.eth.supplyManagerV2,
+    await verifyContract(hre, 'RebaseTokenV2', contractToVerify.mrETH, [
+        contractToVerify.supplyManagerV2,
         account.address,
         config.MRETH_TOKEN_NAME,
         config.MRETH_TOKEN_SYMBOL,
         config.MRETH_TOKEN_DECIMALS,
-        contractsConfig.eth.supplyManagerV2,
+        contractToVerify.supplyManagerV2,
     ]);
 
-    await verifyContract(hre, 'MrEthAssetTokenVault', contractsConfig.eth.vaultWETH, [
+    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.vaultWETH, [
         account.address,
-        contractsConfig.eth.mrETH,
-        contractsConfig.eth.supplyManagerV2,
-        account.address,
-    ]);
-
-    await verifyContract(hre, 'MrEthAssetTokenVault', contractsConfig.eth.vaultETH, [
-        account.address,
-        contractsConfig.eth.mrETH,
-        contractsConfig.eth.supplyManagerV2,
+        contractToVerify.mrETH,
+        contractToVerify.supplyManagerV2,
         account.address,
     ]);
 
-    await verifyContract(hre, 'MrEthNativeTokenVault', contractsConfig.eth.vaultETH, [
+    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.vaultETH, [
         account.address,
-        contractsConfig.eth.mrETH,
-        contractsConfig.eth.supplyManagerV2,
+        contractToVerify.mrETH,
+        contractToVerify.supplyManagerV2,
+        account.address,
+    ]);
+
+    await verifyContract(hre, 'MrEthNativeTokenVault', contractToVerify.vaultETH, [
+        account.address,
+        contractToVerify.mrETH,
+        contractToVerify.supplyManagerV2,
         account.address,
     ]);
 }

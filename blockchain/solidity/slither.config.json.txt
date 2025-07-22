@@ -49,7 +49,7 @@ Slither complains that we emit an event after external calls. But this is normal
 https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
 
 7) solc-version
-We use 0.8.23 because last supported version in tronbox supported is 0.8.23.
+We use 0.8.24 because last supported version in tronbox supported is 0.8.24.
 https://github.com/crytic/slither/wiki/Detector-Documentation#configuration-807
 
 8) timestamp

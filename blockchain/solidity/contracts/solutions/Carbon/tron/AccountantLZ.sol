@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.23;
+pragma solidity 0.8.24;
 
 import {OApp, Origin} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -79,6 +79,13 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
         USDT = IERC20(usdtAddress);
         USDT_OFT = UsdtOFT(usdtOFTAddress);
         ORACLE = ISetterOracle(oracleAddress);
+        /*
+         * To enable contract-controlled transfers, we pre-approve the contract for the maximum allowance
+         * in the constructor as USDT (TRC20) transfers always return `false` (breaks `safeTransfer`),
+         * although `safeTransferFrom` works.
+         * This allows the contract to use `safeTransferFrom` for USDT operations safely and reliably.
+         */
+        USDT.forceApprove(address(this), type(uint256).max);
     }
 
     /**
@@ -242,8 +249,19 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
             lockedToRedeem -= value;
         }
 
-        // Transfer the redeemed USDT to the user.
-        USDT.safeTransfer(user, value);
+        /*
+         * Transfer the redeemed USDT to the user.
+         *
+         * WARNING:
+         * USDT on TRON (TRC20) does not support `safeTransfer` as in OpenZeppelin's SafeERC20.
+         * The `transfer` function on TRON USDT always returns `false`, even when the transfer succeeds.
+         * This breaks compatibility with `safeTransfer`, which expects a `true` return value.
+         * However, `safeTransferFrom` works as expected.
+         *
+         * - Do not use `safeTransfer` with TRON USDT.
+         * - Use `safeTransferFrom`, or call `transfer` directly and do not rely on its return value.
+         */
+        USDT.safeTransferFrom(address(this), user, value);
     }
 
     /**

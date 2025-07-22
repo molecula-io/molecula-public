@@ -2,8 +2,7 @@ import { AbiCoder } from 'ethers';
 import { TronWeb } from 'tronweb';
 import type { Contract as TronContract } from 'tronweb';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
-import { sepoliaConfig } from '../../configs/ethereum/sepoliaTyped';
+import { ethMainnetBetaConfig, sepoliaConfig } from '../../configs/ethereum';
 import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
 import { shastaConfig } from '../../configs/tron/shastaTyped';
 

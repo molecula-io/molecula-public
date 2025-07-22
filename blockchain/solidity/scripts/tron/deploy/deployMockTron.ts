@@ -2,7 +2,8 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { type EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb } from './deployCarbonTron';
+import { getTronWeb } from '../../utils/deployUtils';
+
 import { waitForDeployment } from './waitForDeployment';
 
 export async function deployMockUSDT(

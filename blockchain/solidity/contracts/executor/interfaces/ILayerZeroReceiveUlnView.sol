@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.24;
 
 /// @title LayerZero ULN Verification and Execution State Enums & View Interface
 /// @dev These enums and interface are used for verifying and tracking LayerZero Ultra Light Node packet states.

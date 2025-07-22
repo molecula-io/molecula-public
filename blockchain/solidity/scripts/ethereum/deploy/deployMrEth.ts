@@ -2,15 +2,15 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
+import { type mrEthNetworkConfig } from '../../../configs/ethereum';
 import {
     DEPLOY_GAS_LIMIT,
     APPROVER_SIGNATURE_AND_EXPIRY,
     APPROVER_SALT,
     NATIVE_TOKEN,
-} from '../../../configs/ethereum/constants';
+} from '../../../configs/ethereum';
 
-import { type EthereumNetworkConfig } from '../../../configs/ethereum/types';
-import { getConfig } from '../../utils/deployUtils';
+import { getMrEthConfig } from '../../utils/deployUtils';
 
 /**
  * Deploys and initializes the core V2 contracts for the mrETH system.
@@ -19,7 +19,7 @@ import { getConfig } from '../../utils/deployUtils';
 async function deployMrEthCoreV2(
     hre: HardhatRuntimeEnvironment,
     owner: string,
-    config: EthereumNetworkConfig,
+    config: mrEthNetworkConfig,
     contractsMrEth: {
         depositManager: string;
         rebaseERC20V2FutureAddress: string;
@@ -155,7 +155,7 @@ async function deployMrEthCoreV2(
  * Deploys all necessary contracts and initializes them with the correct configuration.
  */
 export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: EnvironmentType) {
-    const { config, account } = await getConfig(hre, environment);
+    const { config, account } = await getMrEthConfig(hre, environment, hre.network.name);
 
     // Deploy buffer libraries for different protocols
     const AaveBufferLib = await hre.ethers.getContractFactory('AaveBufferLib');

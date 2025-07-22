@@ -5,7 +5,7 @@ import {
     type ContractsNitrogen,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum/constants';
+import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum';
 
 import { getConfig, readFromFile } from '../../utils/deployUtils';
 

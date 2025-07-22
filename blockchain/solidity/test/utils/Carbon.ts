@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum/mainnetBetaTyped';
+import { ethMainnetBetaConfig } from '../../configs/ethereum';
 import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
 
 import { generateRandomWallet } from './Common';

@@ -22,6 +22,10 @@
             "dependsOn": ["transitNode"],
             "cache": false
         },
+        "slither:skip-clean-rpc-cache": {
+            "dependsOn": ["transitNode"],
+            "cache": false
+        },
         "solhint:check": {},
         "//#cycles:check": {},
         "test": {},
