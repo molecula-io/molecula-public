@@ -2,134 +2,32 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.24;
 
-import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-
-// solhint-disable-next-line no-unused-import
-import {ISetterOracle, IOracle} from "../../../common/interfaces/ISetterOracle.sol";
+import {CommonOracle} from "../../../common/CommonOracle.sol";
 
 /**
  * @title TronOracle
- * @dev Contract for managing shares and pool information, implementing the IOracle interface.
+ * @notice Exact Oracle implementation for managing the Pool and share supply, with controlled
+ *         access via the Owner, Updater, and Accountant roles.
+ * @dev Inherits from `CommonOracle`.
+ *      Allows only authorized Updaters or the Accountant to set both the Pool and share values.
  */
-contract TronOracle is Ownable2Step, ISetterOracle {
-    /// @dev Total pool value tracked by the Oracle.
-    uint256 private _pool;
-
-    /// @dev Total shares value tracked by the Oracle.
-    uint256 private _shares;
-
-    /// @dev Accountant address.
-    address public accountant;
-
-    /// @dev Authorized updater address.
-    address public authorizedUpdater;
-
-    /// @dev Error: Only owner or Accountant.
-    error ENotAuthorizedUpdaterOrAccountant();
-
-    /// @dev Error: Only authorized updater.
-    error ENotAuthorizedUpdater();
+contract TronOracle is CommonOracle {
+    // ============ Constructor ============
 
     /**
-     * @dev Modifier that checks whether the caller is the owner or accountant.
-     */
-    modifier onlyAuthorizedUpdaterOrAccountant() {
-        if (msg.sender != authorizedUpdater && msg.sender != accountant) {
-            revert ENotAuthorizedUpdaterOrAccountant();
-        }
-        _;
-    }
-
-    /**
-     * @dev Modifier to check whether the caller is the value setter.
-     */
-    modifier onlyAuthorizedUpdater() {
-        if (msg.sender != authorizedUpdater) {
-            revert ENotAuthorizedUpdater();
-        }
-        _;
-    }
-
-    /**
-     * @dev Constructor that initializes the smart contract by setting the initial shares, pool value, and its owner.
-     * @param initialShares Shares number to set for the Oracle specified during contract creation.
-     * @param initialPool Pool value to set for the Oracle specified during contract creation.
-     * @param initialOwner Smart contract owner address.
-     * @param accountantAddress Accountant address.
-     * @param authorizedUpdaterAddress Value setter address.
+     * @notice Contract constructor that initializes the shares, Pool, Owner, Accountant, and initial authorized updater.
+     * @dev Calls `CommonOracle` constructor for base initialization.
+     * @param initialShares Initial share value.
+     * @param initialPool Initial Pool value.
+     * @param initialOwner Address to set as the contract Owner.
+     * @param authorizedUpdaterAddress Address to set as the initial authorized Updater.
      */
     constructor(
         uint256 initialShares,
         uint256 initialPool,
         address initialOwner,
-        address accountantAddress,
         address authorizedUpdaterAddress
-    ) Ownable(initialOwner) {
-        _pool = initialPool;
-        _shares = initialShares;
-        accountant = accountantAddress;
-        authorizedUpdater = authorizedUpdaterAddress;
-    }
-
-    /**
-     * @inheritdoc ISetterOracle
-     */
-    function setTotalPoolSupply(uint256 pool) external onlyAuthorizedUpdater {
-        _pool = pool;
-    }
-
-    /**
-     * @inheritdoc ISetterOracle
-     */
-    function setTotalSharesSupply(uint256 shares) external onlyAuthorizedUpdater {
-        _shares = shares;
-    }
-
-    /**
-     * @inheritdoc ISetterOracle
-     */
-    function setTotalSupply(
-        uint256 pool,
-        uint256 shares
-    ) external onlyAuthorizedUpdaterOrAccountant {
-        _pool = pool;
-        _shares = shares;
-    }
-
-    /**
-     * @inheritdoc IOracle
-     */
-    function getTotalPoolSupply() external view returns (uint256 pool) {
-        return _pool;
-    }
-
-    /**
-     * @inheritdoc IOracle
-     */
-    function getTotalSharesSupply() external view returns (uint256 shares) {
-        return _shares;
-    }
-
-    /**
-     * @inheritdoc IOracle
-     */
-    function getTotalSupply() external view returns (uint256 pool, uint256 shares) {
-        return (_pool, _shares);
-    }
-
-    /**
-     * @dev Setter for the Accountant address.
-     * @param accountantAddress New Accountant address.
-     */
-    function setAccountant(address accountantAddress) external onlyOwner {
-        accountant = accountantAddress;
-    }
-
-    /**
-     * @dev Setter for the Value setter address.
-     * @param authorizedUpdaterAddress New Value setter address.
-     */
-    function setAuthorizedUpdater(address authorizedUpdaterAddress) external onlyOwner {
-        authorizedUpdater = authorizedUpdaterAddress;
+    ) CommonOracle(initialShares, initialPool, initialOwner) {
+        _setUpdaterAuthorization(authorizedUpdaterAddress, true);
     }
 }

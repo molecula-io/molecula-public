@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "@molecula-monorepo/solidity": "*",
-        "@openzeppelin/contracts": "^4.9.5",
+        "@openzeppelin/contracts": "4.9.6",
         "dotenv": "^16.4.7",
         "hardhat": "^2.26.1",
         "hardhat-gas-reporter": "^2.2.2",

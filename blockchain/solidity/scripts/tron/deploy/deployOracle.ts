@@ -10,7 +10,6 @@ export async function deployOracle(
     initialShares: bigint,
     initialPool: bigint,
     initialOwner: string,
-    accountantAddress: string,
     authorizedUpdater: string,
 ): Promise<string> {
     // Find an account address corresponding to the given PRIVATE_KEY
@@ -29,13 +28,7 @@ export async function deployOracle(
             abi: artifact.abi,
             bytecode: artifact.bytecode,
             // @ts-ignore (probably wrong type annotation)
-            parameters: [
-                initialShares,
-                initialPool,
-                initialOwner,
-                accountantAddress,
-                authorizedUpdater,
-            ],
+            parameters: [initialShares, initialPool, initialOwner, authorizedUpdater],
         },
         issuerAddress,
     );
@@ -46,7 +39,7 @@ export async function deployOracle(
     return waitForDeployment(tronWeb, transaction);
 }
 
-export async function setOracleAccountant(
+export async function setAutorizedUpdater(
     tronWeb: TronWeb,
     privateKey: string,
     oracleAddress: string,
@@ -58,7 +51,7 @@ export async function setOracleAccountant(
         throw new Error('Invalid private key');
     }
 
-    const functionSelector = 'setAccountant(address)';
+    const functionSelector = 'setAuthorizedUpdater(address)';
     const parameter = [{ type: 'address', value: accountantAddress }];
 
     // Build transaction

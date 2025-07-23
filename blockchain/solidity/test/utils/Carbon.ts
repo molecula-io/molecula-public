@@ -114,7 +114,6 @@ export async function deployCarbon() {
         tronMainnetBetaConfig.MUSD_TOKEN_INITIAL_SUPPLY,
         owner!.address,
         owner!.address,
-        owner!.address,
     );
 
     const AccountantLZ = await ethers.getContractFactory('AccountantLZ');
@@ -128,7 +127,7 @@ export async function deployCarbon() {
         await oracle.getAddress(),
     );
 
-    await oracle.setAccountant(await accountantLZ.getAddress());
+    await oracle.setAuthorizedUpdater(await accountantLZ.getAddress());
 
     const RebaseTokenCommon = await ethers.getContractFactory('RebaseTokenTron');
     const rebaseTokenTron = await RebaseTokenCommon.connect(owner!).deploy(

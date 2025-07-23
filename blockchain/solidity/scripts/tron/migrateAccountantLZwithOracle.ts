@@ -1,22 +1,27 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax */
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { type EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+import {
+    type ContractsCarbon,
+    type EnvironmentType,
+} from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb } from '../../utils/deployUtils';
+import { getTronWeb, readFromFile } from '../utils/deployUtils';
 
-import { deployAccountantLZ, setUnderlyingToken } from './deployAccountantLZ';
-import { deployOracle, setAutorizedUpdater } from './deployOracle';
-import { deployRebaseToken } from './deployRebaseToken';
-import { deploymUSDLock } from './deploymUSDLock';
+import { deployAccountantLZ, setUnderlyingToken } from './deploy/deployAccountantLZ';
+import { deployOracle, setAutorizedUpdater } from './deploy/deployOracle';
 
-export async function deployCarbon(
+export async function migrateAccountantLZwithOracle(
     hre: HardhatRuntimeEnvironment,
     mnemonic: string,
     path: string,
-    network: EnvironmentType,
+    environment: EnvironmentType,
 ) {
-    const { config, tronWeb, privateKey } = await getTronWeb(mnemonic, path, network);
+    const { config, tronWeb, privateKey } = await getTronWeb(mnemonic, path, environment);
+
+    const contractsCarbon: ContractsCarbon = await readFromFile(
+        `${environment}/contracts_carbon.json`,
+    );
 
     // get initial owner
     const initialOwner = tronWeb.address.fromPrivateKey(privateKey);
@@ -55,43 +60,22 @@ export async function deployCarbon(
     await setAutorizedUpdater(tronWeb, privateKey, oracle, accountantLZ);
     console.log('Oracle accountant set:', accountantLZ);
 
-    // deploy RebaseToken
-    const rebaseToken = await deployRebaseToken(hre, tronWeb, privateKey, {
-        initialOwner,
-        accountantAddress: accountantLZ,
-        initialShares: 0n, // set to zero, the initial shares are present only in Nitrogen
-        oracleAddress: oracle,
-        tokenName: config.MUSD_TOKEN_NAME,
-        tokenSymbol: config.MUSD_TOKEN_SYMBOL,
-        tokenDecimals: config.MUSD_TOKEN_DECIMALS,
-        minDeposit: config.MUSD_TOKEN_MIN_DEPOSIT,
-        minRedeem: config.MUSD_TOKEN_MIN_REDEEM,
-    });
-    console.log('RebaseToken deployed:', rebaseToken);
-
     // set vault for swap driver
     await setUnderlyingToken(tronWeb, privateKey, {
         accountantLZ,
-        moleculaToken: rebaseToken,
+        moleculaToken: contractsCarbon.tron.rebaseToken,
     });
-
-    // deploy mUSDLock
-    const mUSDLock = await deploymUSDLock(hre, tronWeb, privateKey, rebaseToken);
 
     // all done
     console.log('Contracts deployed:');
-    console.log('RebaseToken:', rebaseToken);
     console.log('Oracle:', oracle);
     console.log('accountantLZ:', accountantLZ);
-    console.log('mUSDLock:', mUSDLock);
     console.log('accountantLZHex:', tronWeb.address.toHex(accountantLZ).slice(2));
 
     return {
         tron: {
-            rebaseToken,
             oracle,
             accountantLZ,
-            mUSDLock,
         },
         accountantLZHex: tronWeb.address.toHex(accountantLZ).slice(2),
     };

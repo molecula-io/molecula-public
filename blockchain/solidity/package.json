@@ -95,7 +95,7 @@
         "@layerzerolabs/test-devtools-evm-foundry": "^6.0.3",
         "@noble/curves": "^1.8.1",
         "@noble/hashes": "^1.7.1",
-        "@openzeppelin/contracts": "^5.2.0",
+        "@openzeppelin/contracts": "^5.4.0",
         "dotenv": "^16.4.7",
         "ethers": "^6.15.0",
         "hardhat": "^2.26.1",
