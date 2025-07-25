@@ -8,6 +8,7 @@ import {
     APPROVER_SIGNATURE_AND_EXPIRY,
     APPROVER_SALT,
     NATIVE_TOKEN,
+    ETH_VIRTUAL_OFFSET,
 } from '../../configs/ethereum';
 
 import { FAUCET, grantERC20 } from './grant';
@@ -17,6 +18,7 @@ import { FAUCET, grantERC20 } from './grant';
  * @returns Object containing all deployed contracts and test accounts
  */
 export async function deployMrETh() {
+    const virtualOffset = ETH_VIRTUAL_OFFSET;
     const signers = await ethers.getSigners();
 
     const owner = signers.at(0)!;
@@ -124,6 +126,7 @@ export async function deployMrETh() {
         depositManager,
         4000,
         rebaseERC20V2FutureAddress,
+        virtualOffset,
     );
     expect(supplyManagerV2).to.be.equal(supplyManagerFutureAddress);
 

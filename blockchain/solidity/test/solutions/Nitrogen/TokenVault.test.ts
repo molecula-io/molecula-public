@@ -297,7 +297,9 @@ describe('Test TokenVault', () => {
 
         // Remove token
         await rebaseTokenOwner.removeTokenVault(usdcVault);
-        await expect(rebaseTokenOwner.removeTokenVault(USDC)).to.be.rejectedWith('ENoTokenVault(');
+        await expect(rebaseTokenOwner.removeTokenVault(usdcVault)).to.be.rejectedWith(
+            'ENoTokenVault(',
+        );
         await expect(
             usdcVault.connect(user0)['deposit(uint256,address,address)'](10n ** 6n, user0, user0),
         ).to.be.rejectedWith('TokenVaultNotAllowed(');

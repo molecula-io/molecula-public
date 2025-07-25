@@ -4,17 +4,20 @@ pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IERC7575Share} from "../external/interfaces/IERC7575.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {IERC7575Share} from "./../external/interfaces/IERC7575.sol";
 import {IVaultContainer} from "./interfaces/IVaultContainer.sol";
 
 /// @title Vault Container.
 /// @notice Abstract contract for managing token Vaults and their assets.
 /// @dev Implements the Vault management functionality with allowlisting and validation.
 abstract contract VaultContainer is IVaultContainer, IERC7575Share, Ownable, ERC165 {
+    using EnumerableMap for EnumerableMap.AddressToAddressMap;
+
     // ============ State Variables ============
 
-    /// @inheritdoc IERC7575Share
-    mapping(address asset => address) public vault;
+    /// @dev Mapping of assets to their vaults.
+    EnumerableMap.AddressToAddressMap internal _vault;
 
     /// @inheritdoc IVaultContainer
     mapping(address tokenVault => bool isValid) public isTokenVaultAllowed;
@@ -47,28 +50,27 @@ abstract contract VaultContainer is IVaultContainer, IERC7575Share, Ownable, ERC
             revert ETokenVaultNotInit();
         }
 
-        // Check the existing Vault.
-        if (vault[asset] != address(0)) {
+        // Register the Token Vault.
+        if (!_vault.set(asset, tokenVault)) {
+            // Throw an exception if the Token Vault has already been added.
             revert EHasTokenVaultForAsset();
         }
-
-        // Register the token Vault.
+        // Add the Token Vault to the allowed ones.
         isTokenVaultAllowed[tokenVault] = true;
-        vault[asset] = tokenVault;
 
         emit TokenVaultAdded(tokenVault);
     }
 
     /// @inheritdoc IVaultContainer
     function removeTokenVault(address tokenVault) public virtual override onlyOwner {
-        // Validate whether the token Vault exists.
-        if (!isTokenVaultAllowed[tokenVault]) {
-            revert ENoTokenVault();
-        }
+        // Gets the asset address for a token Vault.
+        address asset = _getAsset(tokenVault);
 
         // Clean up the Vault mappings.
-        address asset = _getAsset(tokenVault);
-        delete vault[asset];
+        if (!_vault.remove(asset)) {
+            revert ENoTokenVault();
+        }
+        // Remove the token Vault from the allowed ones.
         delete isTokenVaultAllowed[tokenVault];
 
         emit TokenVaultRemoved(tokenVault);
@@ -88,6 +90,16 @@ abstract contract VaultContainer is IVaultContainer, IERC7575Share, Ownable, ERC
     }
 
     // ============ View Functions ============
+
+    /// @inheritdoc IERC7575Share
+    function vault(address asset) public view virtual override returns (address) {
+        return _vault.get(asset);
+    }
+
+    /// @inheritdoc IVaultContainer
+    function getAssetList() public view virtual override returns (address[] memory) {
+        return _vault.keys();
+    }
 
     /// @inheritdoc IVaultContainer
     function validateTokenVault(address addr) external view virtual override {

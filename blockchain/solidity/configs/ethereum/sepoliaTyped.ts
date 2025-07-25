@@ -141,8 +141,8 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     META_TOKEN_DECIMALS: 18,
 
     /** Minimal deposit in eth */
-    META_MIN_DEPOSIT_ETH: 1_000_000n,
+    META_MIN_DEPOSIT_ETH: 10n ** 15n,
 
     /** Minimal redeem in shares */
-    META_MIN_REDEEM_SHARES: 10n ** 18n,
+    META_MIN_REDEEM_SHARES: 5n * 10n ** 14n,
 };

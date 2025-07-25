@@ -65,7 +65,7 @@
         "set:nitrogen:owner:test": "          yarn compile &&                               hardhat ethereumSetupScope setNitrogenOwner --network sepolia --environment devnet",
         "set:nitrogen:setupRouter:test": "    yarn compile &&                               hardhat ethereumSetupScope setupRouter --network sepolia --environment devnet",
         "slither": "slither . --config-file ./slither.config.json --compile-force-framework hardhat",
-        "slither:skip-clean-rpc-cache": "rm cache/solidity-files-cache.json && yarn slither --skip-clean",
+        "slither:skip-clean-rpc-cache": "rm -f cache/solidity-files-cache.json && yarn slither --skip-clean",
         "solhint:check": "solhint './**/*.sol'",
         "solhint:fix": "solhint './**/*.sol' --fix",
         "test": "hardhat test",

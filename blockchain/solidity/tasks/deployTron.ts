@@ -8,7 +8,7 @@ import type { ContractsCarbon } from '@molecula-monorepo/blockchain.addresses';
 import { deployCarbon } from '../scripts/tron/deploy/deployCarbonTron';
 import { deployExecutor } from '../scripts/tron/deploy/deployExecutor';
 import { deployMockUSDT, deployUsdtOFT } from '../scripts/tron/deploy/deployMockTron';
-import { migrateAccountantLZwithOracle } from '../scripts/tron/migrateAccountantLZwithOracle';
+import { migrateAccountantLZwithOracle } from '../scripts/tron/migration/migrateAccountantLZwithOracle';
 import {
     handleError,
     writeToFile,

@@ -20,3 +20,9 @@ export const APPROVER_SALT = '0x000000000000000000000000000000000000000000000000
  * Standard address used to represent the native token (ETH) in the system.
  */
 export const NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+
+/**
+ * Fantom initial share and assert supply for eth-based solutions.
+ * It's about 300 USD.
+ */
+export const ETH_VIRTUAL_OFFSET = 10n ** 17n;

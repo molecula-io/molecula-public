@@ -5,7 +5,7 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT, NATIVE_TOKEN } from '../../../configs/ethereum';
+import { DEPLOY_GAS_LIMIT, ETH_VIRTUAL_OFFSET, NATIVE_TOKEN } from '../../../configs/ethereum';
 import { getConfig } from '../../utils/deployUtils';
 
 /**
@@ -47,6 +47,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         metaPoolTreasury,
         config.META_APY,
         rebaseTokenFutureAddress,
+        ETH_VIRTUAL_OFFSET,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await supplyManagerV2.waitForDeployment();

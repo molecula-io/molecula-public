@@ -9,8 +9,15 @@ import { FAUCET, grantERC20 } from '../../utils/grant';
 
 describe('Supply Manager V2', () => {
     it('Test conversion shares', async () => {
-        const { rebaseTokenV2, USDC, metaPoolTreasury, user0, supplyManagerV2, usdcVault } =
-            await loadFixture(deployCoreV2);
+        const {
+            rebaseTokenV2,
+            USDC,
+            metaPoolTreasury,
+            user0,
+            supplyManagerV2,
+            usdcVault,
+            virtualOffset,
+        } = await loadFixture(deployCoreV2);
 
         const depositUSDCValue = 50n * 10n ** (await USDC.decimals());
         await USDC.connect(user0).approve(usdcVault, ethers.MaxUint256);
@@ -24,14 +31,14 @@ describe('Supply Manager V2', () => {
         await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
 
         const { pool, shares } = await supplyManagerV2.getTotalSupply();
-        expect(pool).to.be.greaterThan(10n ** 18n);
-        expect(shares).to.be.greaterThan(10n ** 18n);
+        expect(pool).to.be.greaterThan(virtualOffset);
+        expect(shares).to.be.greaterThan(virtualOffset);
 
         for (let i = 0; i < 3; i += 1) {
             await grantERC20(user0, USDC, depositUSDCValue);
             await usdcVault.connect(user0).requestDeposit(depositUSDCValue, user0, user0);
             userShares = await rebaseTokenV2.sharesOf(user0);
-            expect(userShares).to.be.greaterThan(10n ** 18n);
+            expect(userShares).to.be.greaterThan(virtualOffset);
         }
     });
 
@@ -134,7 +141,7 @@ describe('Supply Manager V2', () => {
 
         await expect(
             supplyManagerV2.connect(yieldDistributor).distributeYield([], 10_001),
-        ).to.be.rejectedWith('EInvalidAPY');
+        ).to.be.rejectedWith('EInvalidPercentage(');
 
         await expect(
             supplyManagerV2.connect(yieldDistributor).distributeYield([], 1),

@@ -12,10 +12,8 @@ import { signERC2612Permit } from '../../utils/sign';
 
 describe('RebaseTokenV2', () => {
     it('Test total supply: USDC (6 decimals)', async () => {
-        const { rebaseTokenV2, USDC, metaPoolTreasury, supplyManagerV2 } =
+        const { rebaseTokenV2, USDC, metaPoolTreasury, supplyManagerV2, virtualOffset } =
             await loadFixture(deployCoreV2);
-
-        const virtualOffset = 10n ** 18n;
         let totalSupply = await rebaseTokenV2.totalSupply();
         let totalSharesSupply = await rebaseTokenV2.totalSharesSupply();
         expect(totalSupply).to.be.equal(virtualOffset);
@@ -83,7 +81,8 @@ describe('RebaseTokenV2', () => {
     });
 
     it('Test errors', async () => {
-        const { user0, user1, rebaseTokenV2 } = await loadFixture(deployCoreV2);
+        const { user0, user1, rebaseTokenV2, usdcVault, usdeVault, nativeTokenVault } =
+            await loadFixture(deployCoreV2);
 
         const zeroSigner = await ethers.getImpersonatedSigner(ethers.ZeroAddress);
         await expect(rebaseTokenV2.connect(zeroSigner).approve(user0, 1)).to.be.rejectedWith(
@@ -122,6 +121,16 @@ describe('RebaseTokenV2', () => {
         await expect(rebaseTokenV2.setOracle(ethers.ZeroAddress)).to.be.rejectedWith(
             'EZeroAddress',
         );
+
+        await nativeTokenVault.pauseAll();
+        await usdeVault.pauseAll();
+        await usdcVault.pauseRequestDeposit();
+        await expect(rebaseTokenV2.setOracle(user0)).to.be.rejectedWith('EVaultIsNotPaused(');
+        await usdcVault.unpauseRequestDeposit();
+        await usdcVault.pauseRequestRedeem();
+        await expect(rebaseTokenV2.setOracle(user0)).to.be.rejectedWith('EVaultIsNotPaused(');
+        await usdcVault.pauseRequestDeposit();
+
         await rebaseTokenV2.setOracle(user0);
         expect(await rebaseTokenV2.oracle()).to.be.equal(user0);
 

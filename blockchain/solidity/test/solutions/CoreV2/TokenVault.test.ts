@@ -6,7 +6,8 @@ import { ethers } from 'hardhat';
 
 import { deployCoreV2, deployCoreV2WithoutInit } from '../../utils/CoreV2';
 import { findRequestRedeemEventV2 } from '../../utils/event';
-import { grantERC20 } from '../../utils/grant';
+import { grantERC20, grantETH } from '../../utils/grant';
+import { deployMetaEth } from '../../utils/metaETH';
 
 describe('Token Vault', () => {
     it('Check init params', async () => {
@@ -81,7 +82,7 @@ describe('Token Vault', () => {
         const decimals = 18n;
         const depositValue = 10n ** decimals;
         expect(await rebaseTokenV2.sharesOf(user0)).to.be.equal(0);
-        await nativeTokenVault.connect(user0).deposit(0, user0, { value: depositValue });
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
         expect(await rebaseTokenV2.sharesOf(user0)).to.be.equal(depositValue);
         expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(depositValue);
 
@@ -100,6 +101,36 @@ describe('Token Vault', () => {
         await nativeTokenVault.connect(user0).withdraw(claimableAssets, user1, user0);
         expect(await provider.getBalance(user1)).to.be.equal(
             user1Balance + redeemEvent.redeemValue,
+        );
+    });
+
+    it('Deposit native token', async () => {
+        const { nativeTokenVault, user0, rebaseTokenV2, metaPoolTreasury } =
+            await loadFixture(deployMetaEth);
+        const { provider } = ethers;
+
+        // Generate yield
+        await grantETH(metaPoolTreasury, ethers.parseEther('2'));
+
+        const prevBalance = await provider.getBalance(metaPoolTreasury);
+        const prevUserBalance = await provider.getBalance(user0);
+
+        const shares = 10n ** 18n;
+        const assets = await rebaseTokenV2.convertToAssets(shares);
+        await expect(
+            nativeTokenVault.connect(user0).mint(shares, user0, { value: 1 }),
+        ).to.be.rejectedWith('ETooLowMsgValue(');
+        await nativeTokenVault
+            .connect(user0)
+            .mint(shares, user0, { value: ethers.parseEther('200') });
+
+        // metaPoolTreasury gets exactly `assets` native tokens
+        expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(prevBalance + assets);
+        // nativeTokenVault didn't have any eth
+        expect(await provider.getBalance(nativeTokenVault)).to.be.equal(0);
+        // User gets back their funds and did not lose 200 eth
+        expect(prevUserBalance - (await provider.getBalance(user0)) - assets).to.be.lessThan(
+            ethers.parseEther('0.001'),
         );
     });
 

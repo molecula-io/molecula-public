@@ -81,6 +81,11 @@ interface ISupplyManagerV2 {
     /// @param distributedShares Total amount of shares distributed as yield.
     event YieldDistributed(uint256 indexed distributedShares);
 
+    /// @dev Emitted when a new yield distributor is set.
+    /// @param oldDistributor Address of the old yield distributor.
+    /// @param newDistributor Address of the new yield distributor.
+    event YieldDistributorChanged(address indexed oldDistributor, address indexed newDistributor);
+
     // ============ Errors ============
 
     /// @dev Error thrown when no shares are available.
@@ -109,9 +114,6 @@ interface ISupplyManagerV2 {
 
     /// @dev Error thrown when the `TokenVault` already exists in the parties' list.
     error EDuplicateTokenVault();
-
-    /// @dev Error thrown when the APY is invalid.
-    error EInvalidAPY();
 
     /// @dev Error thrown when the yield amount is negative.
     error ENoRealYield();

@@ -23,7 +23,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
     // ============ Core Functions ============
 
     // Get tokens from the Molecula pool.
-    receive() external payable {}
+    receive() external payable virtual {}
 
     /// @inheritdoc IBaseTokenVault
     function init(
@@ -39,20 +39,42 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
 
     /// @inheritdoc IERC7575Payable
     function deposit(
-        uint256 assets,
+        uint256 /*assets*/,
         address receiver
     ) external payable virtual override returns (uint256 shares) {
-        assets = msg.value;
-        (, shares) = _requestDeposit(assets, receiver, msg.sender);
+        (, shares) = _requestDeposit(msg.value, receiver, msg.sender);
     }
 
     /// @inheritdoc IERC7575Payable
+    /// @dev According to EIP-7528 (https://eips.ethereum.org/EIPS/eip-7528):
+    ///         "Mints exactly `shares` Vault shares to receiver by depositing `assets` of ETH."
+    ///         "It is up to the vault implementer to decide whether to refund or absorb any excess Ether,
+    ///             and up to depositors to deposit as close to the exact amount as possible."
     function mint(
         uint256 shares,
         address receiver
     ) external payable virtual override returns (uint256 assets) {
+        // Calculate the amount of assets needed based on the requested shares.
         assets = convertToAssets(shares);
+
+        // Check if the sent ETH value is sufficient for the requested shares.
+        if (msg.value < assets) {
+            revert ETooLowMsgValue(msg.value, assets, shares);
+        }
+
+        // Process the deposit request with the calculated asset amount.
         _requestDeposit(assets, receiver, msg.sender);
+
+        // Calculate any excess ETH sent.
+        uint256 excessEther;
+        unchecked {
+            excessEther = msg.value - assets;
+        }
+
+        // Return any excess ETH to the sender.
+        if (excessEther > 0) {
+            payable(msg.sender).sendValue(excessEther);
+        }
     }
 
     /// @inheritdoc IBaseTokenVault
@@ -202,7 +224,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
         uint256 assets
     ) internal virtual override returns (uint256 shares) {
         return
-            ISupplyManagerV2WithNative(SUPPLY_MANAGER).depositNativeToken{value: msg.value}(
+            ISupplyManagerV2WithNative(SUPPLY_MANAGER).depositNativeToken{value: assets}(
                 _asset,
                 requestId,
                 assets
@@ -221,7 +243,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
         address /*owner*/,
         uint256 /*shares*/ // solhint-disable-next-line no-empty-blocks
     ) internal virtual override {
-        // Do nothing. SupplyManagerV2 stores information about request.
+        // Do nothing. SupplyManagerV2 stores information about requests.
     }
 
     /// @inheritdoc BaseTokenVault

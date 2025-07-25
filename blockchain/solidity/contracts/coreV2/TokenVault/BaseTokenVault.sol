@@ -73,14 +73,18 @@ abstract contract BaseTokenVault is
     function setMinDepositAssets(
         uint128 minDepositAssets_
     ) external virtual override onlyOwner notZero(minDepositAssets_) {
+        uint128 oldMinDepositAssets = minDepositAssets;
         minDepositAssets = minDepositAssets_;
+        emit MinDepositAssetsChanged(oldMinDepositAssets, minDepositAssets_);
     }
 
     /// @inheritdoc IBaseTokenVault
     function setMinRedeemShares(
         uint128 minRedeemShares_
     ) external virtual override onlyOwner notZero(minRedeemShares_) {
+        uint128 oldMinRedeemShares = minRedeemShares;
         minRedeemShares = minRedeemShares_;
+        emit MinRedeemSharesChanged(oldMinRedeemShares, minRedeemShares_);
     }
 
     /// @inheritdoc IERC7540Redeem

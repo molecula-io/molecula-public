@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig, NATIVE_TOKEN } from '../../configs/ethereum';
+import { ethMainnetBetaConfig, ETH_VIRTUAL_OFFSET, NATIVE_TOKEN } from '../../configs/ethereum';
 
 import { generateRandomWallet } from './Common';
 
@@ -16,6 +16,7 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
     const operator = signers.at(11)!;
     const yieldDistributor = signers.at(12)!;
     const poolKeeper = await generateRandomWallet();
+    const virtualOffset = ETH_VIRTUAL_OFFSET;
 
     const supplyManagerFutureAddress = ethers.getCreateAddress({
         from: poolOwner.address,
@@ -48,6 +49,7 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
         metaPoolTreasury,
         4000,
         rebaseERC20V2FutureAddress,
+        virtualOffset,
     );
     expect(await supplyManagerV2.getAddress()).to.be.equal(supplyManagerFutureAddress);
 

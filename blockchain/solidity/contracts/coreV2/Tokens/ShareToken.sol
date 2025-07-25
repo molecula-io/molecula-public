@@ -6,6 +6,7 @@ import {ValueValidator} from "./../../common/ValueValidator.sol";
 import {IERC7575} from "./../external/interfaces/IERC7575.sol";
 import {IOracleV2} from "./../interfaces/IOracleV2.sol";
 import {ISupplyManagerV2} from "./../interfaces/ISupplyManagerV2.sol";
+import {PausableVault} from "./../TokenVault/PausableVault.sol";
 import {IShare} from "./interfaces/IShare.sol";
 import {IVaultContainer} from "./interfaces/IVaultContainer.sol";
 import {VaultContainer} from "./VaultContainer.sol";
@@ -20,7 +21,7 @@ abstract contract ShareToken is IShare, VaultContainer, ValueValidator {
     /// @dev The address of the Supply Manager contract
     address public immutable SUPPLY_MANAGER;
 
-    /// @dev The address of the Oracle contract.
+    /// @inheritdoc IShare
     address public oracle;
 
     // ============ Modifiers ============
@@ -46,13 +47,17 @@ abstract contract ShareToken is IShare, VaultContainer, ValueValidator {
 
     // ============ Admin Functions ============
 
-    /// @dev Sets the Oracle contract's address.
-    /// @param oracleAddress The new Oracle contract address
+    /// @inheritdoc IShare
     function setOracle(
         address oracleAddress
-    ) external virtual onlyOwner notZeroAddress(oracleAddress) {
+    ) external virtual override onlyOwner notZeroAddress(oracleAddress) {
+        // All Vaults must be paused before changing the Oracle to prevent a sandwich attack opportunity.
+        _ensureVaultsArePaused();
+
+        address oldOracle = oracle;
         // Update the Oracle's address.
         oracle = oracleAddress;
+        emit OracleChanged(oldOracle, oracleAddress);
     }
 
     /// @inheritdoc IVaultContainer
@@ -91,5 +96,22 @@ abstract contract ShareToken is IShare, VaultContainer, ValueValidator {
     function _getAsset(address tokenVault) internal view virtual override returns (address asset) {
         // Get the underlying asset from the token Vault.
         return IERC7575(tokenVault).asset();
+    }
+
+    /// @notice Ensures all the Vaults in the container are paused for both deposits and redemptions.
+    /// @dev This is a safety check used before critical operations like changing the Oracle.
+    /// @dev Throws `EVaultIsNotPaused` if any Vault is not fully paused.
+    function _ensureVaultsArePaused() internal view virtual {
+        address[] memory asset = getAssetList();
+        uint256 length = asset.length;
+        for (uint256 i = 0; i < length; ++i) {
+            address tokenVault = vault(asset[i]);
+            PausableVault pausableVault = PausableVault(vault(asset[i]));
+            bool isPausedDeposit = pausableVault.isRequestDepositPaused();
+            bool isPausedRedeem = pausableVault.isRequestRedeemPaused();
+            if (!isPausedDeposit || !isPausedRedeem) {
+                revert EVaultIsNotPaused(tokenVault, isPausedDeposit, isPausedRedeem);
+            }
+        }
     }
 }

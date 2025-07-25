@@ -10,6 +10,12 @@ import { FAUCET, grantERC20, grantETH } from '../../utils/grant';
 import { expectEqual } from '../../utils/math';
 import { deployMetaEth } from '../../utils/metaETH';
 
+enum ValueMode {
+    USE_MESSAGE_VALUE,
+    USE_POOL_BALANCE,
+    USE_BOTH_VALUES,
+}
+
 describe('Meta ETH', () => {
     it('Check deploy', async () => {
         const { metaPoolTreasury } = await loadFixture(deployMetaEth);
@@ -72,7 +78,9 @@ describe('Meta ETH', () => {
 
         // redeem
         expect(await stETH.balanceOf(user0)).to.be.equal(0);
-        await stETHVault.connect(user0).withdraw(redeemAssets - 1n, user0, user0);
+        await stETHVault
+            .connect(user0)
+            .withdraw(await stETHVault.claimableRedeemAssets(user0), user0, user0);
         expectEqual(await stETH.balanceOf(user0), redeemAssets);
     });
 
@@ -88,7 +96,9 @@ describe('Meta ETH', () => {
             },
         ];
         await expect(
-            metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf),
+            metaPoolTreasury
+                .connect(poolKeeper)
+                .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE),
         ).to.be.rejectedWith('ENotInWhiteList(');
         await metaPoolTreasury.addInWhiteList(stETH);
 
@@ -98,14 +108,37 @@ describe('Meta ETH', () => {
         await metaPoolTreasury.pauseExecute();
         expect(await metaPoolTreasury.isExecutePaused()).to.be.equal(true);
         await expect(
-            metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf),
+            metaPoolTreasury
+                .connect(poolKeeper)
+                .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE),
         ).to.be.rejectedWith('EFunctionPaused(');
         await expect(metaPoolTreasury.connect(user0).unpauseExecute()).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
         await metaPoolTreasury.unpauseExecute();
 
-        await metaPoolTreasury.connect(poolKeeper).execute(execEncodedBalanceOf);
+        await metaPoolTreasury
+            .connect(poolKeeper)
+            .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE);
+    });
+
+    it('Test send eth', async () => {
+        const { metaPoolTreasury, poolKeeper, testSeqno } = await loadFixture(deployMetaEth);
+
+        const execEncodedBalanceOf = [
+            {
+                target: testSeqno,
+                data: '0x',
+                value: 1,
+            },
+        ];
+
+        const prevCounter = await testSeqno.seqno();
+        await metaPoolTreasury
+            .connect(poolKeeper)
+            .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE, { value: 1 });
+        // Check that testSeqno.receive function was called
+        expect(await testSeqno.seqno()).to.be.equal(prevCounter + 10n);
     });
 
     it('Test approve execute', async () => {
@@ -121,10 +154,12 @@ describe('Meta ETH', () => {
                 value: 1,
             },
         ];
-        await expect(metaPoolTreasury.execute(execArgs)).to.be.rejectedWith('ENotAuthorized()');
-        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs)).to.be.rejectedWith(
-            'EMsgValueIsNotZero()',
-        );
+        await expect(
+            metaPoolTreasury.execute(execArgs, ValueMode.USE_MESSAGE_VALUE),
+        ).to.be.rejectedWith('ENotAuthorized()');
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execArgs, ValueMode.USE_MESSAGE_VALUE),
+        ).to.be.rejectedWith('EMsgValueIsNotZero()');
 
         const execArgs0 = [
             {
@@ -133,19 +168,19 @@ describe('Meta ETH', () => {
                 value: 0,
             },
         ];
-        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs0)).to.be.rejectedWith(
-            'ENotInWhiteList()',
-        );
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execArgs0, ValueMode.USE_MESSAGE_VALUE),
+        ).to.be.rejectedWith('ENotInWhiteList()');
         await metaPoolTreasury.addInWhiteList(user0.address);
         expect(await metaPoolTreasury.isInWhiteList(user0.address)).to.be.equal(true);
 
         await metaPoolTreasury.setBlockToken(stETH, true);
-        await expect(metaPoolTreasury.connect(poolKeeper).execute(execArgs0)).to.be.rejectedWith(
-            'ETokenBlocked()',
-        );
+        await expect(
+            metaPoolTreasury.connect(poolKeeper).execute(execArgs0, ValueMode.USE_MESSAGE_VALUE),
+        ).to.be.rejectedWith('ETokenBlocked()');
         await metaPoolTreasury.setBlockToken(stETH, false);
 
-        await metaPoolTreasury.connect(poolKeeper).execute(execArgs0);
+        await metaPoolTreasury.connect(poolKeeper).execute(execArgs0, ValueMode.USE_MESSAGE_VALUE);
     });
 
     it('Test approve execute with value', async () => {
@@ -160,9 +195,58 @@ describe('Meta ETH', () => {
             },
         ];
         await expect(
-            metaPoolTreasury.connect(poolKeeper).execute(execArgs0, { value: 2 }),
+            metaPoolTreasury
+                .connect(poolKeeper)
+                .execute(execArgs0, ValueMode.USE_MESSAGE_VALUE, { value: 2 }),
         ).to.be.rejectedWith('EWrongMsgValue()');
-        await metaPoolTreasury.connect(poolKeeper).execute(execArgs0, { value: 1 });
+        await metaPoolTreasury
+            .connect(poolKeeper)
+            .execute(execArgs0, ValueMode.USE_MESSAGE_VALUE, { value: 1 });
+    });
+
+    it('Test sending pool balance', async () => {
+        const { metaPoolTreasury, testSeqno, poolKeeper } = await loadFixture(deployMetaEth);
+        const { provider } = ethers;
+
+        expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(0);
+        await grantETH(metaPoolTreasury, 100500);
+
+        const encodedData = testSeqno.interface.encodeFunctionData('incAndPay', [12n]);
+        const execArgs0 = [
+            {
+                target: testSeqno,
+                data: encodedData,
+                value: 100500,
+            },
+        ];
+        await expect(
+            metaPoolTreasury
+                .connect(poolKeeper)
+                .execute(execArgs0, ValueMode.USE_POOL_BALANCE, { value: 1 }),
+        ).to.rejectedWith('EMsgValueIsNotZero');
+        await metaPoolTreasury
+            .connect(poolKeeper)
+            .execute(execArgs0, ValueMode.USE_POOL_BALANCE, { value: 0 });
+    });
+
+    it('Test sending value and pool balance', async () => {
+        const { metaPoolTreasury, testSeqno, poolKeeper } = await loadFixture(deployMetaEth);
+        const { provider } = ethers;
+
+        expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(0);
+        await grantETH(metaPoolTreasury, 100500);
+
+        const encodedData = testSeqno.interface.encodeFunctionData('incAndPay', [12n]);
+        const execArgs0 = [
+            {
+                target: testSeqno,
+                data: encodedData,
+                value: 100500 + 1,
+            },
+        ];
+        await metaPoolTreasury
+            .connect(poolKeeper)
+            .execute(execArgs0, ValueMode.USE_BOTH_VALUES, { value: 1 });
     });
 
     it('Test add/remove tokens', async () => {

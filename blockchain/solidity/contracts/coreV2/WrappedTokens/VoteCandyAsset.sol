@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.24;
+
+import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {CandyWrappedRebaseAsset} from "./CandyWrappedRebaseAsset.sol";
+import {VoteToken} from "./VoteToken.sol";
+import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
+
+/// @title VoteCandyAsset.
+/// @notice This token can be used as a voting token.
+contract VoteCandyAsset is CandyWrappedRebaseAsset, VoteToken {
+    /// @dev Constructor for initializing the contract.
+    /// @param name Token's name.
+    /// @param symbol Token's symbol.
+    /// @param owner Smart contract owner's address.
+    /// @param rebaseToken_ Rebase token's address.
+    /// @param yieldDistributor_ Authorized Yield Distributor's address.
+    constructor(
+        string memory name,
+        string memory symbol,
+        address owner,
+        address rebaseToken_,
+        address yieldDistributor_
+    )
+        ERC20(name, symbol)
+        ERC20Permit(name)
+        WrappedRebaseAsset(yieldDistributor_)
+        CandyWrappedRebaseAsset(rebaseToken_)
+        Ownable(owner)
+        notZeroAddress(rebaseToken_)
+    {}
+
+    /// @inheritdoc ERC165
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(WrappedRebaseAsset, VoteToken) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /// @inheritdoc ERC20
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    ) internal virtual override(ERC20, VoteToken) {
+        super._update(from, to, value);
+    }
+}

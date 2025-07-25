@@ -89,7 +89,7 @@ contract RebaseTokenV2 is IIssuer, Ownable2Step, Permit, RebaseERC20V2 {
     }
 
     /// @inheritdoc Permit
-    function _onPermit(address owner, address spender, uint256 shares) internal virtual override {
-        _approve(owner, spender, shares);
+    function _onPermit(address owner, address spender, uint256 value) internal virtual override {
+        _approve(owner, spender, value);
     }
 }

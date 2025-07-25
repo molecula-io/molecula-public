@@ -5,57 +5,24 @@ Calls of balanceOf/convertToAssets/distribute functions are used .
 Nothing to do here.
 https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
 
-2) events-access
-It is required that there must be events in all setters. For example:
-
-function setSupplyManager(address supplyManagerAddress) external onlyOwner {
-    supplyManager = supplyManagerAddress;
-}
-Should we add evens?
-https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
-
-3) events-maths
-It's same as events-access. . For example:
-function setTotalPoolSupply(uint256 pool) external onlyOwner {
-    _pool = pool;
-}
-Should we add evens?
-https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
-
-4) missing-zero-check
-There must be zero address validation in constructors and setters. For example:
-constructor(
-    address owner,
-    address service,
-    address ygtTokenAddr,
-    uint256 minDeposit,
-    uint256 minWithdraw
-) Ownable(owner) ServiceOwnable(service) {
-    YGT_TOKEN = ygtTokenAddr;
-    minDepositValue = minDeposit;
-    minWithdrawValue = minWithdraw;
-}
-Check that owner, service and ygtTokenAddr is not zero? Or is it not worth it?
-https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
-
-5) naming-convention
+2) naming-convention
 solhint и slither didn’t agree on the naming of immutable contract variables
 solhint requires capital letters.
 slither - in mixedCase.
 https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
 
-6) reentrancy-events
+3) reentrancy-events
 Slither complains that we emit an event after external calls. But this is normal, since we need to get some data for the event.
 https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
 
-7) solc-version
+4) solc-version
 We use 0.8.24 because last supported version in tronbox supported is 0.8.24.
 https://github.com/crytic/slither/wiki/Detector-Documentation#configuration-807
 
-8) timestamp
+5) timestamp
 We use timestamp because we need it. Too paranoid warning =)
 https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
 
-9) unimplemented-functions
+6) unimplemented-functions
 Compiler throws an exception if some function from the interface is not implemented.
 Slither has false positives

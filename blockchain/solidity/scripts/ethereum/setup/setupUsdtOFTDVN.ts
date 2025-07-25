@@ -5,15 +5,15 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getEnvironmentConfig, getTronEnvironmentConfig } from '../utils/deployUtils';
+import { getEnvironmentConfig, getTronEnvironmentConfig } from '../../utils/deployUtils';
 import {
     setPeer,
     setReceiveConfig,
     setSendConfig,
     setEnforcedOptions,
     setUsdtOftFee,
-} from '../utils/lzEthSetupUtils';
-import { getOAppConfig } from '../utils/lzSetupUtils';
+} from '../../utils/lzEthSetupUtils';
+import { getOAppConfig } from '../../utils/lzSetupUtils';
 
 export async function setupUsdtOftDVN(
     hre: HardhatRuntimeEnvironment,

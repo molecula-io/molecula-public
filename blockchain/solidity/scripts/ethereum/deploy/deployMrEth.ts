@@ -8,7 +8,8 @@ import {
     APPROVER_SIGNATURE_AND_EXPIRY,
     APPROVER_SALT,
     NATIVE_TOKEN,
-} from '../../../configs/ethereum';
+    ETH_VIRTUAL_OFFSET,
+} from '../../../configs/ethereum/constants';
 
 import { getMrEthConfig } from '../../utils/deployUtils';
 
@@ -33,6 +34,7 @@ async function deployMrEthCoreV2(
         contractsMrEth.depositManager,
         config.APY_FORMATTER,
         contractsMrEth.rebaseERC20V2FutureAddress,
+        ETH_VIRTUAL_OFFSET,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await supplyManagerV2.waitForDeployment();

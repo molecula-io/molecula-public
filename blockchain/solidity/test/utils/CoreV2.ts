@@ -16,6 +16,7 @@ export async function deployCoreV2WithoutInit() {
     const operator = signers.at(11)!;
     const yieldDistributor = signers.at(12)!;
     const poolKeeper = await generateRandomWallet();
+    const virtualOffset = 10n ** 18n; // Note: it's for USD solution
 
     const supplyManagerFutureAddress = ethers.getCreateAddress({
         from: poolOwner.address,
@@ -48,6 +49,7 @@ export async function deployCoreV2WithoutInit() {
         metaPoolTreasury,
         4000,
         rebaseERC20V2FutureAddress,
+        virtualOffset,
     );
     expect(await supplyManagerV2.getAddress()).to.be.equal(supplyManagerFutureAddress);
 
@@ -103,6 +105,7 @@ export async function deployCoreV2WithoutInit() {
         USDC,
         USDe,
         nativeTokenVault,
+        virtualOffset,
     };
 }
 
@@ -126,7 +129,7 @@ export async function deployCoreV2() {
         10n ** 18n, // minRedeemShares
     );
 
-    // Add tokenVault into moleculaRebaseToken's white list
+    // Add tokenVault into moleculaRebaseToken's whitelist
     const codeHash = keccak256((await coreV2.usdcVault.getDeployedCode())!);
     await coreV2.rebaseTokenV2.setCodeHash(codeHash, true);
     await coreV2.rebaseTokenV2.addTokenVault(coreV2.usdcVault);

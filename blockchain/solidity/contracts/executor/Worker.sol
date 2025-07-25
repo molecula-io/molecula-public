@@ -7,8 +7,9 @@ import {ISendLib} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/I
 import {Transfer} from "@layerzerolabs/lz-evm-protocol-v2/contracts/libs/Transfer.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {ValueValidator} from "../common/ValueValidator.sol";
 
-abstract contract Worker is AccessControl, Pausable, IWorker {
+abstract contract Worker is AccessControl, Pausable, IWorker, ValueValidator {
     /// @dev Role for contracts allowed to assign jobs (messaging libraries).
     bytes32 internal constant _MESSAGE_LIB_ROLE = keccak256("MESSAGE_LIB_ROLE");
     /// @dev Role representing addresses in the allowlist.
@@ -122,7 +123,9 @@ abstract contract Worker is AccessControl, Pausable, IWorker {
      *      Only callable by ADMIN_ROLE.
      * @param _priceFeed New price feed address.
      */
-    function setPriceFeed(address _priceFeed) external onlyRole(_ADMIN_ROLE) {
+    function setPriceFeed(
+        address _priceFeed
+    ) external onlyRole(_ADMIN_ROLE) notZeroAddress(_priceFeed) {
         priceFeed = _priceFeed;
         emit SetPriceFeed(_priceFeed);
     }
@@ -132,7 +135,9 @@ abstract contract Worker is AccessControl, Pausable, IWorker {
      *      Only callable by ADMIN_ROLE.
      * @param _workerFeeLib Address of new ExecutorFeeLib contract.
      */
-    function setWorkerFeeLib(address _workerFeeLib) external onlyRole(_ADMIN_ROLE) {
+    function setWorkerFeeLib(
+        address _workerFeeLib
+    ) external onlyRole(_ADMIN_ROLE) notZeroAddress(_workerFeeLib) {
         workerFeeLib = _workerFeeLib;
         emit SetWorkerLib(_workerFeeLib);
     }

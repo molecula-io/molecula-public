@@ -6,10 +6,10 @@ import {
     type EnvironmentType,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb, readFromFile } from '../utils/deployUtils';
+import { getTronWeb, readFromFile } from '../../utils/deployUtils';
+import { deployAccountantLZ, setUnderlyingToken } from '../deploy/deployAccountantLZ';
 
-import { deployAccountantLZ, setUnderlyingToken } from './deploy/deployAccountantLZ';
-import { deployOracle, setAutorizedUpdater } from './deploy/deployOracle';
+import { deployOracle, setAutorizedUpdater } from '../deploy/deployOracle';
 
 export async function migrateAccountantLZwithOracle(
     hre: HardhatRuntimeEnvironment,

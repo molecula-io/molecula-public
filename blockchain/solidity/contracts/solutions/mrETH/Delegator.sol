@@ -26,7 +26,7 @@ contract Delegator is DelegatorStorage, Initializable, ValueValidator {
         address operator,
         IDelegationManager.SignatureWithExpiry calldata approverSignatureAndExpiry,
         bytes32 approverSalt
-    ) external initializer {
+    ) external initializer notZeroAddress(rewardsCoordinator_) {
         depositManager = msg.sender;
 
         delegationManager = delegationManager_;

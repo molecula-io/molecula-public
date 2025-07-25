@@ -57,7 +57,11 @@ contract Executor is Worker, ReentrancyGuard, IExecutor {
         address _priceFeed,
         address _roleAdmin,
         address[] memory _admins
-    ) Worker(_messageLibs, _priceFeed, 12000, _roleAdmin, _admins) {
+    )
+        Worker(_messageLibs, _priceFeed, 12000, _roleAdmin, _admins)
+        notZeroAddress(_endpoint)
+        notZeroAddress(_receiveUln302)
+    {
         ENDPOINT = _endpoint;
         LOCAL_EID_V2 = ILayerZeroEndpointV2Extended(_endpoint).eid();
         RECEIVE_ULN302 = _receiveUln302;

@@ -26,6 +26,15 @@ contract MetaNativeTokenVault is NativeTokenVault {
         address guardianAddress
     ) BaseTokenVault(shareAddress, supplyManager) Ownable(initialOwner) Guardian(guardianAddress) {}
 
+    /// @dev Allows the contract to receive ETH.
+    receive()
+        external
+        payable
+        virtual
+        override
+        only(ISupplyManagerV2(SUPPLY_MANAGER).getMoleculaPool())
+    {}
+
     /// @inheritdoc IERC7575Payable
     function totalAssets() external view virtual override returns (uint256 totalManagedAssets) {
         address metaPoolTreasury = ISupplyManagerV2(SUPPLY_MANAGER).getMoleculaPool();

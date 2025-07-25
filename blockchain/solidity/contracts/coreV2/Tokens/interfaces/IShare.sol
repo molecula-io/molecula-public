@@ -4,7 +4,32 @@ pragma solidity ^0.8.24;
 
 /// @title IShare Interface
 interface IShare {
+    // ============ Errors ============
+
+    /// @dev Emitted when attempting to change oracle while vault is not paused.
+    /// @param tokenVault Address of the vault that is not paused.
+    /// @param isPausedDeposit Whether deposits are paused for the vault.
+    /// @param isPausedRedeem Whether redeems are paused for the vault.
+    error EVaultIsNotPaused(address tokenVault, bool isPausedDeposit, bool isPausedRedeem);
+
+    // ============ Events ============
+
+    /// @dev Emitted when the Oracle's address is changed.
+    /// @param oldOracle Previous Oracle's address.
+    /// @param newOracle New Oracle's address.
+    event OracleChanged(address indexed oldOracle, address indexed newOracle);
+
+    // ============ Admin Functions ============
+
+    /// @dev Sets the Oracle contract's address.
+    /// @param oracleAddress New Oracle contract's address.
+    function setOracle(address oracleAddress) external;
+
     // ============ View Functions ============
+
+    /// @dev Oracle contract's address.
+    /// @return Returns the address of the Oracle contract.
+    function oracle() external view returns (address);
 
     /// @dev Returns the user's shares.
     /// @param user User whose shares are to be returned.

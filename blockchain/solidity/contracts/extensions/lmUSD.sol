@@ -10,13 +10,14 @@ import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IdGenerator} from "./../common/IdGenerator.sol";
 import {RebaseERC20} from "./../common/rebase/RebaseERC20.sol";
+import {ValueValidator} from "./../common/ValueValidator.sol";
+import {IWrappedRebaseAsset} from "../coreV2/WrappedTokens/interfaces/IWrappedRebaseAsset.sol";
 import {IlmUSD} from "./interfaces/IlmUSD.sol";
-import {IwmUSD} from "./interfaces/IwmUSD.sol";
 
 /// @notice LMUSD allows users to lock their mUSD holdings for a fixed duration.
 // The duration works with an unlock period to unlock enhanced yield rates immediately.
 // The increased yield is funded by redistributing the yield forfeited by wmUSD holders.
-contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
+contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator, ValueValidator {
     using SafeCast for uint256;
     using SafeERC20 for RebaseERC20;
 
@@ -24,7 +25,7 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
     RebaseERC20 public immutable MUSD;
 
     /// @inheritdoc IlmUSD
-    IwmUSD public immutable WMUSD_TOKEN;
+    address public immutable WMUSD_TOKEN;
 
     /// @inheritdoc IlmUSD
     mapping(uint256 tokenId => LockInfo) public lockInfos;
@@ -67,9 +68,9 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
         address wmUSDAddress,
         uint128[] memory allowedPeriods,
         uint128[] memory periodMultiplier
-    ) Ownable(owner) ERC721(name, symbol) {
+    ) Ownable(owner) ERC721(name, symbol) notZeroAddress(mUSDAddress) notZeroAddress(wmUSDAddress) {
         MUSD = RebaseERC20(mUSDAddress);
-        WMUSD_TOKEN = IwmUSD(wmUSDAddress);
+        WMUSD_TOKEN = wmUSDAddress;
 
         if (allowedPeriods.length != periodMultiplier.length) {
             revert EBadLength();
@@ -127,7 +128,7 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
 
         lockedShares = lockInfo.shares;
 
-        uint256 yieldShares = WMUSD_TOKEN.currentYieldShares();
+        uint256 yieldShares = IWrappedRebaseAsset(WMUSD_TOKEN).currentYieldShares();
         if (yieldShares > 0) {
             // Calculate the total share weight.
             uint256 totalShareWeight = 0;
@@ -184,7 +185,7 @@ contract LMUSD is IlmUSD, ERC721Enumerable, Ownable2Step, IdGenerator {
         _burn(tokenId);
 
         // Grant the dedicated shares to the token owner.
-        WMUSD_TOKEN.distributeYield(tokenOwner, dedicatedShares);
+        IWrappedRebaseAsset(WMUSD_TOKEN).distributeYield(tokenOwner, dedicatedShares);
 
         // Transfer the locked shares to the token owner.
         MUSD.safeTransfer(tokenOwner, MUSD.convertToAssets(lockedShares));

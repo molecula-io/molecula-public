@@ -32,16 +32,6 @@ const config: HardhatUserConfig = {
                 },
             },
             {
-                version: '0.8.28', // using in evm contracts
-                settings: {
-                    evmVersion: 'cancun',
-                    optimizer: {
-                        enabled: true,
-                        runs: 400,
-                    },
-                },
-            },
-            {
                 version: '0.8.24', // used for contracts targeting the Tron network
                 settings: {
                     evmVersion: 'cancun',

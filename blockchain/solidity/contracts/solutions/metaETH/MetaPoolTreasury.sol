@@ -104,7 +104,7 @@ contract MetaPoolTreasury is
     // ============ Anybody's Functions ============
 
     /// @dev Allows the contract to receive ETH.
-    receive() external payable {}
+    receive() external payable virtual {}
 
     /// @inheritdoc IMetaPoolTreasury
     function fulfillRedeemRequests(
@@ -256,7 +256,9 @@ contract MetaPoolTreasury is
     function setPoolKeeper(
         address poolKeeperAddress
     ) external virtual override onlyOwner notZeroAddress(poolKeeperAddress) {
+        address oldKeeper = poolKeeper;
         poolKeeper = poolKeeperAddress;
+        emit PoolKeeperChanged(oldKeeper, poolKeeperAddress);
     }
 
     /// @inheritdoc IMetaPoolTreasury
@@ -298,7 +300,8 @@ contract MetaPoolTreasury is
 
     /// @inheritdoc IMetaPoolTreasury
     function execute(
-        ExecuteParams[] calldata params
+        ExecuteParams[] calldata params,
+        TransactionValueType valueMode
     )
         external
         payable
@@ -316,9 +319,28 @@ contract MetaPoolTreasury is
             sentValue += param.value;
             result[i] = _execute(param.target, param.data, param.value);
         }
-        if (sentValue != msg.value) {
-            revert EWrongMsgValue();
+
+        if (valueMode == TransactionValueType.USE_MESSAGE_VALUE) {
+            // Use only the attached `msg.value`.
+            // `sentValue` must be taken from the `msg.value`.
+            if (msg.value != sentValue) {
+                revert EWrongMsgValue();
+            }
+        } else if (valueMode == TransactionValueType.USE_POOL_BALANCE) {
+            // Use only the Pool's ETH balance.
+            // `sentValue` must be taken from the contract's balance. Ensure `msg.value` is zero.
+            if (msg.value != 0) {
+                revert EMsgValueIsNotZero();
+            }
+        } else {
+            // Use both msg.value and pool's balance.
+            // `sentValue` must be taken from the contract's balance and `msg.value`. If we sent
+            //  some value, ensure that `msg.value` != 0. Otherwise, use the `USE_POOL_BALANCE` mode.
+            if (msg.value == 0 && sentValue != 0) {
+                revert EWrongMsgValue();
+            }
         }
+
         emit Executed(result);
     }
 
@@ -392,6 +414,8 @@ contract MetaPoolTreasury is
             requestedRedeemAssets: 0,
             isBlocked: false
         });
+
+        emit TokenAdded(token);
     }
 
     /**
@@ -429,6 +453,8 @@ contract MetaPoolTreasury is
                 IERC20(token).safeTransfer(owner(), balance);
             }
         }
+
+        emit TokenRemoved(token);
     }
 
     /**

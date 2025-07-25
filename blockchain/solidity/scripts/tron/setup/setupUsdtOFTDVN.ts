@@ -5,9 +5,14 @@ import { TronWeb } from 'tronweb';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getEnvironmentConfig, getTronEnvironmentConfig } from '../utils/deployUtils';
-import { getTronOAppConfig } from '../utils/lzSetupUtils';
-import { setPeer, setReceiveConfig, setSendConfig, setUsdtOftFee } from '../utils/lzTronSetupUtils';
+import { getEnvironmentConfig, getTronEnvironmentConfig } from '../../utils/deployUtils';
+import { getTronOAppConfig } from '../../utils/lzSetupUtils';
+import {
+    setPeer,
+    setReceiveConfig,
+    setSendConfig,
+    setUsdtOftFee,
+} from '../../utils/lzTronSetupUtils';
 
 export async function setupUsdtOftDVN(
     hre: HardhatRuntimeEnvironment,

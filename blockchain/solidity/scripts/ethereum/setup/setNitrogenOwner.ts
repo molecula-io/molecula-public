@@ -4,8 +4,8 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { ContractsNitrogen, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getEnvironmentConfig, readFromFile } from '../utils/deployUtils';
-import { setOwner } from '../utils/setOwner';
+import { getEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
+import { setOwner } from '../../utils/setOwner';
 
 export async function setNitrogenOwner(
     hre: HardhatRuntimeEnvironment,

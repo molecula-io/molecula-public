@@ -20,20 +20,23 @@ contract SupplyManagerV2WithNative is SupplyManagerV2, ISupplyManagerV2WithNativ
     /// @param moleculaPoolAddress Address of the Molecula Pool's contract.
     /// @param apy Initial APY formatter value.
     /// @param moleculaToken_ Molecula Token contract's address.
+    /// @param virtualOffset Phantom initial share and asset supply.
     /// @dev Sets up the initial state and validates parameters.
     constructor(
         address initialOwner,
         address yieldDistributorAddress,
         address moleculaPoolAddress,
         uint16 apy,
-        address moleculaToken_
+        address moleculaToken_,
+        uint128 virtualOffset
     )
         SupplyManagerV2(
             initialOwner,
             yieldDistributorAddress,
             moleculaPoolAddress,
             apy,
-            moleculaToken_
+            moleculaToken_,
+            virtualOffset
         )
     {}
 

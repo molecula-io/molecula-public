@@ -2,9 +2,9 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getEnvironmentConfig, readFromFile } from '../utils/deployUtils';
-import { setReceiveConfig, setSendConfig, setPeer } from '../utils/lzEthSetupUtils';
-import { getOAppConfig } from '../utils/lzSetupUtils';
+import { getEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
+import { setReceiveConfig, setSendConfig, setPeer } from '../../utils/lzEthSetupUtils';
+import { getOAppConfig } from '../../utils/lzSetupUtils';
 
 export async function setupOAppDVN(hre: HardhatRuntimeEnvironment, environment: EnvironmentType) {
     const contractsCarbon: ContractsCarbon = await readFromFile(

@@ -23,18 +23,18 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
 
     // ============ Constants ============
 
-    /// @dev https://docs.openzeppelin.com/contracts/5.x/erc4626#defending_with_a_virtual_offset
-    ///      `_VIRTUAL_OFFSET` represents a virtual amount of fantom Molecula Tokens and
-    ///      shares considered to be initially deposited in an empty `TokenVault`. This is
-    ///      used as a mitigation technique against the first depositor price manipulation attacks.
-    ///      The virtual tokens and shares are not minted but factored into calculations.
-    uint64 internal constant _VIRTUAL_OFFSET = 1e18;
-
     /// @dev Represents 100% in the full portion calculation (1e18).
     /// Used for precise decimal calculation in yield distribution.
     uint64 internal constant _FULL_PORTION = 1e18;
 
     // ============ State Variables ============
+
+    /// @dev https://docs.openzeppelin.com/contracts/5.x/erc4626#defending_with_a_virtual_offset
+    ///      `VIRTUAL_OFFSET` represents a virtual amount of phantom Molecula Tokens and
+    ///      shares considered to be initially deposited in an empty `TokenVault`. This is
+    ///      used as a mitigation technique against the first depositor price manipulation attacks.
+    ///      The virtual tokens and shares are not minted but factored into calculations.
+    uint128 public immutable VIRTUAL_OFFSET;
 
     /// @dev Molecula Token's address.
     address public immutable MOLECULA_TOKEN;
@@ -71,17 +71,6 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         _;
     }
 
-    /**
-     * @dev Validate APY.
-     * @param apy APY.
-     */
-    modifier checkApyFormatter(uint256 apy) {
-        if (apy > ConstantsCoreV2.PERCENTAGE_FACTOR) {
-            revert EInvalidAPY();
-        }
-        _;
-    }
-
     // ============ Constructor ============
 
     /// @notice Initializes the Supply Manager's contract.
@@ -90,20 +79,24 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     /// @param moleculaPoolAddress Address of the Molecula Pool's contract.
     /// @param apy Initial APY formatter value.
     /// @param moleculaToken_ Molecula Token's contract address.
+    /// @param virtualOffset Phantom initial share and asset supply.
     /// @dev Sets up the initial state and validates parameters.
     constructor(
         address initialOwner,
         address yieldDistributorAddress,
         address moleculaPoolAddress,
         uint16 apy,
-        address moleculaToken_
+        address moleculaToken_,
+        uint128 virtualOffset
     )
         Ownable(initialOwner)
         notZeroAddress(yieldDistributorAddress)
         notZeroAddress(moleculaPoolAddress)
         notZeroAddress(moleculaToken_)
-        checkApyFormatter(apy)
+        checkBPS(apy)
+        notZero(virtualOffset)
     {
+        VIRTUAL_OFFSET = virtualOffset;
         _MOLECULA_POOL = moleculaPoolAddress;
         _totalSharesSupply = totalDepositedSupply = _poolSupplyWithOffset();
         apyFormatter = apy;
@@ -248,7 +241,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         virtual
         override
         only(yieldDistributor)
-        checkApyFormatter(newApyFormatter)
+        checkBPS(newApyFormatter)
         notEmpty(parties.length)
     {
         // Calculate the extra yield to distribute.
@@ -316,7 +309,9 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     function setYieldDistributor(
         address newYieldDistributor
     ) external virtual override onlyOwner notZeroAddress(newYieldDistributor) {
+        address oldYieldDistributor = yieldDistributor;
         yieldDistributor = newYieldDistributor;
+        emit YieldDistributorChanged(oldYieldDistributor, newYieldDistributor);
     }
 
     // ============ Molecula Token Functions ============
@@ -406,9 +401,9 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     }
 
     /// @dev Returns the total supply with a virtual offset added to mitigate the first depositor attacks.
-    /// @return Total supply from `_MOLECULA_POOL` and the `_VIRTUAL_OFFSET` constant.
+    /// @return Total supply from `_MOLECULA_POOL` and the `VIRTUAL_OFFSET` constant.
     function _poolSupplyWithOffset() internal view virtual returns (uint256) {
-        return IMoleculaPoolV2(_MOLECULA_POOL).totalSupply() + _VIRTUAL_OFFSET;
+        return IMoleculaPoolV2(_MOLECULA_POOL).totalSupply() + VIRTUAL_OFFSET;
     }
 
     /// @dev Internal function to process multiple redeem requests.

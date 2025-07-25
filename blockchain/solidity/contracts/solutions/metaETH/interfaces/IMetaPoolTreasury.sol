@@ -3,7 +3,22 @@
 pragma solidity ^0.8.24;
 
 interface IMetaPoolTreasury {
+    // ============ Enums ============
+
+    /**
+     * @dev Defines how to handle an ETH value in transactions.
+     * @param USE_MESSAGE_VALUE Use only the attached `msg.value`.
+     * @param USE_POOL_BALANCE Use only the Pool's ETH balance.
+     * @param USE_BOTH_VALUES Use both the `msg.value` and Pool's balance.
+     */
+    enum TransactionValueType {
+        USE_MESSAGE_VALUE,
+        USE_POOL_BALANCE,
+        USE_BOTH_VALUES
+    }
+
     // ============ Structs ============
+
     /**
      * @dev Token information.
      * @param isPresent Is token present.
@@ -83,6 +98,19 @@ interface IMetaPoolTreasury {
     /// @param returnData Error data returned from the failed transfer.
     event EthTransferFailed(bytes returnData);
 
+    /// @dev Emitted when a new token is added to the Pool.
+    /// @param token Added token's address.
+    event TokenAdded(address indexed token);
+
+    /// @dev Emitted when a token is removed from the Pool.
+    /// @param token Removed token's address.
+    event TokenRemoved(address indexed token);
+
+    /// @dev Emitted when the Pool Keeper's address is changed.
+    /// @param oldKeeper Previous Pool Keeper's address.
+    /// @param newKeeper New Pool Keeper's address.
+    event PoolKeeperChanged(address indexed oldKeeper, address indexed newKeeper);
+
     // ============ Functions ============
 
     /// @dev Fulfills redemption requests for the specified request IDs.
@@ -132,10 +160,15 @@ interface IMetaPoolTreasury {
      * @dev Execute transactions on behalf of the whitelisted contract.
      * Allows the `approve` calls to tokens in `poolMap` and `poolMap` without whitelisting.
      * @param params Parameters of the function calls.
+     * @param valueMode Mode to specify how to handle an ETH value in transactions:
+     *                 `USE_MESSAGE_VALUE` - Use the attached `msg.value`.
+     *                 `USE_POOL_BALANCE` - Use the Pool's ETH balance.
+     *                 `USE_BOTH_VALUES` - Use both the `msg.value` and Pool's balance.
      * @return result Result of the function calls.
      */
     function execute(
-        ExecuteParams[] calldata params
+        ExecuteParams[] calldata params,
+        TransactionValueType valueMode
     ) external payable returns (bytes[] memory result);
 
     /**

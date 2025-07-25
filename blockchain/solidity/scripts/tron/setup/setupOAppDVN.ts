@@ -4,9 +4,9 @@ import { TronWeb } from 'tronweb';
 
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronEnvironmentConfig, readFromFile } from '../utils/deployUtils';
-import { getTronOAppConfig } from '../utils/lzSetupUtils';
-import { setReceiveConfig, setSendConfig, setPeer } from '../utils/lzTronSetupUtils';
+import { getTronEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
+import { getTronOAppConfig } from '../../utils/lzSetupUtils';
+import { setReceiveConfig, setSendConfig, setPeer } from '../../utils/lzTronSetupUtils';
 
 export async function setupOAppDVN(
     hre: HardhatRuntimeEnvironment,

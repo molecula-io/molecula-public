@@ -5,8 +5,8 @@ import { TronWeb } from 'tronweb';
 
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronEnvironmentConfig, readFromFile } from '../utils/deployUtils';
-import { setTronOwner } from '../utils/setOwner';
+import { getTronEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
+import { setTronOwner } from '../../utils/setOwner';
 
 export async function setCarbonOwner(
     hre: HardhatRuntimeEnvironment,

@@ -96,6 +96,8 @@
         "retail:deploy": "yarn prepare-web-deploy && yarn workspace @molecula-monorepo/frontend.retail deploy",
         "retail:deploy:staging": "yarn terraform:staging:state && dotenvx run --env-file=./configs/frontend-environments/shared/.env --env-file=./configs/frontend-environments/retail/.env --quiet -- yarn retail:deploy",
         "retail:deploy:prod": "yarn terraform:prod:state && dotenvx run --env-file=./configs/frontend-environments/shared/.env.production --env-file=./configs/frontend-environments/shared/.env --env-file=./configs/frontend-environments/retail/.env.production --env-file=./configs/frontend-environments/retail/.env --quiet -- yarn retail:deploy",
+        "poll:admin:dev": "yarn workspace @molecula-monorepo/pool-admin dev",
+        "poll:admin:beta": "yarn workspace @molecula-monorepo/pool-admin beta",
         "test:docker:compose": "NEXT_BUILD_USE_SENTRY=false NEXT_PUBLIC_ENV=prod yarn workspace @molecula-monorepo/frontend.docker-test build && docker-compose -f frontend/docker-test/docker-compose.yml up --build",
         "test:docker:build": "NEXT_BUILD_USE_SENTRY=false NEXT_PUBLIC_ENV=prod yarn workspace @molecula-monorepo/frontend.docker-test build && docker build -f frontend/docker-test/Dockerfile ./frontend/docker-test",
         "test:ui:create-image": "./scripts/cicd/deploy.sh -p ui-test-image",

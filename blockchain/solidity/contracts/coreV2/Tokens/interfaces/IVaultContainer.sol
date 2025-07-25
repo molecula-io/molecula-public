@@ -71,4 +71,8 @@ interface IVaultContainer {
     /// @dev Validates a token Vault address.
     /// @param addr Address of the token Vault to validate.
     function validateTokenVault(address addr) external view;
+
+    /// @dev Returns a list of all assets managed by token vaults.
+    /// @return Array of asset addresses currently managed by token vaults.
+    function getAssetList() external view returns (address[] memory);
 }

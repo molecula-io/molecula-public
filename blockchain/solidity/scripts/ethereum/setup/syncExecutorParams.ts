@@ -1,19 +1,29 @@
-import { ethers } from 'hardhat';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses';
+import type { ContractsExecutor, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { sepoliaConfig } from '../../configs/ethereum';
+import { getEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
 
 /**
  * This script is for test/devnet configuration only.
  * It synchronizes the Custom Executor contract's per-destination config from the LZ Executor.
  */
-async function syncExecutorParams() {
+export async function syncExecutorParams(
+    hre: HardhatRuntimeEnvironment,
+    environment: EnvironmentType,
+) {
+    // Load the executor contracts' parameters from a JSON file for this environment
+    const contractsExecutor: ContractsExecutor = await readFromFile(
+        `${environment}/contracts_executor.json`,
+    );
+
+    // Retrieve environment-specific configuration
+    const config = getEnvironmentConfig(environment);
     // Connect to the deployed LZ Executor contract using the devnet address
-    const executorLZ = await ethers.getContractAt('Executor', sepoliaConfig.LAYER_ZERO_EXECUTOR);
+    const executorLZ = await hre.ethers.getContractAt('Executor', config.LAYER_ZERO_EXECUTOR);
 
     // Fetch the dstConfig struct from the LZ Executor for the Tron EID
-    const lzDstConfig = await executorLZ.dstConfig(sepoliaConfig.LAYER_ZERO_TRON_EID);
+    const lzDstConfig = await executorLZ.dstConfig(config.LAYER_ZERO_TRON_EID);
 
     // Prepare destination config array for LayerZero remote chain (e.g., Sepolia → Tron)
     // DstConfig fields:
@@ -25,7 +35,7 @@ async function syncExecutorParams() {
     //   - nativeCap: Max allowed native token value
     const dstConfigs = [
         {
-            dstEid: sepoliaConfig.LAYER_ZERO_TRON_EID,
+            dstEid: config.LAYER_ZERO_TRON_EID,
             lzReceiveBaseGas: lzDstConfig.lzReceiveBaseGas,
             multiplierBps: lzDstConfig.multiplierBps,
             floorMarginUSD: lzDstConfig.floorMarginUSD,
@@ -35,10 +45,10 @@ async function syncExecutorParams() {
     ];
 
     // Connect to the deployed Custom Executor contract using the devnet address
-    const executor = await ethers.getContractAt('Executor', DevnetContractsExecutor.eth.executor);
+    const executor = await hre.ethers.getContractAt('Executor', contractsExecutor.eth.executor);
 
     // Set the WorkerFeeLib contract address (enables fee computation for cross-chain jobs)
-    const setFeeLibTx = await executor.setWorkerFeeLib(DevnetContractsExecutor.eth.executorFeeLib);
+    const setFeeLibTx = await executor.setWorkerFeeLib(contractsExecutor.eth.executorFeeLib);
     const receiptFeeLibSet = await setFeeLibTx.wait();
     console.log('setWorkerFeeLib transaction hash:', receiptFeeLibSet?.hash);
 
@@ -47,11 +57,3 @@ async function syncExecutorParams() {
     const receiptConfigSet = await setDstConfigTx.wait();
     console.log('setDstConfig transaction hash:', receiptConfigSet?.hash);
 }
-
-// Entrypoint with error handling for standalone script execution
-syncExecutorParams()
-    .then(() => process.exit(0))
-    .catch(error => {
-        console.error(error);
-        process.exit(1);
-    });

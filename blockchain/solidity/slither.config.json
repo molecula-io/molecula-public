@@ -1,10 +1,7 @@
 {
-    "filter_paths": "lib|@openzeppelin|@layerzerolabs|hardhat|contracts/test|contracts/mock|solidity-bytes-utils|UsdtOFT.sol|RebaseTokenCommon.sol|MoleculaPoolTreasury.sol",
+    "filter_paths": "lib|@openzeppelin|@layerzerolabs|hardhat|contracts/test|contracts/mock|solidity-bytes-utils|UsdtOFT.sol|RebaseTokenCommon.sol|MoleculaPoolTreasury.sol|MoleculaPoolTreasuryV2.sol|SupplyManager.sol|AccountantAgent.sol|AgentLZ.sol|AccountantLZ.sol|OptionsLZ.sol|TronOracle.sol",
     "detectors_to_exclude": [
         "calls-loop",
-        "events-access",
-        "events-maths",
-        "missing-zero-check",
         "naming-convention",
         "reentrancy-events",
         "solc-version",

@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { scope } from 'hardhat/config';
 
-import { setOAppPeer, setCarbonOwner, setCoreOwner, setNitrogenOwner } from '../scripts/ethereum';
-import { setAgentLZGasLimits } from '../scripts/ethereum/setAgentLZGasLimits';
+import {
+    setOAppPeer,
+    setCarbonOwner,
+    setCoreOwner,
+    setNitrogenOwner,
+    setupUsdtOftDVN,
+    syncExecutorParams,
+    setAgentLZGasLimits,
+    setupOAppDVN,
+} from '../scripts/ethereum';
 
-import { setupOAppDVN } from '../scripts/ethereum/setupOAppDVN';
-import { setupUsdtOftDVN } from '../scripts/ethereum/setupUsdtOFTDVN';
 import { getEnvironment, readFromFile } from '../scripts/utils/deployUtils';
 
 const ethereumSetupScope = scope('ethereumSetupScope', 'Scope for set ethereum script flow');
@@ -161,6 +167,31 @@ ethereumSetupScope
         await setAgentLZGasLimits(hre, environment)
             .then(() => {
                 console.log('AgentLZ gasLimit setup completed completed successfully.');
+            })
+            .catch(error => {
+                console.error('Set failed:', error.message);
+                console.error(error.stack); // Log full error stack trace for debugging
+                process.exit(1); // Exit with an error code to indicate failure
+            });
+    });
+
+ethereumSetupScope
+    .task(
+        'syncExecutorParams',
+        "Syncronizes the Custom Executor contract's per-destination config from the LZ Executor",
+    )
+    .addParam('environment', 'Deployment environment') // Required parameter for specifying the set script environment
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment); // Log the selected migration environment
+        console.log('Network:', hre.network.name); // Log the Hardhat network being used
+
+        // Retrieve environment details using the helper function
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        // Execute the migration function with the retrieved parameters
+        await syncExecutorParams(hre, environment)
+            .then(() => {
+                console.log('Executor parametrs syncronization completed completed successfully.');
             })
             .catch(error => {
                 console.error('Set failed:', error.message);

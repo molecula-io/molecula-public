@@ -24,6 +24,22 @@ interface IBaseTokenVault {
     /// @param sumAssets Total sum of assets that have been processed for all fulfilled requests.
     event RedeemClaimable(uint256[] requestIds, uint256 sumAssets);
 
+    /// @dev Emitted when the minimum deposit asset amount is updated.
+    /// @param oldMinDepositAssets Previous minimum deposit asset amount.
+    /// @param newMinDepositAssets New minimum deposit asset amount.
+    event MinDepositAssetsChanged(
+        uint128 indexed oldMinDepositAssets,
+        uint128 indexed newMinDepositAssets
+    );
+
+    /// @dev Emitted when the minimum redeem share amount is updated.
+    /// @param oldMinRedeemShares Previous minimum redeem share amount.
+    /// @param newMinRedeemShares New minimum redeem share amount.
+    event MinRedeemSharesChanged(
+        uint128 indexed oldMinRedeemShares,
+        uint128 indexed newMinRedeemShares
+    );
+
     // ============ Errors ============
 
     /// @dev Error thrown when the deposit value is less than the minimum one.
@@ -141,6 +157,12 @@ interface ITokenVault {
 interface INativeTokenVault {
     /// @dev Error thrown when the native token address is not equal to the actual native token address.
     error EWrongNativeAddress();
+
+    /// @dev Error thrown when the sent ETH value is less than required for the operation.
+    /// @param msgValue Amount of ETH sent with the transaction.
+    /// @param assets Amount of assets involved in the operation.
+    /// @param shares Amount of shares involved in the operation.
+    error ETooLowMsgValue(uint256 msgValue, uint256 assets, uint256 shares);
 
     /// @dev Fulfills redemption requests for the specified request IDs.
     /// @param requestIds Array of redemption request IDs.

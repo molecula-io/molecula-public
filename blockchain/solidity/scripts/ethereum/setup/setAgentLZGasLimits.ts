@@ -3,8 +3,8 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { OAPP_GAS_LIMITS_BY_ENV } from '../../configs/layerzero/omniConfig';
-import { readFromFile } from '../utils/deployUtils';
+import { OAPP_GAS_LIMITS_BY_ENV } from '../../../configs/layerzero/omniConfig';
+import { readFromFile } from '../../utils/deployUtils';
 
 export async function setAgentLZGasLimits(
     hre: HardhatRuntimeEnvironment,

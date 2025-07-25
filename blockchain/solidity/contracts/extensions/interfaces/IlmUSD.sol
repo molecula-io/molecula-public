@@ -3,7 +3,6 @@
 pragma solidity ^0.8.24;
 
 import {RebaseERC20} from "../../common/rebase/RebaseERC20.sol";
-import {IwmUSD} from "./IwmUSD.sol";
 
 interface IlmUSD {
     /**
@@ -40,7 +39,7 @@ interface IlmUSD {
     /// @dev Returns wmUSD token address.
     /// @return wmUSD token address.
     // solhint-disable-next-line func-name-mixedcase
-    function WMUSD_TOKEN() external returns (IwmUSD);
+    function WMUSD_TOKEN() external returns (address);
 
     /// @dev Mapping `tokenId` to the lock information.
     /// See also the `LockInfo` structure.
@@ -183,9 +182,6 @@ interface IlmUSD {
 
     /// @dev Error: the token is still locked.
     error ETokenIsStillLocked();
-
-    /// @dev Error: `msg.sender` is not authorized for some function.
-    error ENotAuthorized();
 
     /// @dev The value has been already set.
     error EAlreadySet();

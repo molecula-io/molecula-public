@@ -90,6 +90,7 @@ contract MrEthSetup is Test {
     ILido public constant stEth = ILido(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
 
     uint16 constant APY_FORMATTER = 8_000;
+    uint64 constant VIRTUAL_OFFSET = 1e17;
     string constant MRETH_TOKEN_NAME = "mrETH release candidate";
     string constant MRETH_TOKEN_SYMBOL = "mrETHrec";
     uint8 constant MRETH_TOKEN_DECIMALS = 18;
@@ -199,7 +200,8 @@ contract MrEthSetup is Test {
             owner,
             address(depositManager),
             APY_FORMATTER,
-            rebaseERC20V2FutureAddress // Use predicted address
+            rebaseERC20V2FutureAddress, // Use predicted address
+            VIRTUAL_OFFSET
         );
 
         // Deploy RebaseTokenV2 (mrETH token)

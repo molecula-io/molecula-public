@@ -22,7 +22,7 @@ abstract contract TokenVault is CommonTokenVault, ITokenVault {
         address assetOwner,
         uint256[] calldata requestIds,
         uint256 sumAssets
-    ) external virtual override {
+    ) external virtual override only(SUPPLY_MANAGER) {
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(_asset).safeTransferFrom(assetOwner, address(this), sumAssets);
 
@@ -60,6 +60,6 @@ abstract contract TokenVault is CommonTokenVault, ITokenVault {
         address /*owner*/,
         uint256 /*shares*/ // solhint-disable-next-line no-empty-blocks
     ) internal virtual override {
-        // Do nothing. SupplyManagerV2 stores information about request.
+        // Do nothing. SupplyManagerV2 stores information about requests.
     }
 }

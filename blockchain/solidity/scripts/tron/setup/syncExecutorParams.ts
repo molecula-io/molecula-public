@@ -1,25 +1,32 @@
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TronWeb } from 'tronweb';
 
-import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses/deploy';
+import type { ContractsExecutor, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { abi as executorABI } from '../../artifacts/contracts/executor/Executor.sol/Executor.json';
-import { shastaConfig } from '../../configs/tron/shastaTyped';
+import { getTronEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
 
 /**
  * This script is for test/devnet use only.
  * It synchronizes the Custom Executor contract's per-destination config from the LZ Executor.
  */
-async function syncExecutorParams() {
+export async function syncExecutorParams(
+    hre: HardhatRuntimeEnvironment,
+    mnemonic: string,
+    path: string,
+    environment: EnvironmentType,
+) {
+    const contractsExecutor: ContractsExecutor = await readFromFile(
+        `${environment}/contracts_executor.json`,
+    );
+    const config = getTronEnvironmentConfig(environment);
+
     // Initialize TronWeb instance for interacting with Tron network
     const tronWeb = new TronWeb({
-        fullHost: shastaConfig.RPC_URL,
+        fullHost: config.RPC_URL,
     });
 
     // Derive account from mnemonic phrase (read from env)
-    const accountInfo = tronWeb.fromMnemonic(
-        process.env.TRON_SEED_PHRASE as string,
-        "m/44'/195'/0'/0/0",
-    );
+    const accountInfo = tronWeb.fromMnemonic(mnemonic, path);
     if (accountInfo instanceof Error) {
         throw new Error('Invalid account information returned from fromMnemonic.');
     }
@@ -29,28 +36,25 @@ async function syncExecutorParams() {
     tronWeb.setPrivateKey(privateKey);
 
     // Get the deployed Executor contract address for Tron (Shasta)
-    const executorLzAddress = tronWeb.address.fromHex(shastaConfig.LAYER_ZERO_TRON_EXECUTOR);
+    const executorLzAddress = tronWeb.address.fromHex(config.LAYER_ZERO_TRON_EXECUTOR);
 
     // Instantiate the LZ Executor contract object
-    const executorLz = tronWeb.contract(executorABI, executorLzAddress);
+    const artifact = await hre.artifacts.readArtifact('Executor');
+    const executorLz = tronWeb.contract(artifact.abi, executorLzAddress);
 
     // @ts-ignore (TronWeb typings for contract calls are incomplete)
-    const dstConfig = await executorLz.methods
-        .dstConfig(shastaConfig.LAYER_ZERO_ETHEREUM_EID)
-        .call();
+    const dstConfig = await executorLz.methods.dstConfig(config.LAYER_ZERO_ETHEREUM_EID).call();
     console.log('Current LZ destination config:', dstConfig);
 
     // Get the deployed Executor contract address for Tron (Shasta)
-    const executorAddress = tronWeb.address.fromHex(DevnetContractsExecutor.tron.executor);
+    const executorAddress = tronWeb.address.fromHex(contractsExecutor.tron.executor);
 
     // Instantiate the Executor contract object
-    const executor = tronWeb.contract(executorABI, executorAddress);
+    const executor = tronWeb.contract(artifact.abi, executorAddress);
 
     // Set the WorkerFeeLib contract address for the Executor (enables fee computation)
     // @ts-ignore (TronWeb typings for contract calls are incomplete)
-    const tx = await executor.methods
-        .setWorkerFeeLib(DevnetContractsExecutor.tron.executorFeeLib)
-        .send();
+    const tx = await executor.methods.setWorkerFeeLib(contractsExecutor.tron.executorFeeLib).send();
     console.log('ExecutorFeeLib setup transaction:', tx);
 
     // Prepare and send destination configuration update.
@@ -59,7 +63,7 @@ async function syncExecutorParams() {
     // ]
     // All values must be passed as strings (TronWeb limitation).
     const dstConfigWithEid = [
-        shastaConfig.LAYER_ZERO_ETHEREUM_EID, // dstEid
+        config.LAYER_ZERO_ETHEREUM_EID, // dstEid
         String(dstConfig[0]), // lzReceiveBaseGas
         String(dstConfig[4]), // lzComposeBaseGas
         String(dstConfig[1]), // multiplierBps
@@ -70,11 +74,3 @@ async function syncExecutorParams() {
     const setConfigTx = await executor.methods.setDstConfig([dstConfigWithEid]).send();
     console.log('Set config transaction:', setConfigTx);
 }
-
-// Run the script and handle errors for standalone CLI use
-syncExecutorParams()
-    .then(() => process.exit(0))
-    .catch(error => {
-        console.error(error);
-        process.exit(1);
-    });

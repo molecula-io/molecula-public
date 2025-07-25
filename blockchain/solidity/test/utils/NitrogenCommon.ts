@@ -131,7 +131,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
         from: poolOwner.address,
         nonce: (await poolOwner.getNonce()) + 1,
     });
-    const WMUSD = await ethers.getContractFactory('WMUSDCandy');
+    const WMUSD = await ethers.getContractFactory('WmUSD');
     const wmusd = await WMUSD.deploy(
         ethMainnetBetaConfig.WMUSD_TOKEN_NAME,
         ethMainnetBetaConfig.WMUSD_TOKEN_SYMBOL,
