@@ -1,5 +1,4 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { TronWeb } from 'tronweb';
 
 import type { ContractsExecutor, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
@@ -11,8 +10,6 @@ import { getTronEnvironmentConfig, readFromFile } from '../../utils/deployUtils'
  */
 export async function syncExecutorParams(
     hre: HardhatRuntimeEnvironment,
-    mnemonic: string,
-    path: string,
     environment: EnvironmentType,
 ) {
     const contractsExecutor: ContractsExecutor = await readFromFile(
@@ -20,37 +17,25 @@ export async function syncExecutorParams(
     );
     const config = getTronEnvironmentConfig(environment);
 
-    // Initialize TronWeb instance for interacting with Tron network
-    const tronWeb = new TronWeb({
-        fullHost: config.RPC_URL,
-    });
-
-    // Derive account from mnemonic phrase (read from env)
-    const accountInfo = tronWeb.fromMnemonic(mnemonic, path);
-    if (accountInfo instanceof Error) {
-        throw new Error('Invalid account information returned from fromMnemonic.');
-    }
-
-    // Strip "0x" if present and set as signing key for TronWeb
-    const privateKey = accountInfo.privateKey.substring(2);
-    tronWeb.setPrivateKey(privateKey);
+    // get owner
+    console.log('Initial owner:', hre.tronweb.defaultAddress.base58);
 
     // Get the deployed Executor contract address for Tron (Shasta)
-    const executorLzAddress = tronWeb.address.fromHex(config.LAYER_ZERO_TRON_EXECUTOR);
+    const executorLzAddress = hre.tronweb.address.fromHex(config.LAYER_ZERO_TRON_EXECUTOR);
 
     // Instantiate the LZ Executor contract object
     const artifact = await hre.artifacts.readArtifact('Executor');
-    const executorLz = tronWeb.contract(artifact.abi, executorLzAddress);
+    const executorLz = hre.tronweb.contract(artifact.abi, executorLzAddress);
 
     // @ts-ignore (TronWeb typings for contract calls are incomplete)
     const dstConfig = await executorLz.methods.dstConfig(config.LAYER_ZERO_ETHEREUM_EID).call();
     console.log('Current LZ destination config:', dstConfig);
 
     // Get the deployed Executor contract address for Tron (Shasta)
-    const executorAddress = tronWeb.address.fromHex(contractsExecutor.tron.executor);
+    const executorAddress = hre.tronweb.address.fromHex(contractsExecutor.tron.executor);
 
     // Instantiate the Executor contract object
-    const executor = tronWeb.contract(artifact.abi, executorAddress);
+    const executor = hre.tronweb.contract(artifact.abi, executorAddress);
 
     // Set the WorkerFeeLib contract address for the Executor (enables fee computation)
     // @ts-ignore (TronWeb typings for contract calls are incomplete)

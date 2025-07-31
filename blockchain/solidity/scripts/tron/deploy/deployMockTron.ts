@@ -2,26 +2,17 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { type EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb } from '../../utils/deployUtils';
+import { getTronEnvironmentConfig } from '../../utils/deployUtils';
 
 import { waitForDeployment } from './waitForDeployment';
 
-export async function deployMockUSDT(
-    hre: HardhatRuntimeEnvironment,
-    mnemonic: string,
-    path: string,
-    network: EnvironmentType,
-) {
-    const { tronWeb, privateKey } = await getTronWeb(mnemonic, path, network);
+export async function deployMockUSDT(hre: HardhatRuntimeEnvironment) {
     // Find an account address corresponding to the given PRIVATE_KEY
-    const issuerAddress = tronWeb.address.fromPrivateKey(privateKey);
+    const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
-    if (!issuerAddress) {
-        throw new Error('Invalid private key');
-    }
     const artifact = await hre.artifacts.readArtifact('UsdtTron');
 
-    const transaction = await tronWeb.transactionBuilder.createSmartContract(
+    const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 1000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000 sun
             // @ts-ignore (probably wrong type annotation)
@@ -34,29 +25,22 @@ export async function deployMockUSDT(
     );
 
     // Send the transactions
-    await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(transaction, privateKey));
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(transaction, hre.tronweb.defaultPrivateKey as string),
+    );
 
-    const usdtAddress = await waitForDeployment(tronWeb, transaction);
+    const usdtAddress = await waitForDeployment(hre.tronweb, transaction);
     console.log(`Mock USDT address is : ${usdtAddress}`);
 }
 
-export async function deployUsdtOFT(
-    hre: HardhatRuntimeEnvironment,
-    mnemonic: string,
-    path: string,
-    network: EnvironmentType,
-) {
-    const { config, tronWeb, privateKey } = await getTronWeb(mnemonic, path, network);
+export async function deployUsdtOFT(hre: HardhatRuntimeEnvironment, network: EnvironmentType) {
+    const config = getTronEnvironmentConfig(network);
     // Find an account address corresponding to the given PRIVATE_KEY
-    const issuerAddress = tronWeb.address.fromPrivateKey(privateKey);
-
-    if (!issuerAddress) {
-        throw new Error('Invalid private key');
-    }
+    const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
     const artifact = await hre.artifacts.readArtifact('UsdtOFT');
 
-    const transaction = await tronWeb.transactionBuilder.createSmartContract(
+    const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 3000000000, // The maximum TRX burns for resource consumption（3TRX = 3,000,000 sun
             // @ts-ignore (probably wrong type annotation)
@@ -78,8 +62,10 @@ export async function deployUsdtOFT(
     );
 
     // Send the transactions
-    await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(transaction, privateKey));
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(transaction, hre.tronweb.defaultPrivateKey as string),
+    );
 
-    const usdtAddress = await waitForDeployment(tronWeb, transaction);
+    const usdtAddress = await waitForDeployment(hre.tronweb, transaction);
     console.log(`Mock UsdtOFT address is : ${usdtAddress}`);
 }

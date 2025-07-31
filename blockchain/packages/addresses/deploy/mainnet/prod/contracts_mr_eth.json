@@ -4,8 +4,8 @@
         "delegatorImplementation": "",
         "supplyManagerV2": "",
         "mrETH": "",
-        "vaultWETH": "",
-        "vaultETH": "",
-        "vaultStETH": ""
+        "wEthVault": "",
+        "ethVault": "",
+        "stEthVault": ""
     }
 }

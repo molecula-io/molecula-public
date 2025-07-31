@@ -33,7 +33,7 @@ export async function deployMoleculaPoolTreasuryV2WithDerivedParams(
     );
 
     // 3. Start with the token list from config, used as a constructor argument
-    const tokens: PoolData[] = [...config.TOKENS];
+    const tokens: PoolData[] = [...config.MOLECULA_POOL_TOKENS];
 
     // 4. If mUSDe token is present (deployed), add it to the token list for V2
     if (contractsNitrogen.eth.mUSDe !== '') {

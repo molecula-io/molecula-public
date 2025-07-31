@@ -11,11 +11,10 @@ import {IOracle} from "./../../../common/interfaces/IOracle.sol";
 import {ISupplyManager} from "./../../../common/interfaces/ISupplyManager.sol";
 import {LZMsgCodec} from "./../../../common/layerzero/LZMsgCodec.sol";
 import {OptionsLZ, Ownable2Step, Ownable} from "./../../../common/layerzero/OptionsLZ.sol";
-import {ZeroValueChecker} from "./../../../common/ZeroValueChecker.sol";
 import {UsdtOFT, SendParam, OFTReceipt} from "./../common/UsdtOFT.sol";
 
 /// @title AgentLZ - Agent contract for LayerZero cross-chain communication.
-contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, ZeroValueChecker, IAgent {
+contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, IAgent {
     using SafeERC20 for IERC20;
 
     /// @dev LayerZero destination chain ID.
@@ -100,7 +99,13 @@ contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, ZeroValueChecker, IAgent {
         uint32 lzDstEid,
         address usdtAddress,
         address usdtOFTAddress
-    ) OApp(endpoint, initialOwner) OptionsLZ(initialOwner, authorizedLZConfiguratorAddress) {
+    )
+        OApp(endpoint, initialOwner)
+        OptionsLZ(initialOwner, authorizedLZConfiguratorAddress)
+        checkNotZero(supplyManagerAddress)
+        checkNotZero(usdtAddress)
+        checkNotZero(usdtOFTAddress)
+    {
         SUPPLY_MANAGER = supplyManagerAddress;
         DST_EID = lzDstEid;
         USDT = IERC20(usdtAddress);
@@ -227,6 +232,9 @@ contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, ZeroValueChecker, IAgent {
             revert EOperationNotReady();
         }
 
+        // Update the deposit status in the mapping to mark it as executed.
+        deposits[requestId].status = DepositStatus.Executed;
+
         // Retrieve the deposit amount from the mapping.
         uint256 value = deposits[requestId].value;
 
@@ -234,7 +242,11 @@ contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, ZeroValueChecker, IAgent {
         USDT.forceApprove(ISupplyManager(SUPPLY_MANAGER).getMoleculaPool(), value);
 
         // Execute the deposit on the Supply Manager and receive the corresponding number of shares.
+        // slither-disable-next-line reentrancy-no-eth
         uint256 shares = ISupplyManager(SUPPLY_MANAGER).deposit(address(USDT), requestId, value);
+
+        // Update the shares in the deposit mapping.
+        deposits[requestId].shares = shares;
 
         // Declare the LayerZero options and payload variables.
         bytes memory lzOptions;
@@ -292,10 +304,6 @@ contract AgentLZ is OApp, OptionsLZ, ReentrancyGuard, ZeroValueChecker, IAgent {
                 }
             }
         }
-
-        // Update the deposit status in the mapping to mark it as executed.
-        deposits[requestId].shares = shares;
-        deposits[requestId].status = DepositStatus.Executed;
 
         // Emit an event to log the successful deposit confirmation.
         emit DepositConfirm(requestId, deposits[requestId].shares);

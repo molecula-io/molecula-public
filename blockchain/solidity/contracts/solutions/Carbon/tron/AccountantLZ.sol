@@ -10,12 +10,11 @@ import {IRebaseToken} from "./../../../common/interfaces/IRebaseToken.sol";
 import {ISetterOracle} from "./../../../common/interfaces/ISetterOracle.sol";
 import {LZMsgCodec} from "./../../../common/layerzero/LZMsgCodec.sol";
 import {OptionsLZ, Ownable2Step, Ownable} from "./../../../common/layerzero/OptionsLZ.sol";
-import {ZeroValueChecker} from "./../../../common/ZeroValueChecker.sol";
 import {UsdtOFT, SendParam, OFTReceipt, MessagingFee} from "./../common/UsdtOFT.sol";
 
 /// @title AccountantLZ - Accountant contract for handling LayerZero-based cross-chain transactions.
 /// @notice This contract facilitates cross-chain USDT transactions using LayerZero and UsdtOFT.
-contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
+contract AccountantLZ is OApp, OptionsLZ, IAccountant {
     using SafeERC20 for IERC20;
 
     /// @dev LayerZero destination chain ID for cross-chain communication.
@@ -56,6 +55,15 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
     /// @dev Error: Insufficient USDT balance in the contract.
     error EInsufficientBalance();
 
+    /// @dev Emitted when the underlying token address is set or updated.
+    /// @param underlyingTokenAddress Address of the new underlying token contract.
+    event SetUnderlyingToken(address indexed underlyingTokenAddress);
+
+    /// @dev Emitted when a redemption request is successfully confirmed and USDT tokens are transferred to the user.
+    /// @param user Address of the user who receives the redeemed USDT tokens.
+    /// @param value Amount of USDT tokens redeemed and transferred.
+    event RedeemConfirmed(address indexed user, uint256 indexed value);
+
     /**
      * @dev Initializes the contract and sets up the required addresses.
      * @param initialOwner Address of the contract owner.
@@ -74,7 +82,13 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
         address usdtAddress,
         address usdtOFTAddress,
         address oracleAddress
-    ) OApp(endpoint, initialOwner) OptionsLZ(initialOwner, authorizedLZConfiguratorAddress) {
+    )
+        OApp(endpoint, initialOwner)
+        OptionsLZ(initialOwner, authorizedLZConfiguratorAddress)
+        checkNotZero(usdtAddress)
+        checkNotZero(usdtOFTAddress)
+        checkNotZero(oracleAddress)
+    {
         DST_EID = lzDstEid;
         USDT = IERC20(usdtAddress);
         USDT_OFT = UsdtOFT(usdtOFTAddress);
@@ -221,6 +235,7 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
         address underlyingTokenAddress
     ) external onlyOwner checkNotZero(underlyingTokenAddress) {
         underlyingToken = underlyingTokenAddress;
+        emit SetUnderlyingToken(underlyingTokenAddress);
     }
 
     /**
@@ -262,6 +277,8 @@ contract AccountantLZ is OApp, OptionsLZ, ZeroValueChecker, IAccountant {
          * - Use `safeTransferFrom`, or call `transfer` directly and do not rely on its return value.
          */
         USDT.safeTransferFrom(address(this), user, value);
+
+        emit RedeemConfirmed(user, value);
     }
 
     /**

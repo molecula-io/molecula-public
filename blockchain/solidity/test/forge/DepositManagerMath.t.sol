@@ -65,7 +65,7 @@ contract DepositManagerMathTest is MrEthSetup {
         // depositAmount should be greater then minimal deposit and lower then 100_000 stETH
         vm.assume(depositAmount < 1e23);
 
-        uint256 minDepositAssets = MrEthAssetTokenVault(vaultStETH).minDepositAssets();
+        uint256 minDepositAssets = MrEthAssetTokenVault(stEthVault).minDepositAssets();
         if (depositAmount < minDepositAssets) {
             // Skip if deposit amount is too low
             return;
@@ -80,8 +80,8 @@ contract DepositManagerMathTest is MrEthSetup {
         // Fund user with stETH
         vm.deal(testUser, depositAmount);
         stEth.submit{value: depositAmount}(address(0));
-        stEth.approve(vaultStETH, depositAmount);
-        MrEthAssetTokenVault(vaultStETH).requestDeposit(depositAmount, testUser, testUser);
+        stEth.approve(stEthVault, depositAmount);
+        MrEthAssetTokenVault(stEthVault).requestDeposit(depositAmount, testUser, testUser);
         vm.stopPrank();
 
         // Get final state
@@ -124,7 +124,7 @@ contract DepositManagerMathTest is MrEthSetup {
         vm.startPrank(testUser);
         // Fund user with WETH
         vm.deal(testUser, depositAmount);
-        MrEthNativeTokenVault(vaultETH).deposit{value: depositAmount}(depositAmount, testUser);
+        MrEthNativeTokenVault(ethVault).deposit{value: depositAmount}(depositAmount, testUser);
         vm.stopPrank();
 
         // Get initial state
@@ -182,8 +182,8 @@ contract DepositManagerMathTest is MrEthSetup {
         // Fund user with WETH
         vm.deal(testUser, depositAmount);
         weth.deposit{value: depositAmount}();
-        weth.approve(vaultWETH, depositAmount); // Deposit double the withdrawal amount
-        MrEthAssetTokenVault(vaultWETH).requestDeposit(depositAmount, testUser, testUser);
+        weth.approve(wEthVault, depositAmount); // Deposit double the withdrawal amount
+        MrEthAssetTokenVault(wEthVault).requestDeposit(depositAmount, testUser, testUser);
         vm.stopPrank();
 
         // Get initial state

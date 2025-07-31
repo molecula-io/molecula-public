@@ -84,6 +84,9 @@ _get_envs_for_package() {
         "back")
             echo "dev alpha beta prod"
             ;;
+        "rpc-proxy")
+            echo "dev alpha beta prod"
+            ;;
         "back-account-service")
             echo "dev alpha beta prod"
             ;;

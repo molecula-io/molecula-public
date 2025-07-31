@@ -5,8 +5,6 @@ import { waitForDeployment } from './waitForDeployment';
 
 export async function deployAccountantLZ(
     hre: HardhatRuntimeEnvironment,
-    tronWeb: TronWeb,
-    privateKey: string,
     params: {
         initialOwner: string;
         authorizedLZConfiguratorAddress: string;
@@ -18,15 +16,11 @@ export async function deployAccountantLZ(
     },
 ): Promise<string> {
     // Find an account address corresponding to the given PRIVATE_KEY
-    const issuerAddress = tronWeb.address.fromPrivateKey(privateKey);
-
-    if (!issuerAddress) {
-        throw new Error('Invalid private key');
-    }
+    const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
     const artifact = await hre.artifacts.readArtifact('AccountantLZ');
 
-    const transaction = await tronWeb.transactionBuilder.createSmartContract(
+    const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 5000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
             // @ts-ignore (probably wrong type annotation)
@@ -47,30 +41,28 @@ export async function deployAccountantLZ(
     );
 
     // Send the transactions
-    await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(transaction, privateKey));
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(transaction, hre.tronweb.defaultPrivateKey as string),
+    );
 
-    return waitForDeployment(tronWeb, transaction);
+    return waitForDeployment(hre.tronweb, transaction);
 }
 
 export async function setUnderlyingToken(
-    tronWeb: TronWeb,
-    privateKey: string,
+    tronweb: TronWeb,
     params: {
         accountantLZ: string;
         moleculaToken: string;
     },
 ) {
-    const senderAddress = tronWeb.address.fromPrivateKey(privateKey);
-    if (!senderAddress) {
-        throw new Error('Invalid private key');
-    }
+    const senderAddress = tronweb.defaultAddress.base58 as string;
 
     const functionSelector = 'setUnderlyingToken(address)';
     const parameter = [{ type: 'address', value: params.moleculaToken }];
 
     // Build transaction
-    const response = await tronWeb.transactionBuilder.triggerSmartContract(
-        tronWeb.address.toHex(params.accountantLZ), // Contract address in hex
+    const response = await tronweb.transactionBuilder.triggerSmartContract(
+        tronweb.address.toHex(params.accountantLZ), // Contract address in hex
         functionSelector,
         { feeLimit: 1000000000 }, // Set fee limit
         parameter,
@@ -80,8 +72,11 @@ export async function setUnderlyingToken(
     const { transaction } = response;
 
     // Sign the transaction
-    const signedTransaction = await tronWeb.trx.sign(transaction, privateKey);
+    const signedTransaction = await tronweb.trx.sign(
+        transaction,
+        tronweb.defaultPrivateKey as string,
+    );
 
     // Send transaction
-    await tronWeb.trx.sendRawTransaction(signedTransaction);
+    await tronweb.trx.sendRawTransaction(signedTransaction);
 }

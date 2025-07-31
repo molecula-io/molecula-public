@@ -20,6 +20,8 @@ import {
     Executor__factory,
     MoleculaPoolTreasuryV2__factory,
     SupplyManagerV2__factory,
+    TokenVault__factory,
+    NativeTokenVault__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -33,6 +35,7 @@ import {
     Curve__factory,
     Aragon__factory,
     ReceiveULN__factory,
+    SendULN__factory,
 } from '../typechain';
 
 import { ERC20Safe } from './contracts';
@@ -69,6 +72,9 @@ import type {
     Aragon,
     ReceiveULN,
     SupplyManagerV2,
+    SendULN,
+    TokenVault,
+    NativeTokenVault,
 } from './types';
 
 export const EvmContractSafeFactory = {
@@ -299,6 +305,15 @@ export const EvmContractSafeFactory = {
             rpcProvider,
         );
     },
+    SendULN: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<SendULN>(
+            {
+                factory: SendULN__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
     SwapCurve: (address: string, rpcProvider: ProviderOrRunner) => {
         return new EvmContractSafe<Curve>(
             {
@@ -340,6 +355,24 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<Aragon>(
             {
                 factory: Aragon__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    TokenVault: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<TokenVault>(
+            {
+                factory: TokenVault__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    NativeTokenVault: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<NativeTokenVault>(
+            {
+                factory: NativeTokenVault__factory,
                 address,
             },
             rpcProvider,

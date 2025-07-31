@@ -1,19 +1,19 @@
 {
     "eth": {
-        "supplyManagerV2": "0x6731743a845c9E6963632fBc488DDF463723987a",
-        "mrETH": "0xC5F9b193f19CD2701141F9714ca7D143a64F1c84",
-        "vaultWETH": "0xf767860bA78787F6198e08d5F2E833713127C814",
-        "vaultETH": "0x08f798EF8A8FEf9cd0C13BaE9aca977e44874959",
-        "vaultStETH": "0x833f0e0f97B5cacCc6E8f04CaBFDB3FB205AC283",
-        "depositManager": "0xE58824a25A5277677F695f56303117573f9E3033",
-        "delegatorImplementation": "0x77e0F32d52a32d8783965cda9636B6E8201821d4"
+        "supplyManagerV2": "0xD129b262B6f0a97c258dbfe07ca9f64b6B9A1198",
+        "mrETH": "0x9C69A92D15baB4582F31b43E0294D39c36ced99e",
+        "wEthVault": "0xE4DedB13Fa3afe065980157dd036899E24C473Dd",
+        "ethVault": "0x69143bf0939d3f679ba1DAd497CBA7fb9C6651B3",
+        "stEthVault": "0x35067A34FE903057A0d429c8522cA1545f17Dd65",
+        "depositManager": "0x430Cb31DC674908b3a749Cc40100723d5B28A9A7",
+        "delegatorImplementation": "0x13104671661a62666F59E4d37EAE3BD1C122E004"
     },
     "holesky": {
         "supplyManagerV2": "0xDB3bbBe531aeD6FABaE34a234751BC87B75a729A",
         "mrETH": "0x7D8A7762Eb22053DB267bf026f59Dbd3c1A720F8",
-        "vaultWETH": "0x047aa63A7B861c13b6D278328A463bfB1accDe35",
-        "vaultETH": "0xa1e43221E418299C8519b70Eb9eDBF8F35651FDD",
-        "vaultStETH": "0xc39f843DBd512eBB0F74f65D56FfB8c3274C57E5",
+        "wEthVault": "0x047aa63A7B861c13b6D278328A463bfB1accDe35",
+        "ethVault": "0xa1e43221E418299C8519b70Eb9eDBF8F35651FDD",
+        "stEthVault": "0xc39f843DBd512eBB0F74f65D56FfB8c3274C57E5",
         "depositManager": "0x06cAf67D1ACAe5A7125eD31D2Dce985f9D1A52Be",
         "delegatorImplementation": "0x7B9A91CE89B5a198501be538B4AB605AE8aff76D"
     }

@@ -26,7 +26,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         `${envType}/contracts_nitrogen.json`,
     );
 
-    const tokens = [...config.TOKENS];
+    const tokens = [...config.MOLECULA_POOL_TOKENS];
     if (contractsNitrogen.eth.mUSDe !== '') {
         tokens.push({ token: contractsNitrogen.eth.mUSDe as EVMAddress, n: 0 });
     }

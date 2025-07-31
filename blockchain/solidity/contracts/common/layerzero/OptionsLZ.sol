@@ -4,8 +4,9 @@ pragma solidity ^0.8.24;
 
 import {OptionsBuilder} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OptionsBuilder.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ZeroValueChecker} from "../ZeroValueChecker.sol";
 
-contract OptionsLZ is Ownable2Step {
+contract OptionsLZ is Ownable2Step, ZeroValueChecker {
     using OptionsBuilder for bytes;
 
     /// @dev Base bit flag.
@@ -23,6 +24,14 @@ contract OptionsLZ is Ownable2Step {
     /// @dev Throws an error if the caller is not the authorized LZ configurator.
     error ENotAuthorizedLZConfigurator();
 
+    /// @dev Emitted when an authorized LZ configurator is updated.
+    /// @param previousConfigurator Address of the previous authorized LZ configurator.
+    /// @param newConfigurator Address of the new authorized LZ configurator that replaced the previous one.
+    event AuthorizedLZConfiguratorUpdated(
+        address indexed previousConfigurator,
+        address indexed newConfigurator
+    );
+
     /// @dev Modifier to check whether the caller is the authorized LZ configurator.
     modifier onlyAuthorizedLZConfigurator() {
         if (msg.sender != authorizedLZConfigurator) {
@@ -39,7 +48,7 @@ contract OptionsLZ is Ownable2Step {
     constructor(
         address initialOwner,
         address authorizedLZConfiguratorAddress
-    ) Ownable(initialOwner) {
+    ) Ownable(initialOwner) checkNotZero(authorizedLZConfiguratorAddress) {
         authorizedLZConfigurator = authorizedLZConfiguratorAddress;
     }
 
@@ -81,7 +90,9 @@ contract OptionsLZ is Ownable2Step {
      */
     function setAuthorizedLZConfigurator(
         address authorizedLZConfiguratorAddress
-    ) external onlyOwner {
+    ) external onlyOwner checkNotZero(authorizedLZConfiguratorAddress) {
+        address oldConfigurator = authorizedLZConfigurator;
         authorizedLZConfigurator = authorizedLZConfiguratorAddress;
+        emit AuthorizedLZConfiguratorUpdated(oldConfigurator, authorizedLZConfiguratorAddress);
     }
 }

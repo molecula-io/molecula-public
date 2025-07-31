@@ -47,7 +47,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
         const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasury');
         moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
             poolOwner.address,
-            ethMainnetBetaConfig.TOKENS.map(x => x.token),
+            ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token),
             poolKeeper,
             supplyManagerFutureAddress,
             [],
@@ -57,7 +57,7 @@ export async function deployNitrogenV2Common(token: string, isOldMPT: boolean = 
         const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
         moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
             poolOwner.address,
-            ethMainnetBetaConfig.TOKENS.map(x => x.token),
+            ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token),
             poolKeeper,
             supplyManagerFutureAddress,
             [],

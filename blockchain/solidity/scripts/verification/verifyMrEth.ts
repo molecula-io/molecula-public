@@ -46,30 +46,29 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         contractToVerify.mrETH,
     ]);
 
-    await verifyContract(hre, 'RebaseTokenV2', contractToVerify.mrETH, [
-        contractToVerify.supplyManagerV2,
-        account.address,
+    await verifyContract(hre, 'RewardBearingToken', contractToVerify.mrETH, [
         config.MRETH_TOKEN_NAME,
         config.MRETH_TOKEN_SYMBOL,
-        config.MRETH_TOKEN_DECIMALS,
+        account.address,
+        contractToVerify.supplyManagerV2,
         contractToVerify.supplyManagerV2,
     ]);
 
-    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.vaultWETH, [
+    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.wEthVault, [
         account.address,
         contractToVerify.mrETH,
         contractToVerify.supplyManagerV2,
         account.address,
     ]);
 
-    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.vaultETH, [
+    await verifyContract(hre, 'MrEthAssetTokenVault', contractToVerify.stEthVault, [
         account.address,
         contractToVerify.mrETH,
         contractToVerify.supplyManagerV2,
         account.address,
     ]);
 
-    await verifyContract(hre, 'MrEthNativeTokenVault', contractToVerify.vaultETH, [
+    await verifyContract(hre, 'MrEthNativeTokenVault', contractToVerify.ethVault, [
         account.address,
         contractToVerify.mrETH,
         contractToVerify.supplyManagerV2,

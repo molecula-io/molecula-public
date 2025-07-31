@@ -3,7 +3,7 @@
 import { spawn } from 'child_process';
 import { task } from 'hardhat/config';
 
-import { getEnvironment } from '../scripts/utils/deployUtils';
+import { getEnvironment } from '../../scripts/utils/deployUtils';
 
 task('deployLzExecutorMultichain', 'Deploys Carbon LZ Executor contract to multiple networks')
     .addParam('environment', 'Deployment environment')

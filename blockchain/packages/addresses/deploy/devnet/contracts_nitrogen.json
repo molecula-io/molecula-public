@@ -7,8 +7,8 @@
         "poolKeeper": "0x51fFFb7a28734D7Abb70a30012ce86646E39E269",
         "mUSDLock": "0xb2615cF1e8C284b6F45EDceEF4bD21Df2bBf31cB",
         "mUSDe": "0x8b76f5b8470C3acCF8956b9859d36372EAB51f81",
-        "lmUSD": "0x12CCD83E41E3Ab85875B457af6709598FD9FFaf5",
-        "wmUSD": "0xb480E55e042797c74B43c3e506Fd603ecbb5DEb7",
+        "lmUSD": "",
+        "wmUSD": "0x2C8B6dDf726A277B369C571aADE02ff9B0D8F1Ad",
         "rebaseTokenOwner": "0xf9cD077258b2D142dA3Aa4181f9d68FB0dEe5982",
         "tokenVaults": {
             "USDc": "0x14341e94Ede9AB2D2C063A0178C718c77e623A32"

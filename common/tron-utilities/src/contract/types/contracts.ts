@@ -1,6 +1,11 @@
 import type { TronWeb, ContractAbiInterface } from 'tronweb';
 
-import type { SunCurve, TRC20, ReceiveULN } from '@molecula-monorepo/common.tron-contracts';
+import type {
+    SunCurve,
+    TRC20,
+    ReceiveULN,
+    SendULN,
+} from '@molecula-monorepo/common.tron-contracts';
 import type { UsdtOFT, Executor } from '@molecula-monorepo/solidity/typechain-types';
 import type { ILayerZeroEndpointV2 } from '@molecula-monorepo/solidity/typechain-types/@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces';
 
@@ -21,7 +26,8 @@ export type AllTronContracts =
     | SunCurve
     | UsdtOFT
     | Executor
-    | ReceiveULN;
+    | ReceiveULN
+    | SendULN;
 
 export type TronContractParams = {
     client: TronWeb;

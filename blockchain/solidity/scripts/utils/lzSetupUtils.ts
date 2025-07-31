@@ -74,7 +74,7 @@ export async function getTronOAppConfig(
         [],
         executorConfigAbi,
         sendExecutorConfigBytes,
-    )[0];
+    );
     console.log('Send Library Executor Config:', executorConfigArray);
 
     if (

@@ -5,6 +5,8 @@ import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses
 import { sepoliaConfig } from '../../configs/ethereum';
 
 async function getExecutorParams() {
+    const signer = await ethers.provider.getSigner();
+    console.log('Signer address:', signer.address);
     const executor = await ethers.getContractAt('Executor', DevnetContractsExecutor.eth.executor);
 
     const priceFeed = await executor.priceFeed();

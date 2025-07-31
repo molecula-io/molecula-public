@@ -38,7 +38,7 @@ export async function deployCore(
     const poolKeeper = config.POOL_KEEPER;
 
     // add mUSDe to token array
-    const tokens = config.TOKENS;
+    const tokens = config.MOLECULA_POOL_TOKENS;
     if (mUSDe !== '') {
         tokens.push({ token: mUSDe as EVMAddress, n: 0 });
     }

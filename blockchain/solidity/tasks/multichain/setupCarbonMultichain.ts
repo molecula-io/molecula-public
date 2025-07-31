@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 import { scope } from 'hardhat/config';
 
 // Utility for determining environment-specific flags
-import { getEnvironment } from '../scripts/utils/deployUtils';
+import { getEnvironment } from '../../scripts/utils/deployUtils';
 
 // Define a scope name and description for our multichain setup tasks
 const multichainSetupScope = scope(

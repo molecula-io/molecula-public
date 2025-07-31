@@ -1,4 +1,4 @@
-import { TronWeb } from 'tronweb';
+import { tronweb } from 'hardhat';
 
 import { DevnetContractsExecutor } from '@molecula-monorepo/blockchain.addresses/deploy';
 
@@ -6,34 +6,19 @@ import { abi as executorABI } from '../../artifacts/contracts/executor/Executor.
 import { shastaConfig } from '../../configs/tron/shastaTyped';
 
 async function getExecutorParams() {
-    // Create TronWeb instance
-    const tronWeb = new TronWeb({
-        fullHost: shastaConfig.RPC_URL,
-    });
-    // Get private key
-    const accountInfo = tronWeb.fromMnemonic(
-        process.env.TRON_SEED_PHRASE as string,
-        "m/44'/195'/0'/0/0",
-    );
-    if (accountInfo instanceof Error) {
-        throw new Error('Invalid account information returned from fromMnemonic.');
-    }
-    const privateKey = accountInfo.privateKey.substring(2);
-    tronWeb.setPrivateKey(privateKey);
-
     // Get the deployed Executor contract address for Tron (Shasta)
-    const executorAddress = tronWeb.address.fromHex(DevnetContractsExecutor.tron.executor);
+    const executorAddress = tronweb.address.fromHex(DevnetContractsExecutor.tron.executor);
 
-    const executor = tronWeb.contract(executorABI, executorAddress);
+    const executor = tronweb.contract(executorABI, executorAddress);
 
     // @ts-ignore (Missing types for contracts)
     const priceFeed = await executor.methods.priceFeed().call({ _isConstant: true });
-    const priceFeedAddress = TronWeb.address.fromHex(priceFeed.toString());
+    const priceFeedAddress = tronweb.address.fromHex(priceFeed.toString());
     console.log('priceFeed contract', priceFeedAddress);
 
     // @ts-ignore (Missing types for contracts)
     const workerFeeLib = await executor.methods.workerFeeLib().call({ _isConstant: true });
-    const workerFeeLibAddress = TronWeb.address.fromHex(workerFeeLib.toString());
+    const workerFeeLibAddress = tronweb.address.fromHex(workerFeeLib.toString());
     console.log('workerFeeLib contract', workerFeeLibAddress);
 
     // @ts-ignore (Missing types for contracts)

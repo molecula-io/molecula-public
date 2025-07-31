@@ -1,24 +1,17 @@
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
-import type { TronWeb } from 'tronweb';
 
 import { waitForDeployment } from './waitForDeployment';
 
 export async function deploymUSDLock(
     hre: HardhatRuntimeEnvironment,
-    tronWeb: TronWeb,
-    privateKey: string,
     rebaseTokenAddress: string,
 ): Promise<string> {
     // Find an account address corresponding to the given PRIVATE_KEY
-    const issuerAddress = tronWeb.address.fromPrivateKey(privateKey);
-
-    if (!issuerAddress) {
-        throw new Error('Invalid private key');
-    }
+    const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
     const artifact = await hre.artifacts.readArtifact('MUSDLock');
 
-    const transaction = await tronWeb.transactionBuilder.createSmartContract(
+    const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 2000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
             // @ts-ignore (probably wrong type annotation)
@@ -31,7 +24,9 @@ export async function deploymUSDLock(
     );
 
     // Send the transactions
-    await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(transaction, privateKey));
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(transaction, hre.tronweb.defaultPrivateKey as string),
+    );
 
-    return waitForDeployment(tronWeb, transaction);
+    return waitForDeployment(hre.tronweb, transaction);
 }

@@ -30,6 +30,9 @@ import type {
     UsdtOFT,
     Aragon,
     ReceiveULN,
+    SendULN,
+    TokenVault,
+    NativeTokenVault,
 } from '../types';
 
 type AnyFunction = () => void;
@@ -59,6 +62,14 @@ export type EvmContractSafeCall<Contract extends PickFunctions<Contract>, Respon
     ...args: PostfixOverrides<Parameters<Contract[Method]>, 'nonpayable'>
 ) => Promise<Response>;
 
+export type EvmContractGasCall<Contract extends PickFunctions<Contract>, Response> = <
+    Method extends keyof Contract,
+>(
+    multiplier: number,
+    method: Method,
+    ...args: PostfixOverrides<Parameters<Contract[Method]>, 'nonpayable'>
+) => Promise<Response>;
+
 export type AllEvmContracts =
     | IMoleculaPoolV2
     | MoleculaPoolTreasury
@@ -77,6 +88,7 @@ export type AllEvmContracts =
     | SFrxUSD
     | ILayerZeroEndpointV2
     | ReceiveULN
+    | SendULN
     | Executor
     | MUSDE
     | AavePool
@@ -84,6 +96,8 @@ export type AllEvmContracts =
     | ICurveStableSwapFactoryNG
     | ICurveStableSwapNG
     | UsdtOFT
-    | Aragon;
+    | Aragon
+    | TokenVault
+    | NativeTokenVault;
 
 export type ProviderOrRunner = Provider | ContractRunner;

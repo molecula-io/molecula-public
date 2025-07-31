@@ -7,6 +7,8 @@ import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-toolbox';
 import '@typechain/hardhat';
 import 'hardhat-gas-reporter';
+import '@fireblocks/hardhat-fireblocks';
+import './extensions/hardhat-tronweb';
 
 import './tasks';
 import { tronMainnetProdConfig } from './configs/tron/mainnetProdTyped';
@@ -14,6 +16,7 @@ import { shastaConfig } from './configs/tron/shastaTyped';
 
 dotenv.config({ path: '.env.test' });
 dotenv.config({ path: '.config.env' });
+dotenv.config({ path: '.env.fireblocks.testnet' });
 
 const config: HardhatUserConfig = {
     paths: {
@@ -88,6 +91,20 @@ const config: HardhatUserConfig = {
                         initialIndex: 0,
                         count: 20,
                         passphrase: '',
+                    },
+                },
+            }),
+        ...(process.env.JSON_RPC_URL_SEPOLIA &&
+            process.env.FIREBLOCKS_API_KEY &&
+            process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH && {
+                sepolia_fireblocks: {
+                    url: process.env.JSON_RPC_URL_SEPOLIA,
+                    fireblocks: {
+                        privateKey: process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH,
+                        apiKey: process.env.FIREBLOCKS_API_KEY,
+                        vaultAccountIds: [1, 2],
+                        logRequestsAndResponses: true,
+                        logTransactionStatusChanges: true,
                     },
                 },
             }),

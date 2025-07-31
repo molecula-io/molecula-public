@@ -14,8 +14,8 @@ describe('Test mrETH DepositManager', () => {
         it('Should successfully request deposit and deposit WETH', async () => {
             const {
                 depositManager,
-                rebaseTokenV2,
-                tokenVaultWETH,
+                rewardBearingToken,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -30,24 +30,24 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
 
             // First deposit request
-            await tokenVaultWETH.connect(owner).requestDeposit(val, owner, owner);
+            await wEthVault.connect(owner).requestDeposit(val, owner, owner);
 
             // Verify shares and balances after first deposit
-            let userShares = await rebaseTokenV2.sharesOf(owner);
+            let userShares = await rewardBearingToken.sharesOf(owner);
 
             expectEqual(await aWETH.balanceOf(depositManager), val);
 
             expectEqual(userShares, val);
-            expectEqual(await rebaseTokenV2.convertToAssets(userShares), val);
+            expectEqual(await rewardBearingToken.convertToAssets(userShares), val);
 
             // Second deposit request
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
 
             // Verify balances after second deposit
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 2n);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThanOrEqual(val * 2n);
-            expect(await rebaseTokenV2.convertToAssets(userShares)).to.be.greaterThanOrEqual(
+            expect(await rewardBearingToken.convertToAssets(userShares)).to.be.greaterThanOrEqual(
                 val * 2n,
             );
 
@@ -57,7 +57,7 @@ describe('Test mrETH DepositManager', () => {
             );
 
             // Large deposit request to prepare for staking
-            await tokenVaultWETH.requestDeposit(val * 30n, owner, owner);
+            await wEthVault.requestDeposit(val * 30n, owner, owner);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 32n);
 
             // Perform staking operation
@@ -67,12 +67,12 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(val * 32n);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(0n);
 
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThan(val * 32n);
         });
 
         it('Should successfully stake with buffer percentage', async () => {
-            const { depositManager, tokenVaultWETH, owner, WETH, defaultWithdrawalCredentials } =
+            const { depositManager, wEthVault, owner, WETH, defaultWithdrawalCredentials } =
                 await loadFixture(deployMrETh);
 
             // Set buffer percentage to 5%
@@ -85,7 +85,7 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThan(val * 2n);
 
             // First deposit request
-            await tokenVaultWETH.connect(owner).requestDeposit(val, owner, owner);
+            await wEthVault.connect(owner).requestDeposit(val, owner, owner);
 
             // Generate validator keys for staking
             const { pubkey, signature, depositDataRoot } = createValidatorKeys(
@@ -98,20 +98,20 @@ describe('Test mrETH DepositManager', () => {
             ).to.be.rejectedWith('ETooHighDepositValue()');
 
             // Deposit more to succeed stake
-            await tokenVaultWETH.connect(owner).requestDeposit(10n ** 17n, owner, owner);
+            await wEthVault.connect(owner).requestDeposit(10n ** 17n, owner, owner);
 
             // Perform staking operation
             await depositManager.stakeNative(32n * 10n ** 18n, pubkey, signature, depositDataRoot);
 
             await depositManager.setBufferPercentage(10_000n);
-            await tokenVaultWETH.connect(owner).requestDeposit(val, owner, owner);
+            await wEthVault.connect(owner).requestDeposit(val, owner, owner);
             await expect(
                 depositManager.stakeNative(32n * 10n ** 18n, pubkey, signature, depositDataRoot),
             ).to.be.rejectedWith('ENoNeedToStake()');
         });
 
         it('Should successfully request deposit and deposit stETH', async () => {
-            const { depositManager, rebaseTokenV2, tokenVaultStETH, owner, aWETH, stETH } =
+            const { depositManager, rewardBearingToken, stEthVault, owner, aWETH, stETH } =
                 await loadFixture(deployMrETh);
 
             // Test deposit value of 1 WETH
@@ -122,12 +122,12 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
 
             // Perform deposit request
-            await tokenVaultStETH.connect(owner).requestDeposit(val, owner, owner);
+            await stEthVault.connect(owner).requestDeposit(val, owner, owner);
 
             // Verify shares and balances after deposit
-            const userShares = await rebaseTokenV2.sharesOf(owner);
+            const userShares = await rewardBearingToken.sharesOf(owner);
             expectEqual(userShares, val);
-            expectEqual(await rebaseTokenV2.convertToAssets(userShares), val);
+            expectEqual(await rewardBearingToken.convertToAssets(userShares), val);
             expectEqual(await depositManager.totalSupply(), val);
         });
 
@@ -168,8 +168,8 @@ describe('Test mrETH DepositManager', () => {
         it('Should successfully request deposit and deposit ETH', async () => {
             const {
                 depositManager,
-                rebaseTokenV2,
-                nativeTokenVault,
+                rewardBearingToken,
+                nativeVault,
                 owner,
                 WETH,
                 aWETH,
@@ -184,29 +184,29 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
 
             // Test minimum deposit value validation
-            await expect(nativeTokenVault.deposit(0, owner, { value: 1n })).to.be.reverted;
+            await expect(nativeVault.deposit(0, owner, { value: 1n })).to.be.reverted;
 
             // Verify initial state
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
-            let userShares = await rebaseTokenV2.sharesOf(owner);
+            let userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.equal(0n);
-            expect(await rebaseTokenV2.convertToAssets(userShares)).to.be.equal(0n);
+            expect(await rewardBearingToken.convertToAssets(userShares)).to.be.equal(0n);
 
             // First deposit
-            await nativeTokenVault.deposit(val, owner, { value: val });
+            await nativeVault.deposit(val, owner, { value: val });
             expectEqual(await aWETH.balanceOf(depositManager), val);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expectEqual(userShares, val);
-            expectEqual(await rebaseTokenV2.convertToAssets(userShares), val);
+            expectEqual(await rewardBearingToken.convertToAssets(userShares), val);
 
             // Second deposit
-            await nativeTokenVault.deposit(val, owner, { value: val });
+            await nativeVault.deposit(val, owner, { value: val });
 
             // Verify balances after second deposit
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val * 2n);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThanOrEqual(val * 3n);
-            expect(await rebaseTokenV2.convertToAssets(userShares)).to.be.lessThan(val * 3n);
+            expect(await rewardBearingToken.convertToAssets(userShares)).to.be.lessThan(val * 3n);
 
             // Generate validator keys for staking
             const { pubkey, signature, depositDataRoot } = createValidatorKeys(
@@ -214,7 +214,7 @@ describe('Test mrETH DepositManager', () => {
             );
 
             // Large deposit to prepare for staking
-            await nativeTokenVault.deposit(val * 30n, owner, { value: val * 30n });
+            await nativeVault.deposit(val * 30n, owner, { value: val * 30n });
 
             // Perform staking operation
             await depositManager.stakeNative(val * 32n, pubkey, signature, depositDataRoot);
@@ -222,15 +222,15 @@ describe('Test mrETH DepositManager', () => {
             // Verify final balances after staking
             expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(val * 32n);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(0n);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThan(val * 32n);
         });
 
         it('Should successfully add pool to buffer', async () => {
             const {
                 depositManager,
-                rebaseTokenV2,
-                tokenVaultWETH,
+                rewardBearingToken,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -275,19 +275,19 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThan(val * 32n);
 
             // First deposit and verify equal distribution
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
             expectEqual(await aWETH.balanceOf(depositManager), val / 2n);
             expectEqual(await cWETHv3.balanceOf(depositManager), val / 2n);
 
             // Second deposit
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val);
             expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(val);
 
             // Verify shares and assets
-            let userShares = await rebaseTokenV2.sharesOf(owner);
+            let userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThanOrEqual(val * 2n);
-            expect(await rebaseTokenV2.convertToAssets(userShares)).to.be.greaterThanOrEqual(
+            expect(await rewardBearingToken.convertToAssets(userShares)).to.be.greaterThanOrEqual(
                 2n * val,
             );
 
@@ -297,7 +297,7 @@ describe('Test mrETH DepositManager', () => {
             );
 
             // Large deposit to prepare for staking
-            await tokenVaultWETH.requestDeposit(val * 30n, owner, owner);
+            await wEthVault.requestDeposit(val * 30n, owner, owner);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 16n);
             expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 16n);
 
@@ -309,19 +309,19 @@ describe('Test mrETH DepositManager', () => {
             expect(await cWETHv3.balanceOf(depositManager)).to.be.lessThan(val * 16n);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(0n);
             expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(0n);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThan(val * 32n);
         });
 
         it('Should successfully handle pause and unpause operations', async () => {
-            const { depositManager, tokenVaultWETH, owner, defaultWithdrawalCredentials } =
+            const { depositManager, wEthVault, owner, defaultWithdrawalCredentials } =
                 await loadFixture(deployMrETh);
 
             // Test deposit value of 32 WETH
             const val = 32n * 10n ** 18n;
 
             // Initial deposit
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
 
             // Pause staking
             await depositManager.pauseStake();
@@ -346,7 +346,7 @@ describe('Test mrETH DepositManager', () => {
             const {
                 user0,
                 depositManager,
-                tokenVaultWETH,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -390,7 +390,7 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThan(val * 3n);
 
             // Perform deposit and verify equal distribution
-            await tokenVaultWETH.requestDeposit(2n * val, owner, owner);
+            await wEthVault.requestDeposit(2n * val, owner, owner);
             expectEqual(await aWETH.balanceOf(depositManager), val);
             expectEqual(await cWETHv3.balanceOf(depositManager), val);
 
@@ -456,7 +456,7 @@ describe('Test mrETH DepositManager', () => {
         it('Should correctly calculate pool portions to withdraw', async () => {
             const {
                 depositManager,
-                tokenVaultWETH,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -501,7 +501,7 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThanOrEqual(val * 64n);
 
             // Perform large deposit
-            await tokenVaultWETH.requestDeposit(val * 64n, owner, owner);
+            await wEthVault.requestDeposit(val * 64n, owner, owner);
             expectEqual(await aWETH.balanceOf(depositManager), (val * 64n) / 2n);
             expectEqual(await cWETHv3.balanceOf(depositManager), (val * 64n) / 2n);
 
@@ -527,7 +527,7 @@ describe('Test mrETH DepositManager', () => {
         it('Should successfully rebalance buffer', async () => {
             const {
                 depositManager,
-                tokenVaultWETH,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -598,7 +598,7 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThanOrEqual(val);
 
             // Perform large deposit
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
             expectEqual(await aWETH.balanceOf(depositManager), (val * 30n) / 100n); // 30%
             expectEqual(await cWETHv3.balanceOf(depositManager), (val * 70n) / 100n); // 70%
 
@@ -636,8 +636,8 @@ describe('Test mrETH DepositManager', () => {
             const {
                 user0,
                 depositManager,
-                tokenVaultWETH,
-                tokenVaultStETH,
+                wEthVault,
+                stEthVault,
                 owner,
                 WETH,
                 stETH,
@@ -708,7 +708,7 @@ describe('Test mrETH DepositManager', () => {
             );
 
             // Perform large deposit
-            await tokenVaultWETH.requestDeposit(val * 96n, owner, owner);
+            await wEthVault.requestDeposit(val * 96n, owner, owner);
 
             let restakeData = await depositManager.totalRestakedSupply();
             const operatorTVLs1 = restakeData.operatorDelegatorTVLs;
@@ -773,7 +773,7 @@ describe('Test mrETH DepositManager', () => {
             expectEqual(operatorTVLs4[2]!, val * 32n);
 
             // Perform deposit request
-            await tokenVaultStETH.connect(owner).requestDeposit(val * 34n, owner, owner);
+            await stEthVault.connect(owner).requestDeposit(val * 34n, owner, owner);
 
             restakeData = await depositManager.totalRestakedSupply();
             const operatorTVLs5 = restakeData.operatorDelegatorTVLs;
@@ -783,7 +783,7 @@ describe('Test mrETH DepositManager', () => {
             expectEqual(operatorTVLs5[2]!, val * 32n);
 
             // Perform deposit request
-            await tokenVaultStETH.connect(owner).requestDeposit(val * 8n, owner, owner);
+            await stEthVault.connect(owner).requestDeposit(val * 8n, owner, owner);
 
             restakeData = await depositManager.totalRestakedSupply();
             const operatorTVLs6 = restakeData.operatorDelegatorTVLs;
@@ -832,8 +832,8 @@ describe('Test mrETH DepositManager', () => {
         it('Should successfully update yield for WETH', async () => {
             const {
                 depositManager,
-                rebaseTokenV2,
-                tokenVaultWETH,
+                rewardBearingToken,
+                wEthVault,
                 owner,
                 WETH,
                 aWETH,
@@ -852,24 +852,24 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
 
             // First deposit request
-            await tokenVaultWETH.connect(owner).requestDeposit(val, owner, owner);
+            await wEthVault.connect(owner).requestDeposit(val, owner, owner);
 
             // Verify shares and balances after first deposit
-            let userShares = await rebaseTokenV2.sharesOf(owner);
+            let userShares = await rewardBearingToken.sharesOf(owner);
 
             expectEqual(await aWETH.balanceOf(depositManager), val);
 
             expectEqual(userShares, val);
-            expectEqual(await rebaseTokenV2.convertToAssets(userShares), val);
+            expectEqual(await rewardBearingToken.convertToAssets(userShares), val);
 
             // Second deposit request
-            await tokenVaultWETH.requestDeposit(val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
 
             // Verify balances after second deposit
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 2n);
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThanOrEqual(val * 2n);
-            expect(await rebaseTokenV2.convertToAssets(userShares)).to.be.greaterThanOrEqual(
+            expect(await rewardBearingToken.convertToAssets(userShares)).to.be.greaterThanOrEqual(
                 val * 2n,
             );
 
@@ -879,7 +879,7 @@ describe('Test mrETH DepositManager', () => {
             );
 
             // Large deposit request to prepare for staking
-            await tokenVaultWETH.requestDeposit(val * 30n, owner, owner);
+            await wEthVault.requestDeposit(val * 30n, owner, owner);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 32n);
 
             // Perform staking operation
@@ -889,7 +889,7 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(val * 32n);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(0n);
 
-            userShares = await rebaseTokenV2.sharesOf(owner);
+            userShares = await rewardBearingToken.sharesOf(owner);
             expect(userShares).to.be.lessThan(val * 32n);
 
             // Create mock RewardsMerkleClaim data with all zeros
@@ -923,8 +923,8 @@ describe('Test mrETH DepositManager', () => {
             const {
                 depositManager,
                 defaultOperator,
-                rebaseTokenV2,
-                tokenVaultStETH,
+                rewardBearingToken,
+                stEthVault,
                 owner,
                 aWETH,
                 stETH,
@@ -941,12 +941,12 @@ describe('Test mrETH DepositManager', () => {
             expect(await aWETH.balanceOf(depositManager)).to.be.equal(0n);
 
             // Perform deposit request
-            await tokenVaultStETH.connect(owner).requestDeposit(val, owner, owner);
+            await stEthVault.connect(owner).requestDeposit(val, owner, owner);
 
             // Verify shares and balances after deposit
-            const userShares = await rebaseTokenV2.sharesOf(owner);
+            const userShares = await rewardBearingToken.sharesOf(owner);
             expectEqual(userShares, val);
-            expectEqual(await rebaseTokenV2.convertToAssets(userShares), val);
+            expectEqual(await rewardBearingToken.convertToAssets(userShares), val);
             expectEqual(await depositManager.totalSupply(), val);
 
             // Create mock RewardsMerkleClaim data with all zeros

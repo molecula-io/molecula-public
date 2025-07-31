@@ -2,7 +2,7 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { type EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb } from '../../utils/deployUtils';
+import { getTronEnvironmentConfig } from '../../utils/deployUtils';
 
 import { waitForDeployment } from './waitForDeployment';
 
@@ -12,32 +12,22 @@ import { waitForDeployment } from './waitForDeployment';
  * @param hre -     Hardhat runtime environment (for artifact reading).
  * @param mnemonic - Mnemonic phrase for Tron account access.
  * @param path -    Derivation path for Tron account.
- * @param network - Network identifier (e.g. 'shasta', 'mainnet', etc).
+ * @param environment - Environment identifier (e.g. 'devnet', 'mainnet/beta', etc).
  * @returns        Deployed addresses in a structured object for config.
  */
-export async function deployExecutor(
-    hre: HardhatRuntimeEnvironment,
-    mnemonic: string,
-    path: string,
-    network: EnvironmentType,
-) {
+export async function deployExecutor(hre: HardhatRuntimeEnvironment, environment: EnvironmentType) {
     // Get TronWeb instance, privateKey, and config for this network.
-    const { tronWeb, privateKey, config } = await getTronWeb(mnemonic, path, network);
+    const config = getTronEnvironmentConfig(environment);
 
     // Derive issuer (deployer) address from private key.
-    const issuerAddress = tronWeb.address.fromPrivateKey(privateKey);
-
-    // Defensive check: fail if the derived address is invalid.
-    if (!issuerAddress) {
-        throw new Error('Invalid private key');
-    }
+    const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
     // --- Deploy ExecutorFeeLib contract ---
     // Read compiled artifact for ExecutorFeeLib (ABI + bytecode).
     const executorFeeLibArtifact = await hre.artifacts.readArtifact('ExecutorFeeLib');
 
     // Build the contract deployment transaction for ExecutorFeeLib.
-    const feeLibDeploymentTransaction = await tronWeb.transactionBuilder.createSmartContract(
+    const feeLibDeploymentTransaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 1_000_000_000, // Max TRX for deployment (in SUN)
             // @ts-ignore: ABI and bytecode types may mismatch on TronWeb
@@ -50,12 +40,15 @@ export async function deployExecutor(
     );
 
     // Sign and broadcast the deployment transaction for ExecutorFeeLib.
-    await tronWeb.trx.sendRawTransaction(
-        await tronWeb.trx.sign(feeLibDeploymentTransaction, privateKey),
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(
+            feeLibDeploymentTransaction,
+            hre.tronweb.defaultPrivateKey as string,
+        ),
     );
 
     // Wait until the contract is deployed and retrieve the deployed address.
-    const executorFeeLib = await waitForDeployment(tronWeb, feeLibDeploymentTransaction);
+    const executorFeeLib = await waitForDeployment(hre.tronweb, feeLibDeploymentTransaction);
     console.log(`Executor Fee Lib address is : ${executorFeeLib}`);
 
     // --- Deploy Executor contract ---
@@ -63,7 +56,7 @@ export async function deployExecutor(
     const executorArtifact = await hre.artifacts.readArtifact('Executor');
 
     // Build the contract deployment transaction for Executor.
-    const executorDeploymentTransaction = await tronWeb.transactionBuilder.createSmartContract(
+    const executorDeploymentTransaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 5_000_000_000, // Higher TRX limit, since this contract is larger
             // @ts-ignore: ABI and bytecode types may mismatch on TronWeb
@@ -89,15 +82,20 @@ export async function deployExecutor(
     );
 
     // Sign and broadcast the deployment transaction for Executor.
-    await tronWeb.trx.sendRawTransaction(
-        await tronWeb.trx.sign(executorDeploymentTransaction, privateKey),
+    await hre.tronweb.trx.sendRawTransaction(
+        await hre.tronweb.trx.sign(
+            executorDeploymentTransaction,
+            hre.tronweb.defaultPrivateKey as string,
+        ),
     );
 
     // Wait until the contract is deployed and retrieve the deployed address.
-    const executor = await waitForDeployment(tronWeb, executorDeploymentTransaction);
+    const executor = await waitForDeployment(hre.tronweb, executorDeploymentTransaction);
 
     // Convert the Tron address to an EVM-compatible hex string (0x-prefixed).
-    const executorHexAdderess = tronWeb.address.toHex(executor).replace(/^(41)/, '0x') as string;
+    const executorHexAdderess = hre.tronweb.address
+        .toHex(executor)
+        .replace(/^(41)/, '0x') as string;
     console.log(`Executor address is : ${executorHexAdderess}`);
 
     // Return deployed contract addresses in a structured object.

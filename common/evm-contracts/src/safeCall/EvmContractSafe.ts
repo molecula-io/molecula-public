@@ -23,6 +23,7 @@ import type {
     AllEvmContracts,
     EvmContractSafeViewCall,
     ProviderOrRunner,
+    EvmContractGasCall,
 } from './types';
 
 /**
@@ -221,6 +222,50 @@ export class EvmContractSafe<Contract extends AllEvmContracts> {
 
     /**
      * Estimate gas of contract method
+     * @param multiplier - Multiplier for gas limit (`1` to use default value)
+     * @param method - Method name
+     * @param args - Method arguments
+     * @returns gas value to use as GasLimit for call
+     */
+    public estimateGasValue: EvmContractGasCall<Contract, string> = async (
+        multiplier,
+        method,
+        ...args
+    ): Promise<string> => {
+        try {
+            const contractMethod = this.contract[method] as TypedContractMethod;
+            const gas = await contractMethod.estimateGas(...args);
+
+            return new BigNumber(gas.toString()).multipliedBy(multiplier).toFixed(0);
+        } catch (error) {
+            let decodedError: DecodedError | null;
+            let reason;
+            try {
+                decodedError = await this.decodeError(error);
+                ({ reason } = decodedError);
+            } catch (_) {
+                decodedError = null;
+                reason = error.message;
+            }
+
+            const errorMessage = `Failed contract call: ${reason}`;
+
+            throw new SafeCallError(errorMessage, {
+                method: method as string,
+                args: JSON.parse(jsonStringifyBigint(args)),
+                decodedError: decodedError
+                    ? {
+                          reason: decodedError.reason,
+                          data: decodedError.data,
+                          type: decodedError.type,
+                      }
+                    : null,
+            });
+        }
+    };
+
+    /**
+     * Estimate gas of contract method converted to ETH
      * @param method - Method name
      * @param args - Method arguments
      * @returns human readable error reason

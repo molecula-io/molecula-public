@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { scope } from 'hardhat/config';
 
-import type { HardhatNetworkHDAccountsConfig } from 'hardhat/types/config';
-
 import {
     setupOAppDVN,
     setAccountantLZGasLimits,
@@ -22,10 +20,9 @@ tronSetupScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
         // Execute the migration function with the retrieved parameters
-        await setCarbonOwner(hre, accounts.mnemonic, accounts.path, environment)
+        await setCarbonOwner(hre, environment)
             .then(() => {
                 console.log('Set Carbon owner completed successfully.');
             })
@@ -44,10 +41,9 @@ tronSetupScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
         // Execute the migration function with the retrieved parameters
-        await setupOAppDVN(hre, accounts.mnemonic, accounts.path, environment)
+        await setupOAppDVN(hre, environment)
             .then(() => {
                 console.log('Setup of OApp DVN is completed successfully.');
             })
@@ -66,11 +62,10 @@ tronSetupScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name); // Log the Hardhat network being used
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
 
         // Execute the migration function with the retrieved parameters
-        await setupUsdtOftDVN(hre, accounts.mnemonic, accounts.path, environment)
+        await setupUsdtOftDVN(hre, environment)
             .then(() => {
                 console.log('UsdtOFT DVN setup completed successfully.');
             })
@@ -89,11 +84,10 @@ tronSetupScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name); // Log the Hardhat network being used
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
 
         // Execute the migration function with the retrieved parameters
-        await setAccountantLZGasLimits(hre, accounts.mnemonic, accounts.path, environment)
+        await setAccountantLZGasLimits(hre, environment)
             .then(() => {
                 console.log('AcoountantLZ gasLimit setup completed successfully.');
             })
@@ -115,11 +109,10 @@ tronSetupScope
         console.log('Network:', hre.network.name); // Log the Hardhat network being used
 
         // Retrieve environment details using the helper function
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
 
         // Execute the migration function with the retrieved parameters
-        await syncExecutorParams(hre, accounts.mnemonic, accounts.path, environment)
+        await syncExecutorParams(hre, environment)
             .then(() => {
                 console.log('Executor parametrs syncronization completed completed successfully.');
             })

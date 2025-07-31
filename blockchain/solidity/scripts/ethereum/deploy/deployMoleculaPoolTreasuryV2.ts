@@ -19,7 +19,7 @@ export async function deployMoleculaPoolTreasuryV2(
         `${environment}/contracts_nitrogen.json`,
     );
 
-    const tokens: PoolData[] = [...config.TOKENS];
+    const tokens: PoolData[] = [...config.MOLECULA_POOL_TOKENS];
     if (contractsNitrogen.eth.mUSDe !== '') {
         tokens.push({ token: contractsNitrogen.eth.mUSDe as EVMAddress, n: 0 });
     }

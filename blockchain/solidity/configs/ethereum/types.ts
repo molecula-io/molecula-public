@@ -38,7 +38,8 @@ export type EthereumNetworkConfig = {
     INITIAL_USDT_SUPPLY: bigint;
     DAI_ADDRESS: EVMAddress;
 
-    TOKENS: PoolData[];
+    MOLECULA_POOL_TOKENS: PoolData[];
+    META_POOL_TOKENS: PoolData[];
     WHITE_LIST: string[];
 
     GUARDIAN_ADDRESS: EVMAddress;

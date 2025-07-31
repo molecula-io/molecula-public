@@ -186,32 +186,6 @@ export async function getMrEthConfig(
     return { config, account };
 }
 
-export async function getTronWeb(
-    mnemonic: string,
-    derivationPath: string,
-    network: EnvironmentType,
-) {
-    // get config
-    const config = getTronEnvironmentConfig(network);
-
-    // Create TronWeb instance
-    const tronWeb = new TronWeb({
-        fullHost: config.RPC_URL,
-    });
-
-    const accountInfo = tronWeb.fromMnemonic(mnemonic, derivationPath);
-
-    if (accountInfo instanceof Error) {
-        throw new Error('Invalid account information returned from fromMnemonic.');
-    }
-
-    const privateKey = accountInfo.privateKey.substring(2);
-
-    console.log('Deploy wallet address: ', accountInfo.address);
-
-    return { config, tronWeb, privateKey };
-}
-
 // If `target` does not have enough erc20Token tokens, then transfer them
 export async function increaseBalance(
     name: string,

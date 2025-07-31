@@ -3,6 +3,7 @@ import {
     evmAuthorizedAddresses,
     evmStaticTokenAddresses,
     staticPoolCurrenciesRetailTestnet,
+    staticPoolCurrenciesMetaETHTestnet,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -73,7 +74,9 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     INITIAL_USDT_SUPPLY: 100_000_000n,
 
     /** Pools Currencies config for retail testnet solutions. */
-    TOKENS: Object.values(staticPoolCurrenciesRetailTestnet),
+    MOLECULA_POOL_TOKENS: Object.values(staticPoolCurrenciesRetailTestnet),
+    /** Pools Currencies config for MetaETH testnet solution. */
+    META_POOL_TOKENS: Object.values(staticPoolCurrenciesMetaETHTestnet),
 
     /** Whitelist of address callable by MoleculaPoolFactory contract. */
     WHITE_LIST: [],

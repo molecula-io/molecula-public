@@ -1,4 +1,4 @@
-// Export typechain
+// Export typechain;
 
 export * from '../typechain';
 
@@ -24,6 +24,8 @@ export type {
     ICurveStableSwapFactoryNG,
     ICurveStableSwapNG,
     UsdtOFT,
+    TokenVault,
+    NativeTokenVault,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 const contractsNames = [
@@ -56,6 +58,9 @@ const contractsNames = [
     'UsdtOFT',
     'Aragon',
     'ReceiveULN',
+    'SendULN',
+    'TokenVault',
+    'NativeTokenVault',
 ] as const;
 
 export type ContractNameType = (typeof contractsNames)[number];

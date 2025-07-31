@@ -14,7 +14,7 @@ import {ISupplyManagerV2} from "../../contracts/coreV2/interfaces/ISupplyManager
 import {IStrategyFactory} from "../../contracts/solutions/mrETH/external/interfaces/IStrategyFactory.sol";
 import {Delegator} from "../../contracts/solutions/mrETH/Delegator.sol";
 import {SupplyManagerV2WithNative} from "../../contracts/coreV2/SupplyManagerV2WithNative.sol";
-import {RebaseTokenV2} from "../../contracts/coreV2/Tokens/RebaseTokenV2.sol";
+import {RewardBearingToken} from "../../contracts/coreV2/Tokens/RewardBearingToken.sol";
 import {MrEthAssetTokenVault} from "../../contracts/solutions/mrETH/TokenVault/MrEthAssetTokenVault.sol";
 import {MrEthNativeTokenVault} from "../../contracts/solutions/mrETH/TokenVault/MrEthNativeTokenVault.sol";
 import {IMoleculaPoolV2} from "../../contracts/coreV2/interfaces/IMoleculaPoolV2.sol";
@@ -70,9 +70,9 @@ contract MrEthSetup is Test {
     // Core V2 contracts
     ISupplyManagerV2 public supplyManagerV2;
     address public mrETH;
-    address public vaultWETH;
-    address payable public vaultETH;
-    address public vaultStETH;
+    address public wEthVault;
+    address payable public ethVault;
+    address public stEthVault;
 
     // Pool configuration
     IDepositManagerTypes.PoolData[] public poolDataArray;
@@ -128,8 +128,11 @@ contract MrEthSetup is Test {
         // After DepositManager deployment, the next contract will be SupplyManagerV2
         address supplyManagerFutureAddress = vm.computeCreateAddress(owner, transactionCount + 1);
 
-        // Predict RebaseTokenV2 address (nonce + 2) - after SupplyManagerV2
-        address rebaseERC20V2FutureAddress = vm.computeCreateAddress(owner, transactionCount + 2);
+        // Predict RewardBearingToken address (nonce + 2) - after SupplyManagerV2
+        address rewardBearingTokenFutureAddress = vm.computeCreateAddress(
+            owner,
+            transactionCount + 2
+        );
 
         // Deploy DepositManager with predicted SupplyManager address
         vm.startPrank(owner, owner);
@@ -149,7 +152,7 @@ contract MrEthSetup is Test {
         _setupInitialPools();
 
         // Deploy core V2 contracts with predicted addresses
-        _deployCoreV2Contracts(rebaseERC20V2FutureAddress);
+        _deployCoreV2Contracts(rewardBearingTokenFutureAddress);
 
         vm.stopPrank();
     }
@@ -190,30 +193,29 @@ contract MrEthSetup is Test {
     }
 
     /**
-     * @dev Deploy core V2 contracts (SupplyManagerV2, RebaseTokenV2, Token Vaults)
-     * @param rebaseERC20V2FutureAddress Predicted RebaseTokenV2 address
+     * @dev Deploy core V2 contracts (SupplyManagerV2, rewardBearingToken, Token Vaults)
+     * @param rewardBearingTokenFutureAddress Predicted RewardBearingToken address
      */
-    function _deployCoreV2Contracts(address rebaseERC20V2FutureAddress) internal {
-        // Deploy SupplyManagerV2 with predicted RebaseTokenV2 address
+    function _deployCoreV2Contracts(address rewardBearingTokenFutureAddress) internal {
+        // Deploy SupplyManagerV2 with predicted rewardBearingToken address
         supplyManagerV2 = new SupplyManagerV2WithNative(
             owner,
             owner,
             address(depositManager),
             APY_FORMATTER,
-            rebaseERC20V2FutureAddress, // Use predicted address
+            rewardBearingTokenFutureAddress, // Use predicted address
             VIRTUAL_OFFSET
         );
 
-        // Deploy RebaseTokenV2 (mrETH token)
-        RebaseTokenV2 rebaseTokenV2 = new RebaseTokenV2(
-            address(supplyManagerV2),
-            owner,
+        // Deploy RewardBearingToken (mrETH token)
+        RewardBearingToken rewardBearingToken = new RewardBearingToken(
             MRETH_TOKEN_NAME,
             MRETH_TOKEN_SYMBOL,
-            MRETH_TOKEN_DECIMALS,
+            owner,
+            address(supplyManagerV2),
             address(supplyManagerV2)
         );
-        mrETH = address(rebaseTokenV2);
+        mrETH = address(rewardBearingToken);
 
         // Verify that DepositManager's SupplyManagerV2 address matches the deployed one
         require(
@@ -229,7 +231,7 @@ contract MrEthSetup is Test {
             owner
         );
 
-        vaultWETH = address(tokenVaultWETH);
+        wEthVault = address(tokenVaultWETH);
         // Initialize WETH vault
         tokenVaultWETH.init(address(weth), MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
 
@@ -240,7 +242,7 @@ contract MrEthSetup is Test {
             address(supplyManagerV2),
             owner
         );
-        vaultStETH = address(tokenVaultStETH);
+        stEthVault = address(tokenVaultStETH);
 
         // Initialize stETH vault
         tokenVaultStETH.init(address(stEth), MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
@@ -252,7 +254,7 @@ contract MrEthSetup is Test {
             address(supplyManagerV2),
             owner
         );
-        vaultETH = payable(address(tokenVaultETH));
+        ethVault = payable(address(tokenVaultETH));
 
         // Initialize native ETH vault
         tokenVaultETH.init(NATIVE_TOKEN, MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
@@ -264,14 +266,14 @@ contract MrEthSetup is Test {
             bytes32 nativeTokenVaultCodeHash = address(tokenVaultETH).codehash;
 
             // Set code hashes for both vault types
-            rebaseTokenV2.setCodeHash(assetTokenVaultCodeHash, true);
-            rebaseTokenV2.setCodeHash(nativeTokenVaultCodeHash, true);
+            rewardBearingToken.setCodeHash(assetTokenVaultCodeHash, true);
+            rewardBearingToken.setCodeHash(nativeTokenVaultCodeHash, true);
         }
 
         // Register all vaults
-        rebaseTokenV2.addTokenVault(vaultWETH);
-        rebaseTokenV2.addTokenVault(vaultStETH);
-        rebaseTokenV2.addTokenVault(vaultETH);
+        rewardBearingToken.addTokenVault(wEthVault);
+        rewardBearingToken.addTokenVault(stEthVault);
+        rewardBearingToken.addTokenVault(ethVault);
 
         // Enable all vaults
         tokenVaultWETH.unpauseAll();

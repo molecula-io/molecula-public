@@ -2,8 +2,6 @@
 
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { TronWeb } from 'tronweb';
-
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import { getTronEnvironmentConfig } from './deployUtils';
@@ -41,20 +39,18 @@ export async function setOwner(
 
 export async function setTronOwner(
     hre: HardhatRuntimeEnvironment,
-    privateKey: string,
     network: EnvironmentType,
     contracts: { name: string; addr: string }[],
     newOwner: string,
 ) {
     const config = getTronEnvironmentConfig(network);
-    // Create TronWeb instance
-    const tronWeb = new TronWeb({
-        fullHost: config.RPC_URL,
-    });
 
-    tronWeb.setPrivateKey(privateKey);
+    // get owner
+    const initialOwner = hre.tronweb.defaultAddress.base58;
+    console.log('Initial owner:', initialOwner);
+
     console.log(`Setting owner ${config.OWNER} for the contracts:`);
-    const initialOwner = tronWeb.address.fromPrivateKey(privateKey);
+
     // eslint-disable-next-line no-restricted-syntax
     for (const contract of contracts) {
         // Get ABI
@@ -62,8 +58,8 @@ export async function setTronOwner(
             '@openzeppelin/contracts/access/Ownable.sol:Ownable',
         );
 
-        const ownableContract = tronWeb.contract(artifact.abi, contract.addr);
-        const currentOwner = tronWeb.address.fromHex(await ownableContract.owner().call());
+        const ownableContract = hre.tronweb.contract(artifact.abi, contract.addr);
+        const currentOwner = hre.tronweb.address.fromHex(await ownableContract.owner().call());
         if (currentOwner === newOwner) {
             console.log(
                 `\tContract ${contract.name} ${contract.addr} has already the owner. Skipped.`,

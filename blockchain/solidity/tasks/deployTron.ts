@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { scope } from 'hardhat/config';
 
-import type { HardhatNetworkHDAccountsConfig } from 'hardhat/types/config';
-
 import type { ContractsCarbon } from '@molecula-monorepo/blockchain.addresses';
 
 import { deployCarbon } from '../scripts/tron/deploy/deployCarbonTron';
@@ -26,7 +24,6 @@ tronMajorScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
 
         try {
@@ -35,7 +32,7 @@ tronMajorScope
             );
 
             // Execute deployment
-            const tron = await deployCarbon(hre, accounts.mnemonic, accounts.path, environment);
+            const tron = await deployCarbon(hre, environment);
 
             writeToFile(`${environment}/contracts_carbon.json`, {
                 eth: contractsCarbon.eth,
@@ -56,7 +53,6 @@ tronMajorScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
 
         try {
@@ -65,12 +61,7 @@ tronMajorScope
             );
 
             // Execute deployment
-            const tron = await migrateAccountantLZwithOracle(
-                hre,
-                accounts.mnemonic,
-                accounts.path,
-                environment,
-            );
+            const tron = await migrateAccountantLZwithOracle(hre, environment);
 
             writeToFile(`${environment}/contracts_carbon.json`, {
                 eth: contractsCarbon.eth,
@@ -88,17 +79,14 @@ tronMajorScope
 
 tronMajorScope
     .task('deployUsdtMock', 'Deploys USDT mock contract on Tron')
-    .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('\n TRON Deployment');
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
-        const environment = getEnvironment(hre, taskArgs.environment);
         try {
             // Execute deployment
-            await deployMockUSDT(hre, accounts.mnemonic, accounts.path, environment);
+            await deployMockUSDT(hre);
 
             console.log('Deployment USDT Mock completed successfully.');
         } catch (error) {
@@ -114,11 +102,10 @@ tronMajorScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
         try {
             // Execute deployment
-            await deployUsdtOFT(hre, accounts.mnemonic, accounts.path, environment);
+            await deployUsdtOFT(hre, environment);
 
             console.log('Deployment UsdtOFT mock completed successfully.');
         } catch (error) {
@@ -134,17 +121,11 @@ tronMajorScope
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
 
-        const accounts = hre.network.config.accounts as HardhatNetworkHDAccountsConfig;
         const environment = getEnvironment(hre, taskArgs.environment);
         try {
             const contractsExecutor = await readFromFile(`${environment}/contracts_executor.json`);
             // Execute deployment
-            const executor = await deployExecutor(
-                hre,
-                accounts.mnemonic,
-                accounts.path,
-                environment,
-            );
+            const executor = await deployExecutor(hre, environment);
             writeToFile(`${environment}/contracts_executor.json`, {
                 eth: contractsExecutor.eth,
                 tron: executor.tron,

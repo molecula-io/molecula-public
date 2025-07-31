@@ -10,12 +10,11 @@ import {IRebaseToken} from "./../../common/interfaces/IRebaseToken.sol";
 import {ISetterOracle} from "./../../common/interfaces/ISetterOracle.sol";
 import {LZMsgCodec} from "./../../common/layerzero/LZMsgCodec.sol";
 import {OptionsLZ, Ownable2Step, Ownable} from "./../../common/layerzero/OptionsLZ.sol";
-import {ZeroValueChecker} from "./../../common/ZeroValueChecker.sol";
 import {UsdtOFT, SendParam, OFTReceipt, MessagingFee} from "./../../solutions/Carbon/common/UsdtOFT.sol";
 
 /// @title AccountantLZ - Accountant contract for handling LayerZero-based cross-chain transactions.
 /// @notice This contract facilitates cross-chain USDT transactions using LayerZero and UsdtOFT.
-contract MockAccountantLZ is OApp, IAccountant, OptionsLZ, ZeroValueChecker {
+contract MockAccountantLZ is OApp, IAccountant, OptionsLZ {
     using SafeERC20 for IERC20;
 
     /// @dev LayerZero destination chain ID for cross-chain communication.

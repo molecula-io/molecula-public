@@ -98,6 +98,7 @@
         "./frontend/feature-flags-sync-service",
         "./middleware/packages/deposit-solutions",
         "./middleware/packages/evm-deposit-manager",
+        "./middleware/packages/evm-deposit-manager-v2",
         "./middleware/packages/evm-eip6963-adapter",
         "./middleware/packages/atoms-manager",
         "./middleware/packages/contracts",

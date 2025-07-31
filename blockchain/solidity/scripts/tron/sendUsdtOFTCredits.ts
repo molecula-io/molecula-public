@@ -1,4 +1,4 @@
-import { TronWeb } from 'tronweb';
+import { tronweb } from 'hardhat';
 
 import { abi as usdtOFT } from '../../artifacts/contracts/solutions/Carbon/common/UsdtOFT.sol/UsdtOFT.json';
 import { abi as usdtContract } from '../../artifacts/contracts/test/UsdtTron.sol/UsdtTron.json';
@@ -8,23 +8,8 @@ import { shastaConfig } from '../../configs/tron/shastaTyped';
 async function sendUSDTCreditsCrossChain() {
     const amountToSend = 1000e6; // Sending 1000 USDT cross-chain
 
-    // Create TronWeb instance
-    const tronWeb = new TronWeb({
-        fullHost: shastaConfig.RPC_URL,
-    });
-    // Get private key
-    const accountInfo = tronWeb.fromMnemonic(
-        process.env.TRON_SEED_PHRASE as string,
-        "m/44'/195'/0'/0/0",
-    );
-    if (accountInfo instanceof Error) {
-        throw new Error('Invalid account information returned from fromMnemonic.');
-    }
-    const privateKey = accountInfo.privateKey.substring(2);
-    tronWeb.setPrivateKey(privateKey);
-
-    const usdtOFTContract = tronWeb.contract(usdtOFT, shastaConfig.USDT_OFT);
-    const usdtTokenContract = tronWeb.contract(usdtContract, shastaConfig.USDT_ADDRESS);
+    const usdtOFTContract = tronweb.contract(usdtOFT, shastaConfig.USDT_OFT);
+    const usdtTokenContract = tronweb.contract(usdtContract, shastaConfig.USDT_ADDRESS);
 
     const quoteParams = [
         sepoliaConfig.LAYER_ZERO_ETHEREUM_EID.toString(), // dstEid
@@ -47,7 +32,7 @@ async function sendUSDTCreditsCrossChain() {
     const approveTx = await usdtTokenContract.methods
         .approve(shastaConfig.USDT_OFT, amountToSend)
         .send({
-            feeLimit: +tronWeb.toSun(100),
+            feeLimit: +tronweb.toSun(100),
         });
     console.log('Approval successful.');
     console.log('Transaction Hash:', approveTx);
@@ -55,7 +40,7 @@ async function sendUSDTCreditsCrossChain() {
     // Step 2: Depositing local liquidity
     // @ts-ignore
     const depositTx = await usdtOFTContract.methods.depositLocal(amountToSend).send({
-        feeLimit: +tronWeb.toSun(100),
+        feeLimit: +tronweb.toSun(100),
     });
 
     console.log('Deposit successful!');
@@ -74,7 +59,7 @@ async function sendUSDTCreditsCrossChain() {
 
     console.log('txresponse:', feeQuote);
     const nativeFee = feeQuote[0].nativeFee.toString();
-    console.log(`Fee required: ${tronWeb.fromSun(nativeFee)} TRX`);
+    console.log(`Fee required: ${tronweb.fromSun(nativeFee)} TRX`);
 
     // Step 3: Execute Cross-chain Transfer
     console.log('Sending cross-chain USDT...');
@@ -96,7 +81,7 @@ async function sendUSDTCreditsCrossChain() {
             ...feeQuote,
         )
         .send({
-            feeLimit: +tronWeb.toSun(100), // adjust as necessary
+            feeLimit: +tronweb.toSun(100), // adjust as necessary
             callValue: nativeFee, // LayerZero messaging fee in TRX
         });
 

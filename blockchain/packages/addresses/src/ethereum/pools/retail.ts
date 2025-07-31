@@ -40,7 +40,7 @@ export const staticPoolCurrenciesRetailTestnet = {
         token: evmStaticTokenAddresses.aEthDAI[EVMChainIDs.Sepolia],
         n: 0,
     },
-} satisfies { [token in PoolCurrency]?: PoolData };
+} satisfies { [token in ThirdPartyPoolCurrency]?: PoolData };
 
 /**
  * Pool Currencies addresses for Retail for Testnet.
@@ -132,7 +132,7 @@ export const staticPoolCurrenciesRetailMainnet = {
         token: evmStaticTokenAddresses.sUSDS[EVMChainIDs.Mainnet],
         n: 0,
     },
-} satisfies { [token in ThirdPartyPoolCurrency]: PoolData };
+} satisfies { [token in ThirdPartyPoolCurrency]?: PoolData };
 
 /**
  * Pool Currencies addresses for Retail for Mainnet (prod).
@@ -159,8 +159,17 @@ export const poolCurrenciesRetailMainnetBeta = {
 } satisfies { [token in PoolCurrency]?: PoolData };
 
 /**
- * A type annotation for ERC-20 tokens which can be used by Molecula Pool in Retail Mainnet.
+ * A type annotation for all ERC-20 tokens which can be used in MoleculaPool
+ * for Retail solution in Mainnet.
  */
 export type PoolsTokensRetailMainnet =
     | keyof typeof poolCurrenciesRetailMainnetProd
     | keyof typeof poolCurrenciesRetailMainnetBeta;
+
+/**
+ * A type annotation for third-party ERC-20 tokens which can be used in MoleculaPool
+ * for Retail solution in all networks.
+ */
+export type RetailThirdPartyPoolCurrency =
+    | keyof typeof staticPoolCurrenciesRetailMainnet
+    | keyof typeof staticPoolCurrenciesRetailTestnet;

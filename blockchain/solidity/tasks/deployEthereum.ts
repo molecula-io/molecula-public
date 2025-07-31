@@ -14,7 +14,7 @@ import {
 } from '../scripts/ethereum';
 import { deployNitrogenTokenVault } from '../scripts/ethereum/deploy/deployNitrogenTokenVault';
 import { deployRebaseTokenOwner } from '../scripts/ethereum/deploy/deployRebaseTokenOwner';
-import { deploywmUSDlmUSD } from '../scripts/ethereum/deploy/deploywmUSDlmUSD';
+import { deploylmUSD, deploywmUSD } from '../scripts/ethereum/deploy/deploywmUSD';
 import {
     getEnvironment,
     handleError,
@@ -129,7 +129,29 @@ ethereumMajorScope
     });
 
 ethereumMajorScope
-    .task('deploywmUSDlmUSD', 'Deploys wmUSD and lmUSD contracts')
+    .task('deploywmUSD', 'Deploys wmUSD contract')
+    .addParam('environment', 'Deployment environment')
+    .addParam('yieldDist', 'Yield distributor address')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+        console.log('Yield distributor address:', taskArgs.yieldDist);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        contractsNitrogen.eth.wmUSD = await deploywmUSD(hre, environment, {
+            mUSD: contractsNitrogen.eth.rebaseToken,
+            yieldDistributor: taskArgs.yieldDist,
+        });
+
+        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
+    });
+
+ethereumMajorScope
+    .task('deploylmUSD', 'Deploys lmUSD contract')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('Environment:', taskArgs.environment);
@@ -140,16 +162,12 @@ ethereumMajorScope
             `${environment}/contracts_nitrogen.json`,
         );
 
-        const contracts = await deploywmUSDlmUSD(
-            hre,
-            environment,
-            contractsNitrogen.eth.rebaseToken,
-        );
-        contractsNitrogen.eth.wmUSD = contracts.wmUSD;
-        contractsNitrogen.eth.lmUSD = contracts.lmUSD;
+        contractsNitrogen.eth.lmUSD = await deploylmUSD(hre, environment, {
+            mUSD: contractsNitrogen.eth.rebaseToken,
+            wmUSD: contractsNitrogen.eth.wmUSD,
+        });
 
         writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
-        console.log('Deployment and file write completed successfully.');
     });
 
 ethereumMajorScope

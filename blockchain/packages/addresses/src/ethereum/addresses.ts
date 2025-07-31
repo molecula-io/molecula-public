@@ -1,12 +1,18 @@
 import {
     DevnetContractsCarbon,
     DevnetContractsNitrogen,
+    DevnetContractsMetaEth,
     MainBetaContractsCarbon,
     MainBetaContractsNitrogen,
+    MainBetaContractsMetaEth,
     DevnetContractsEthena,
 } from '../../deploy';
 
-import { MainProdContractsCarbon, MainProdContractsNitrogen } from '../../deploy/mainnet/prod';
+import {
+    MainProdContractsCarbon,
+    MainProdContractsNitrogen,
+    MainProdContractsMetaEth,
+} from '../../deploy/mainnet/prod';
 
 import { EVMChainIDs } from './chains';
 
@@ -80,10 +86,23 @@ export const evmStaticTokenAddresses = {
         [EVMChainIDs.Mainnet]: '0xa3931d71877c0e7a3148cb7eb4463524fec27fbd',
         [EVMChainIDs.Sepolia]: undefined,
     },
+    ETH: {
+        // See: https://eips.ethereum.org/EIPS/eip-7528
+        [EVMChainIDs.Mainnet]: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+        [EVMChainIDs.Sepolia]: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    },
+    stETH: {
+        [EVMChainIDs.Mainnet]: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+        [EVMChainIDs.Sepolia]: '0x00c71b0fCadE911B2feeE9912DE4Fe19eB04ca56',
+    },
+    wETH: {
+        [EVMChainIDs.Mainnet]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        [EVMChainIDs.Sepolia]: '0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c',
+    },
 } as const;
 
 /**
- * Supported EVM token molecula addresses.
+ * Custom EVM tokens developed exclusively for MoleculaPool.
  */
 export const evmMoleculaTokenAddresses = {
     mUSDe: {
@@ -113,7 +132,9 @@ export const evmStaticContractAddresses = {
  * Supported EVM molecula contract addresses.
  */
 export const evmMoleculaContractAddresses = {
-    SupplyManager: {
+    // mUSD / Retail (Nitrogen)
+
+    RetailSupplyManager: {
         [EVMChainIDs.Mainnet]: {
             beta: MainBetaContractsNitrogen.eth.supplyManager as EVMAddress,
             prod: MainProdContractsNitrogen.eth.supplyManager as EVMAddress,
@@ -161,5 +182,43 @@ export const evmMoleculaContractAddresses = {
             prod: MainProdContractsCarbon.eth.agentLZ as EVMAddress,
         },
         [EVMChainIDs.Sepolia]: DevnetContractsCarbon.eth.agentLZ as EVMAddress,
+    },
+
+    // MetaETH
+
+    MetaETH: {
+        [EVMChainIDs.Mainnet]: {
+            beta: MainBetaContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
+        },
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
+    },
+    MetaETHSupplyManager: {
+        [EVMChainIDs.Mainnet]: {
+            beta: MainBetaContractsMetaEth.eth.supplyManagerV2 as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.supplyManagerV2 as EVMAddress,
+        },
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.supplyManagerV2 as EVMAddress,
+    },
+    MetaETHNativeTokenVault: {
+        [EVMChainIDs.Mainnet]: {
+            beta: MainBetaContractsMetaEth.eth.nativeTokenVault as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.nativeTokenVault as EVMAddress,
+        },
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.nativeTokenVault as EVMAddress,
+    },
+    MetaETHStETHTokenVault: {
+        [EVMChainIDs.Mainnet]: {
+            beta: MainBetaContractsMetaEth.eth.stETHVault as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.stETHVault as EVMAddress,
+        },
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.stETHVault as EVMAddress,
+    },
+    MetaETHWETHTokenVault: {
+        [EVMChainIDs.Mainnet]: {
+            beta: MainBetaContractsMetaEth.eth.wETHVault as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.wETHVault as EVMAddress,
+        },
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.wETHVault as EVMAddress,
     },
 } as const;

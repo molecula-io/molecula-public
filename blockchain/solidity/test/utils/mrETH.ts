@@ -70,7 +70,7 @@ export async function deployMrETh() {
         nonce: transactionCount + 3,
     });
 
-    const rebaseERC20V2FutureAddress = ethers.getCreateAddress({
+    const rewardBearingTokenFutureAddress = ethers.getCreateAddress({
         from: owner.address,
         nonce: transactionCount + 4,
     });
@@ -125,22 +125,21 @@ export async function deployMrETh() {
         owner,
         depositManager,
         4000,
-        rebaseERC20V2FutureAddress,
+        rewardBearingTokenFutureAddress,
         virtualOffset,
     );
     expect(supplyManagerV2).to.be.equal(supplyManagerFutureAddress);
 
-    // Deploy and initialize RebaseTokenV2
-    const RebaseTokenV2 = await ethers.getContractFactory('RebaseTokenV2');
-    const rebaseTokenV2 = await RebaseTokenV2.connect(owner).deploy(
-        supplyManagerV2,
+    // Deploy and initialize RewardBearingToken
+    const RewardBearingToken = await ethers.getContractFactory('RewardBearingToken');
+    const rewardBearingToken = await RewardBearingToken.connect(owner).deploy(
+        ethMrEthMainnetBetaConfig.MRETH_TOKEN_NAME,
+        ethMrEthMainnetBetaConfig.MRETH_TOKEN_SYMBOL,
         owner,
-        'Test Molecula Rebase Token V2',
-        'TMRTV2',
-        18,
+        supplyManagerV2,
         supplyManagerV2,
     );
-    expect(rebaseTokenV2).to.be.equal(rebaseERC20V2FutureAddress);
+    expect(rewardBearingToken).to.be.equal(rewardBearingTokenFutureAddress);
 
     const defaultOperator = ethMrEthMainnetBetaConfig.EIGENLAYER_OPERATOR;
 
@@ -174,28 +173,28 @@ export async function deployMrETh() {
     const TokenVault = await ethers.getContractFactory('MrEthAssetTokenVault');
 
     // Deploy and initialize WETH token vault
-    const tokenVaultWETH = await TokenVault.connect(owner).deploy(
+    const wEthVault = await TokenVault.connect(owner).deploy(
         owner,
-        rebaseTokenV2,
+        rewardBearingToken,
         supplyManagerV2,
         owner!.address,
     );
 
-    await tokenVaultWETH.init(
+    await wEthVault.init(
         WETH,
         10n ** 6n, // Minimum deposit value
         10n ** 18n, // Minimum redeem shares
     );
 
     // Deploy and initialize stETH token vault
-    const tokenVaultStETH = await TokenVault.connect(owner).deploy(
+    const stEthVault = await TokenVault.connect(owner).deploy(
         owner,
-        rebaseTokenV2,
+        rewardBearingToken,
         supplyManagerV2,
         owner!.address,
     );
 
-    await tokenVaultStETH.init(
+    await stEthVault.init(
         stETH,
         10n ** 6n, // Minimum deposit value
         10n ** 18n, // Minimum redeem shares
@@ -203,36 +202,36 @@ export async function deployMrETh() {
 
     // Deploy and initialize native token vault
     const NativeTokenVault = await ethers.getContractFactory('MrEthNativeTokenVault');
-    const nativeTokenVault = await NativeTokenVault.deploy(
+    const nativeVault = await NativeTokenVault.deploy(
         owner!.address,
-        rebaseTokenV2,
+        rewardBearingToken,
         supplyManagerV2,
         owner!.address,
     );
 
-    await nativeTokenVault.init(
+    await nativeVault.init(
         NATIVE_TOKEN,
         10n ** 6n, // Minimum deposit assets
         10n ** 18n, // Minimum redeem shares
     );
 
     // Add token vaults to whitelist
-    const codeHash = keccak256((await tokenVaultWETH.getDeployedCode())!);
-    await rebaseTokenV2.setCodeHash(codeHash, true);
+    const codeHash = keccak256((await wEthVault.getDeployedCode())!);
+    await rewardBearingToken.setCodeHash(codeHash, true);
 
-    await rebaseTokenV2.addTokenVault(tokenVaultWETH);
-    await rebaseTokenV2.addTokenVault(tokenVaultStETH);
+    await rewardBearingToken.addTokenVault(wEthVault);
+    await rewardBearingToken.addTokenVault(stEthVault);
 
-    const codeHash2 = keccak256((await nativeTokenVault.getDeployedCode())!);
-    await rebaseTokenV2.setCodeHash(codeHash2, true);
-    await rebaseTokenV2.addTokenVault(nativeTokenVault);
-    await nativeTokenVault.unpauseRequestDeposit();
-    await nativeTokenVault.unpauseRequestRedeem();
+    const codeHash2 = keccak256((await nativeVault.getDeployedCode())!);
+    await rewardBearingToken.setCodeHash(codeHash2, true);
+    await rewardBearingToken.addTokenVault(nativeVault);
+    await nativeVault.unpauseRequestDeposit();
+    await nativeVault.unpauseRequestRedeem();
 
     // Test token vault addition revert case
     const tokenVaultCWETH_V3 = await TokenVault.connect(owner).deploy(
         owner,
-        rebaseTokenV2,
+        rewardBearingToken,
         supplyManagerV2,
         owner!.address,
     );
@@ -243,7 +242,7 @@ export async function deployMrETh() {
         10n ** 18n, // Minimum redeem shares
     );
 
-    await expect(rebaseTokenV2.addTokenVault(tokenVaultCWETH_V3)).to.be.reverted;
+    await expect(rewardBearingToken.addTokenVault(tokenVaultCWETH_V3)).to.be.reverted;
 
     // Get default delegator
     const defaultDelegatorAddress = await depositManager.chooseDelegatorForDeposit();
@@ -251,15 +250,15 @@ export async function deployMrETh() {
     // Get default withdrawal credentials and approve tokens
     const defaultWithdrawalCredentials =
         await depositManager.getWithdrawalCredentials(defaultDelegatorAddress);
-    await WETH.approve(tokenVaultWETH, ethers.MaxUint256);
-    await WETH.connect(user0).approve(tokenVaultWETH, ethers.MaxUint256);
+    await WETH.approve(wEthVault, ethers.MaxUint256);
+    await WETH.connect(user0).approve(wEthVault, ethers.MaxUint256);
 
-    await stETH.approve(tokenVaultStETH, ethers.MaxUint256);
-    await stETH.connect(user0).approve(tokenVaultStETH, ethers.MaxUint256);
+    await stETH.approve(stEthVault, ethers.MaxUint256);
+    await stETH.connect(user0).approve(stEthVault, ethers.MaxUint256);
 
     // Unpause token vaults
-    await tokenVaultWETH.unpauseAll();
-    await tokenVaultStETH.unpauseAll();
+    await wEthVault.unpauseAll();
+    await stEthVault.unpauseAll();
 
     await expect(
         depositManager.initialize(0, [
@@ -294,10 +293,10 @@ export async function deployMrETh() {
     return {
         depositManager,
         supplyManagerV2,
-        rebaseTokenV2,
-        tokenVaultWETH,
-        tokenVaultStETH,
-        nativeTokenVault,
+        rewardBearingToken,
+        wEthVault,
+        stEthVault,
+        nativeVault,
         owner,
         user0,
         user1,

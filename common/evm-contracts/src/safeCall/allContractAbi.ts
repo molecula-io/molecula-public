@@ -21,6 +21,8 @@ import {
     MoleculaPoolTreasuryV2__factory,
     SupplyManagerV2__factory,
     IMoleculaPoolV2__factory,
+    TokenVault__factory,
+    NativeTokenVault__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -34,6 +36,7 @@ import {
     SFrxUSD__factory,
     Aragon__factory,
     ReceiveULN__factory,
+    SendULN__factory,
 } from '../../typechain';
 
 import type { ContractNameType } from '../types';
@@ -68,6 +71,9 @@ const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     UsdtOFT: UsdtOFT__factory.abi,
     Aragon: Aragon__factory.abi,
     ReceiveULN: ReceiveULN__factory.abi,
+    SendULN: SendULN__factory.abi,
+    TokenVault: TokenVault__factory.abi,
+    NativeTokenVault: NativeTokenVault__factory.abi,
 } as const;
 
 export const allContractAbi: JsonFragment[][] = Object.values(

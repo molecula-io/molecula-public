@@ -12,6 +12,10 @@ yarn-error.log
 .env
 .env.test
 .env.production
+.env.fireblocks.testnet
+
+# Fireblocks
+/configs/fireblocks/fireblocks_secret.key
 
 # Hardhat files
 /cache

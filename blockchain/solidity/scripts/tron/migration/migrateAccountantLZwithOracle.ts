@@ -6,25 +6,23 @@ import {
     type EnvironmentType,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { getTronWeb, readFromFile } from '../../utils/deployUtils';
+import { getTronEnvironmentConfig, readFromFile } from '../../utils/deployUtils';
 import { deployAccountantLZ, setUnderlyingToken } from '../deploy/deployAccountantLZ';
 
 import { deployOracle, setAutorizedUpdater } from '../deploy/deployOracle';
 
 export async function migrateAccountantLZwithOracle(
     hre: HardhatRuntimeEnvironment,
-    mnemonic: string,
-    path: string,
     environment: EnvironmentType,
 ) {
-    const { config, tronWeb, privateKey } = await getTronWeb(mnemonic, path, environment);
+    const config = getTronEnvironmentConfig(environment);
 
     const contractsCarbon: ContractsCarbon = await readFromFile(
         `${environment}/contracts_carbon.json`,
     );
 
     // get initial owner
-    const initialOwner = tronWeb.address.fromPrivateKey(privateKey);
+    const initialOwner = hre.tronweb.defaultAddress.base58;
 
     if (!initialOwner) {
         throw new Error('Invalid private key');
@@ -35,8 +33,6 @@ export async function migrateAccountantLZwithOracle(
     // deploy Oracle
     const oracle = await deployOracle(
         hre,
-        tronWeb,
-        privateKey,
         config.MUSD_TOKEN_INITIAL_SUPPLY,
         config.MUSD_TOKEN_INITIAL_SUPPLY,
         initialOwner,
@@ -45,7 +41,7 @@ export async function migrateAccountantLZwithOracle(
     console.log('Oracle deployed:', oracle);
 
     // deploy Accountant LZ
-    const accountantLZ = await deployAccountantLZ(hre, tronWeb, privateKey, {
+    const accountantLZ = await deployAccountantLZ(hre, {
         initialOwner,
         authorizedLZConfiguratorAddress: config.ACCOUNTANT_AUTHORIZED_LZ_CONFIGURATOR, // update after lz configuration
         endpoint: config.LAYER_ZERO_TRON_ENDPOINT,
@@ -57,11 +53,11 @@ export async function migrateAccountantLZwithOracle(
     console.log('Accountant LZ deployed:', accountantLZ);
 
     // Set Accountant to Oracle
-    await setAutorizedUpdater(tronWeb, privateKey, oracle, accountantLZ);
+    await setAutorizedUpdater(hre.tronweb, oracle, accountantLZ);
     console.log('Oracle accountant set:', accountantLZ);
 
     // set vault for swap driver
-    await setUnderlyingToken(tronWeb, privateKey, {
+    await setUnderlyingToken(hre.tronweb, {
         accountantLZ,
         moleculaToken: contractsCarbon.tron.rebaseToken,
     });
@@ -70,13 +66,13 @@ export async function migrateAccountantLZwithOracle(
     console.log('Contracts deployed:');
     console.log('Oracle:', oracle);
     console.log('accountantLZ:', accountantLZ);
-    console.log('accountantLZHex:', tronWeb.address.toHex(accountantLZ).slice(2));
+    console.log('accountantLZHex:', hre.tronweb.address.toHex(accountantLZ).slice(2));
 
     return {
         tron: {
             oracle,
             accountantLZ,
         },
-        accountantLZHex: tronWeb.address.toHex(accountantLZ).slice(2),
+        accountantLZHex: hre.tronweb.address.toHex(accountantLZ).slice(2),
     };
 }

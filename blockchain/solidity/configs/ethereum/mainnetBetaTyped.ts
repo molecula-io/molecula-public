@@ -3,6 +3,7 @@ import {
     EVMChainIDs,
     evmStaticTokenAddresses,
     staticPoolCurrenciesRetailMainnet,
+    staticPoolCurrenciesMetaETHMainnet,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -75,7 +76,9 @@ export const ethMainnetBetaConfig: EthereumNetworkConfig = {
     INITIAL_USDT_SUPPLY: 10_000_000n,
 
     /** Pools Currencies config for retail solutions. */
-    TOKENS: Object.values(staticPoolCurrenciesRetailMainnet),
+    MOLECULA_POOL_TOKENS: Object.values(staticPoolCurrenciesRetailMainnet),
+    /** Pools Currencies config for MetaETH solution. */
+    META_POOL_TOKENS: Object.values(staticPoolCurrenciesMetaETHMainnet),
 
     /** Default whitelist of addresses callable by MoleculaPoolFactory contract. */
     WHITE_LIST: [
