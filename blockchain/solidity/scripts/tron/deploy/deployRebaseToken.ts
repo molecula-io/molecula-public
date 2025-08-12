@@ -23,7 +23,7 @@ export async function deployRebaseToken(
 
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
-            feeLimit: 2000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
+            feeLimit: 2_000_000_000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
             // @ts-ignore (probably wrong type annotation)
             abi: artifact.abi,
             bytecode: artifact.bytecode,

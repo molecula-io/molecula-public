@@ -55,6 +55,15 @@ export async function deployMrETh() {
     const DelegatorImplementation = await ethers.getContractFactory('Delegator');
     const delegatorImplementation = await DelegatorImplementation.deploy();
 
+    // Deploy Molecula Buffer
+    const MoleculaBuffer = await ethers.getContractFactory('MoleculaBuffer');
+    const moleculaBuffer = await MoleculaBuffer.deploy(
+        ethMrEthMainnetBetaConfig.MOLECULA_BUFFER_NAME,
+        ethMrEthMainnetBetaConfig.MOLECULA_BUFFER_SYMBOL,
+        owner.address,
+        ethMrEthMainnetBetaConfig.WETH_ADDRESS,
+    );
+
     // Deploy mock rewards coordinator
     const RewardsCoordinator = await ethers.getContractFactory('MockRewardsCoordinator');
     const rewardsCoordinator = await RewardsCoordinator.connect(owner!).deploy();
@@ -90,7 +99,7 @@ export async function deployMrETh() {
     );
 
     await expect(
-        depositManager.initialize(10_001n, [
+        depositManager.initialize(moleculaBuffer, 10_001n, [
             {
                 pool: aavePool,
                 newPoolData: {
@@ -105,7 +114,7 @@ export async function deployMrETh() {
     ).to.be.rejectedWith('EInvalidPercentage()');
 
     // Initialize DepositManager with Aave pool
-    await depositManager.initialize(0, [
+    await depositManager.initialize(moleculaBuffer, 0, [
         {
             pool: aavePool,
             newPoolData: {
@@ -261,7 +270,7 @@ export async function deployMrETh() {
     await stEthVault.unpauseAll();
 
     await expect(
-        depositManager.initialize(0, [
+        depositManager.initialize(moleculaBuffer, 0, [
             {
                 pool: aavePool,
                 newPoolData: {
@@ -276,7 +285,7 @@ export async function deployMrETh() {
     ).to.be.rejectedWith('InvalidInitialization()');
 
     await expect(
-        depositManager.connect(user0).initialize(0, [
+        depositManager.connect(user0).initialize(moleculaBuffer, 0, [
             {
                 pool: aavePool,
                 newPoolData: {
@@ -310,5 +319,6 @@ export async function deployMrETh() {
         compoundBufferLib,
         defaultOperator,
         defaultWithdrawalCredentials,
+        moleculaBuffer,
     };
 }

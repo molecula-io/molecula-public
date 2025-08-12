@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://etherscan.io/address/0x63baa2ebec4f7ea0bbbb0cb0ff75c088526400a8#code
+ * Link to the original contract:
+ * https://etherscan.io/address/0x63baa2ebec4f7ea0bbbb0cb0ff75c088526400a8#code
  */
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;

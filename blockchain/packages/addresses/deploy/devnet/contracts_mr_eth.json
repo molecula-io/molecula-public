@@ -6,7 +6,8 @@
         "ethVault": "0x69143bf0939d3f679ba1DAd497CBA7fb9C6651B3",
         "stEthVault": "0x35067A34FE903057A0d429c8522cA1545f17Dd65",
         "depositManager": "0x430Cb31DC674908b3a749Cc40100723d5B28A9A7",
-        "delegatorImplementation": "0x13104671661a62666F59E4d37EAE3BD1C122E004"
+        "delegatorImplementation": "0x13104671661a62666F59E4d37EAE3BD1C122E004",
+        "moleculaBuffer": ""
     },
     "holesky": {
         "supplyManagerV2": "0xDB3bbBe531aeD6FABaE34a234751BC87B75a729A",
@@ -15,6 +16,17 @@
         "ethVault": "0xa1e43221E418299C8519b70Eb9eDBF8F35651FDD",
         "stEthVault": "0xc39f843DBd512eBB0F74f65D56FfB8c3274C57E5",
         "depositManager": "0x06cAf67D1ACAe5A7125eD31D2Dce985f9D1A52Be",
-        "delegatorImplementation": "0x7B9A91CE89B5a198501be538B4AB605AE8aff76D"
+        "delegatorImplementation": "0x7B9A91CE89B5a198501be538B4AB605AE8aff76D",
+        "moleculaBuffer": ""
+    },
+    "hoodi": {
+        "supplyManagerV2": "0xFFe879a6Bf157cDD67a8DFd778eb64158e4A6f98",
+        "mrETH": "0x9a2E5F0C0168b90E1954a10b0dd5BF7d866bd19b",
+        "wEthVault": "0xBa7F33400dAE2621AAf900Ec38d2f0D389809b59",
+        "ethVault": "0xa906f4088A45730c7b1223a5f8B7A18973169F0E",
+        "stEthVault": "0xd69640D043A1aB8D6CaD4e43733c2bA67D64069F",
+        "depositManager": "0x8032982e9cf3dEd51afe621A6Fcbe23D8aAbaBDd",
+        "delegatorImplementation": "0x162aF3cCa3E593d677fEAE51721353bE3873bCB2",
+        "moleculaBuffer": "0x576da78902436F4964e5d6Dc8AF933Ba2ce04E06"
     }
 }

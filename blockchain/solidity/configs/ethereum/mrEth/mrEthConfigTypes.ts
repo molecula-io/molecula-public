@@ -25,5 +25,8 @@ export type mrEthNetworkConfig = {
     MRETH_TOKEN_MIN_DEPOSIT: bigint;
     MRETH_TOKEN_MIN_REDEEM: bigint;
 
+    MOLECULA_BUFFER_NAME: string;
+    MOLECULA_BUFFER_SYMBOL: string;
+
     APY_FORMATTER: number;
 };

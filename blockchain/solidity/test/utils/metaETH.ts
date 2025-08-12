@@ -55,6 +55,8 @@ export async function deployMetaEthWithoutInit() {
         supplyManagerFutureAddress,
         [testSeqno],
         guardian,
+        ethers.ZeroAddress,
+        poolKeeper,
     );
 
     // deploy supply manager
@@ -81,6 +83,13 @@ export async function deployMetaEthWithoutInit() {
     );
     expect(await rebaseTokenV2.getAddress()).to.be.equal(rebaseTokenFutureAddress);
 
+    const WrappedRebaseToken = await ethers.getContractFactory('WmetaETH');
+    const wmetaETH = await WrappedRebaseToken.connect(poolOwner).deploy(
+        'Wrapped metaETH',
+        'wmetaETH',
+        rebaseTokenV2,
+    );
+
     // deploy TokenVaults
     const MetaERC20TokenVault = await ethers.getContractFactory('MetaERC20TokenVault');
     const stETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
@@ -88,14 +97,12 @@ export async function deployMetaEthWithoutInit() {
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
     const wETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');
@@ -127,6 +134,7 @@ export async function deployMetaEthWithoutInit() {
         poolKeeper,
         testSeqno,
         randAccount,
+        wmetaETH,
     };
 }
 

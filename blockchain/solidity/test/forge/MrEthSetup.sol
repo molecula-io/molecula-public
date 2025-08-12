@@ -25,6 +25,7 @@ import {ICompoundAssetDataProvider} from "../../contracts/solutions/mrETH/extern
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {MockRewardsCoordinator} from "../../contracts/mock/mrETH/MockRewardsCoordinator.sol";
 import {IAaveV3Pool} from "../../contracts/solutions/mrETH/external/interfaces/IAaveV3Pool.sol";
+import {MoleculaBuffer} from "../../contracts/solutions/mrETH/MoleculaBuffer.sol";
 
 interface ILido is IERC20 {
     function getTotalPooledEther() external view returns (uint256);
@@ -36,9 +37,9 @@ interface ILido is IERC20 {
 }
 
 /**
- * @title MrETH Setup Contract
- * @notice Setup contract for mrETH system testing
- * @dev Provides deployment and initialization functions for mrETH contracts
+ * @title MrETH Setup Contract.
+ * @notice Setup contract for mrETH system testing.
+ * @dev Provides deployment and initialization functions for the mrETH contracts.
  */
 contract MrEthSetup is Test {
     // Constants from mrETH.ts
@@ -51,15 +52,16 @@ contract MrEthSetup is Test {
 
     ISignatureUtilsMixinTypes.SignatureWithExpiry public approverSignatureAndExpiry;
 
-    // Admin wallets
+    // Admin wallets.
     address public owner;
     address public authorizedStaker;
     address public guardian;
 
-    // Main contracts
+    // Main contracts.
     DepositManager public depositManager;
     MockRewardsCoordinator public rewardsCoordinator;
     Delegator public delegatorImplementation;
+    MoleculaBuffer public moleculaBuffer;
 
     IWETH public constant weth = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     IStrategyFactory public constant strategyFactory =
@@ -67,21 +69,21 @@ contract MrEthSetup is Test {
     IDelegationManager public constant delegationManager =
         IDelegationManager(0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A);
 
-    // Core V2 contracts
+    // Core V2 contracts.
     ISupplyManagerV2 public supplyManagerV2;
     address public mrETH;
     address public wEthVault;
     address payable public ethVault;
     address public stEthVault;
 
-    // Pool configuration
+    // Pool configuration.
     IDepositManagerTypes.PoolData[] public poolDataArray;
     IDepositManagerTypes.SetPoolData[] public setPoolData;
     address[] public operatorsArray;
     address[] public poolsArray;
     bool[] public authArray;
 
-    // Strategy and operator addresses (from mainnet config)
+    // Strategy and operator addresses from the Mainnet config.
     IStrategy public constant stEthStrategy = IStrategy(0x93c4b944D05dfe6df7645A86cd2206016c51564D);
     address public constant defaultOperator = 0x5ACCC90436492F24E6aF278569691e2c942A676d;
     address public constant aavePool = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
@@ -97,7 +99,7 @@ contract MrEthSetup is Test {
     uint128 constant MRETH_TOKEN_MIN_DEPOSIT = 1e15;
     uint128 constant MRETH_TOKEN_MIN_REDEEM = 1e15;
     /**
-     * @dev Setup function that deploys all necessary contracts
+     * @dev Setup function that deploys all necessary contracts.
      */
     function setUp() public virtual {
         // Setup admin addresses
@@ -109,38 +111,41 @@ contract MrEthSetup is Test {
         vm.deal(authorizedStaker, 10000 ether);
         vm.deal(guardian, 10000 ether);
 
-        // Initialize approver signature and expiry
+        // Initialize approver signature and expiry.
         approverSignatureAndExpiry = ISignatureUtilsMixinTypes.SignatureWithExpiry({
             signature: "0x0",
             expiry: 0
         });
 
-        // Deploy delegator implementation
+        // Deploy delegator implementation.
         delegatorImplementation = new Delegator();
 
-        // Deploy MockRewardsCoordinator
+        // Deploy `MockRewardsCoordinator`.
         rewardsCoordinator = new MockRewardsCoordinator();
 
-        // Calculate future contract addresses for proper initialization
+        // Deploy `MoleculaBuffer`.
+        moleculaBuffer = new MoleculaBuffer("Molecula Buffer Token", "mwETH", owner, address(weth));
+
+        // Calculate future contract addresses for proper initialization.
         uint256 transactionCount = vm.getNonce(owner);
 
-        // Calculate the correct addresses based on the deployment order
-        // After DepositManager deployment, the next contract will be SupplyManagerV2
+        // Calculate the correct addresses based on the deployment order.
+        // After `DepositManager` deployment, the next contract will be `SupplyManagerV2`.
         address supplyManagerFutureAddress = vm.computeCreateAddress(owner, transactionCount + 1);
 
-        // Predict RewardBearingToken address (nonce + 2) - after SupplyManagerV2
+        // Predict `RewardBearingToken` address `(nonce + 2)` after `SupplyManagerV2`.
         address rewardBearingTokenFutureAddress = vm.computeCreateAddress(
             owner,
             transactionCount + 2
         );
 
-        // Deploy DepositManager with predicted SupplyManager address
+        // Deploy `DepositManager` with predicted `SupplyManager` address.
         vm.startPrank(owner, owner);
         depositManager = new DepositManager(
             owner,
             authorizedStaker,
             guardian,
-            supplyManagerFutureAddress, // Use predicted address
+            supplyManagerFutureAddress, // Use the predicted address.
             address(weth),
             address(strategyFactory),
             address(delegationManager),
@@ -148,17 +153,17 @@ contract MrEthSetup is Test {
             address(delegatorImplementation)
         );
 
-        // Setup initial pool configuration
+        // Setup the initial Pool configuration.
         _setupInitialPools();
 
-        // Deploy core V2 contracts with predicted addresses
+        // Deploy core V2 contracts with predicted addresses.
         _deployCoreV2Contracts(rewardBearingTokenFutureAddress);
 
         vm.stopPrank();
     }
 
     /**
-     * @dev Setup initial pool configuration for testing
+     * @dev Setup the initial Pool configuration for testing.
      */
     function _setupInitialPools() internal {
         // Clear storage arrays
@@ -169,7 +174,7 @@ contract MrEthSetup is Test {
         poolsArray.push(aavePool);
         authArray.push(true);
 
-        // Pool 1: AAVE pool (portion[0])
+        // Pool 1: AAVE Pool `(portion[0])`.
         setPoolData.push(
             IDepositManagerTypes.SetPoolData({
                 pool: poolsArray[0],
@@ -183,9 +188,10 @@ contract MrEthSetup is Test {
             })
         );
 
-        // Initialize DepositManager with AAVE pool
+        // Initialize `DepositManager` with the AAVE Pool.
         depositManager.initialize(
-            0, // buffer percentage
+            address(moleculaBuffer),
+            0, // Buffer percentage.
             setPoolData
         );
 
@@ -193,21 +199,21 @@ contract MrEthSetup is Test {
     }
 
     /**
-     * @dev Deploy core V2 contracts (SupplyManagerV2, rewardBearingToken, Token Vaults)
-     * @param rewardBearingTokenFutureAddress Predicted RewardBearingToken address
+     * @dev Deploy core V2 contracts: `SupplyManagerV2`, `rewardBearingToken`, and `TokenVaults`.
+     * @param rewardBearingTokenFutureAddress Predicted `RewardBearingToken` address.
      */
     function _deployCoreV2Contracts(address rewardBearingTokenFutureAddress) internal {
-        // Deploy SupplyManagerV2 with predicted rewardBearingToken address
+        // Deploy `SupplyManagerV2` with the predicted `rewardBearingToken` address.
         supplyManagerV2 = new SupplyManagerV2WithNative(
             owner,
             owner,
             address(depositManager),
             APY_FORMATTER,
-            rewardBearingTokenFutureAddress, // Use predicted address
+            rewardBearingTokenFutureAddress, // Use the predicted address.
             VIRTUAL_OFFSET
         );
 
-        // Deploy RewardBearingToken (mrETH token)
+        // Deploy the `RewardBearingToken`, mrETH token.
         RewardBearingToken rewardBearingToken = new RewardBearingToken(
             MRETH_TOKEN_NAME,
             MRETH_TOKEN_SYMBOL,
@@ -217,13 +223,13 @@ contract MrEthSetup is Test {
         );
         mrETH = address(rewardBearingToken);
 
-        // Verify that DepositManager's SupplyManagerV2 address matches the deployed one
+        // Verify that `DepositManager`'s `SupplyManagerV2` address matches the deployed one.
         require(
             depositManager.SUPPLY_MANAGER() == address(supplyManagerV2),
             "DepositManager's SupplyManagerV2 address does not match deployed address"
         );
 
-        // Deploy WETH token vault
+        // Deploy the WETH token Vault.
         MrEthAssetTokenVault tokenVaultWETH = new MrEthAssetTokenVault(
             owner,
             mrETH,
@@ -232,10 +238,10 @@ contract MrEthSetup is Test {
         );
 
         wEthVault = address(tokenVaultWETH);
-        // Initialize WETH vault
+        // Initialize the WETH Vault.
         tokenVaultWETH.init(address(weth), MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
 
-        // Deploy stETH token vault
+        // Deploy the stETH token Vault.
         MrEthAssetTokenVault tokenVaultStETH = new MrEthAssetTokenVault(
             owner,
             mrETH,
@@ -244,10 +250,10 @@ contract MrEthSetup is Test {
         );
         stEthVault = address(tokenVaultStETH);
 
-        // Initialize stETH vault
+        // Initialize the stETH Vault.
         tokenVaultStETH.init(address(stEth), MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
 
-        // Deploy native ETH token vault
+        // Deploy the native ETH token Vault.
         MrEthNativeTokenVault tokenVaultETH = new MrEthNativeTokenVault(
             owner,
             mrETH,
@@ -256,36 +262,36 @@ contract MrEthSetup is Test {
         );
         ethVault = payable(address(tokenVaultETH));
 
-        // Initialize native ETH vault
+        // Initialize the native ETH Vault.
         tokenVaultETH.init(NATIVE_TOKEN, MRETH_TOKEN_MIN_DEPOSIT, MRETH_TOKEN_MIN_REDEEM);
 
-        // Add token vaults to whitelist and register them
-        // Get deployed code hash for asset token vaults (WETH and stETH use the same type)
+        // Add token Vaults to the whitelist and register them.
+        // Get the deployed code hash for the token Vaults. WETH and stETH use the same type.
         {
             bytes32 assetTokenVaultCodeHash = address(tokenVaultWETH).codehash;
             bytes32 nativeTokenVaultCodeHash = address(tokenVaultETH).codehash;
 
-            // Set code hashes for both vault types
+            // Set code hashes for both Vault types.
             rewardBearingToken.setCodeHash(assetTokenVaultCodeHash, true);
             rewardBearingToken.setCodeHash(nativeTokenVaultCodeHash, true);
         }
 
-        // Register all vaults
+        // Register all Vaults.
         rewardBearingToken.addTokenVault(wEthVault);
         rewardBearingToken.addTokenVault(stEthVault);
         rewardBearingToken.addTokenVault(ethVault);
 
-        // Enable all vaults
+        // Enable all Vaults.
         tokenVaultWETH.unpauseAll();
         tokenVaultStETH.unpauseAll();
         tokenVaultETH.unpauseAll();
     }
 
     /**
-     * @dev Setup complete mrETH system with operator and strategies
+     * @dev Setup the complete mrETH system with an operator and strategies.
      */
     function setupCompleteMrEthSystem() public {
-        // Clear operatorsArray
+        // Clear `operatorsArray`.
         delete operatorsArray;
 
         operatorsArray.push(defaultOperator);
@@ -294,17 +300,17 @@ contract MrEthSetup is Test {
 
         newDelegationPortions[0] = 10_000;
 
-        // Add default operator
+        // Add the default operator.
         depositManager.addOperator(
             defaultOperator,
             APPROVER_SALT,
             approverSignatureAndExpiry,
             APPROVER_SALT,
             operatorsArray,
-            newDelegationPortions // 100% allocation
+            newDelegationPortions // 100% allocation.
         );
 
-        // Add stETH strategy
+        // Add the stETH strategy.
         address[] memory strategies = new address[](1);
         IStrategy[] memory strategyAddresses = new IStrategy[](1);
         IStrategyLib[] memory strategyLibraries = new IStrategyLib[](1);
@@ -317,12 +323,12 @@ contract MrEthSetup is Test {
     }
 
     /**
-     * @dev Generates a deposit root
-     * @param pubkey The public key of the deposit
-     * @param signature The signature of the deposit
-     * @param withdrawal_credentials The withdrawal credentials of the deposit
-     * @param _amountIn The amount of the deposit
-     * @return The deposit root
+     * @dev Generates a deposit root.
+     * @param pubkey Deposit's public key.
+     * @param signature Deposit's signature.
+     * @param withdrawal_credentials Deposit's withdrawal credentials.
+     * @param _amountIn Deposit amount.
+     * @return Deposit root.
      */
     function generateDepositRoot(
         bytes memory pubkey,
@@ -335,9 +341,9 @@ contract MrEthSetup is Test {
 
         bytes32 pubkey_root = sha256(abi.encodePacked(pubkey, bytes16(0)));
 
-        // Extract first 64 bytes of signature
+        // Extract the first 64 bytes of the signature.
         bytes memory firstChunk = extractBytes(signature, 0, 64);
-        // Extract remaining bytes of signature
+        // Extract the remaining bytes of the signature.
         bytes memory secondChunk = extractBytes(signature, 64, signature.length - 64);
 
         bytes32 signature_root = sha256(
@@ -356,11 +362,11 @@ contract MrEthSetup is Test {
     }
 
     /**
-     * @dev Extracts a portion of a bytes array
-     * @param data The bytes array to extract from
-     * @param startIndex The starting index of the portion
-     * @param length The length of the portion
-     * @return result The extracted portion
+     * @dev Extracts a portion of the bytes array.
+     * @param data Bytes array to extract from.
+     * @param startIndex Starting index of the portion.
+     * @param length Portion's length.
+     * @return result Extracted portion.
      */
     function extractBytes(
         bytes memory data,
@@ -378,9 +384,9 @@ contract MrEthSetup is Test {
     }
 
     /**
-     * @dev Converts a uint64 value to little endian bytes
-     * @param value The uint64 value to convert
-     * @return ret The little endian bytes representation of the value
+     * @dev Converts a uint64 value to little endian bytes.
+     * @param value Uint64 value to convert.
+     * @return ret Little endian bytes representation of the value.
      */
     function to_little_endian_64(uint64 value) internal pure returns (bytes memory ret) {
         ret = new bytes(8);

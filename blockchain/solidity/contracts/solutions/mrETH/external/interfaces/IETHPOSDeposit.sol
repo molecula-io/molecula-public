@@ -8,7 +8,8 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┗┛━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
- * Link to original contract https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IETHPOSDeposit.sol
+ * Link to the original contract:
+ * https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IETHPOSDeposit.sol
  */
 
 // SPDX-License-Identifier: CC0-1.0

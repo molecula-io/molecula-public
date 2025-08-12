@@ -39,6 +39,8 @@ export async function deployCoreV2WithoutInit() {
         supplyManagerFutureAddress,
         [],
         guardian,
+        ethers.ZeroAddress,
+        poolKeeper,
     );
 
     // deploy supply manager
@@ -72,14 +74,12 @@ export async function deployCoreV2WithoutInit() {
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
     const usdeVault = await TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');

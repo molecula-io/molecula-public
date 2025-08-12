@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IDelegationManager.sol
+ * Link to the original contract:
+ * https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IDelegationManager.sol
  */
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;

@@ -1,4 +1,15 @@
 {
     "extends": "@molecula-monorepo/tsconfig-shared",
-    "include": ["**/*.ts", "**/*.tsx", "**/*.json"]
+    "include": ["**/*.ts", "**/*.tsx", "**/*.json"],
+    "exclude": [
+        "backend",
+        "backend-nest",
+        "blockchain",
+        "common",
+        "configs",
+        "frontend",
+        "middleware",
+        "tests",
+        "ui-tests"
+    ]
 }

@@ -57,6 +57,10 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @param newBufferPercentage New buffer percentage value.
     event BufferPercentageChanged(uint16 indexed newBufferPercentage);
 
+    /// @dev Emitted when the Molecula Buffer address is changed.
+    /// @param newMoleculaBuffer New Molecula Buffer address.
+    event MoleculaBufferChanged(address indexed newMoleculaBuffer);
+
     /// @dev Emitted when the delegator implementation address is changed.
     /// @param newDelegatorImplementation New delegator implementation address.
     event DelegatorImplementationChanged(address indexed newDelegatorImplementation);
@@ -135,12 +139,20 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /// @dev Error: Expected pool length is incorrect.
     error EIncorrectExpectedPoolLength();
 
+    /// @dev Error: Molecula Buffer has balance.
+    error EMoleculaBufferHasBalance();
+
     /**
      * @dev Initialize function.
+     * @param moleculaBuffer_ Molecula Buffer contract's address.
      * @param bufferPercent_ Percentage from the TVL to be stored in the Pools.
      * @param setPoolData_ Array of SetPoolData structs.
      */
-    function initialize(uint16 bufferPercent_, SetPoolData[] calldata setPoolData_) external;
+    function initialize(
+        address moleculaBuffer_,
+        uint16 bufferPercent_,
+        SetPoolData[] calldata setPoolData_
+    ) external;
 
     /**
      * @dev Process a deposit into the EigenLayer.
@@ -268,8 +280,12 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
     /**
      * @dev Calculates the total buffered supply including the yield gained with the increased balances of LP tokens.
      * @return bufferedTvl Total ETH supply in buffer.
+     * @return bufferedTvls Array of the ETH supply in each Pool.
      */
-    function totalBufferedSupply() external view returns (uint256 bufferedTvl);
+    function totalBufferedSupply()
+        external
+        view
+        returns (uint256 bufferedTvl, uint256[] memory bufferedTvls);
 
     /**
      * @dev Calculates the available amount of WETHto deposit into the pools.
@@ -369,6 +385,12 @@ interface IDepositManager is IMoleculaPoolV2WithNativeToken, IDepositManagerType
      * @param newBufferPercentage New `bufferPercentage` number.
      */
     function setBufferPercentage(uint16 newBufferPercentage) external;
+
+    /**
+     * @dev Setter for the Molecula Buffer address.
+     * @param newMoleculaBuffer New Molecula Buffer address.
+     */
+    function setMoleculaBuffer(address newMoleculaBuffer) external;
 
     /**
      * @dev Setter for the Delegator contract implementation address.

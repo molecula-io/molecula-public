@@ -9,6 +9,7 @@ import { TronWeb } from 'tronweb';
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import {
+    hoodiMrEthConfig,
     holeskyMrEthConfig,
     ethMainnetBetaConfig,
     ethMrEthMainnetBetaConfig,
@@ -134,6 +135,8 @@ export function getMrEthEnvironmentConfig(network: EnvironmentType, networkName:
                     return sepoliaMrEthConfig;
                 case 'holesky':
                     return holeskyMrEthConfig;
+                case 'hoodi':
+                    return hoodiMrEthConfig;
                 default:
                     throw new Error('Unsupported networkName type!');
             }

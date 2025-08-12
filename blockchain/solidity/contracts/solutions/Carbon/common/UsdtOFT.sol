@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://etherscan.io/address/0x811ed79dB9D34E83BDB73DF6c3e07961Cfb0D5c0#code
+ * Link to the original contract:
+ * https://etherscan.io/address/0x811ed79dB9D34E83BDB73DF6c3e07961Cfb0D5c0#code
  */
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;

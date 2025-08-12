@@ -276,13 +276,13 @@ describe('Test mrETH DepositManager', () => {
 
             // First deposit and verify equal distribution
             await wEthVault.requestDeposit(val, owner, owner);
-            expectEqual(await aWETH.balanceOf(depositManager), val / 2n);
-            expectEqual(await cWETHv3.balanceOf(depositManager), val / 2n);
+            expectEqual(await aWETH.balanceOf(depositManager), val);
+            expectEqual(await cWETHv3.balanceOf(depositManager), 0n);
 
             // Second deposit
             await wEthVault.requestDeposit(val, owner, owner);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val);
-            expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(val);
+            expectEqual(await cWETHv3.balanceOf(depositManager), val);
 
             // Verify shares and assets
             let userShares = await rewardBearingToken.sharesOf(owner);
@@ -298,15 +298,15 @@ describe('Test mrETH DepositManager', () => {
 
             // Large deposit to prepare for staking
             await wEthVault.requestDeposit(val * 30n, owner, owner);
-            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 16n);
-            expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 16n);
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThanOrEqual(val * 31n);
+            expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThanOrEqual(val);
 
             // Perform staking operation
             await depositManager.stakeNative(val * 32n, pubkey, signature, depositDataRoot);
 
             // Verify final balances after staking
-            expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(val * 16n);
-            expect(await cWETHv3.balanceOf(depositManager)).to.be.lessThan(val * 16n);
+            expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(val);
+            expect(await cWETHv3.balanceOf(depositManager)).to.be.lessThan(val);
             expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(0n);
             expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(0n);
             userShares = await rewardBearingToken.sharesOf(owner);
@@ -390,8 +390,11 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThan(val * 3n);
 
             // Perform deposit and verify equal distribution
-            await wEthVault.requestDeposit(2n * val, owner, owner);
+            await wEthVault.requestDeposit(val, owner, owner);
             expectEqual(await aWETH.balanceOf(depositManager), val);
+            expectEqual(await cWETHv3.balanceOf(depositManager), 0n);
+            await wEthVault.requestDeposit(val, owner, owner);
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val);
             expectEqual(await cWETHv3.balanceOf(depositManager), val);
 
             const setPoolData2 = [
@@ -501,9 +504,14 @@ describe('Test mrETH DepositManager', () => {
             expect(await WETH.balanceOf(owner)).to.be.greaterThanOrEqual(val * 64n);
 
             // Perform large deposit
-            await wEthVault.requestDeposit(val * 64n, owner, owner);
-            expectEqual(await aWETH.balanceOf(depositManager), (val * 64n) / 2n);
-            expectEqual(await cWETHv3.balanceOf(depositManager), (val * 64n) / 2n);
+            await wEthVault.requestDeposit(val * 32n, owner, owner);
+            expectEqual(await aWETH.balanceOf(depositManager), val * 32n);
+            expectEqual(await cWETHv3.balanceOf(depositManager), 0n);
+
+            // Perform large deposit
+            await wEthVault.requestDeposit(val * 32n, owner, owner);
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val * 32n);
+            expectEqual(await cWETHv3.balanceOf(depositManager), val * 32n);
 
             // Simulate time passage (2 years)
             await network.provider.send('evm_increaseTime', [years(2)]);
@@ -592,15 +600,18 @@ describe('Test mrETH DepositManager', () => {
             await depositManager.setPools(setPoolData1, 2);
 
             // Test deposit value of 1 WETH
-            const val = 64n * 10n ** 18n;
+            const val = 10n ** 18n;
 
             // Verify initial balance
-            expect(await WETH.balanceOf(owner)).to.be.greaterThanOrEqual(val);
+            expect(await WETH.balanceOf(owner)).to.be.greaterThanOrEqual(val * 10n);
 
-            // Perform large deposit
-            await wEthVault.requestDeposit(val, owner, owner);
-            expectEqual(await aWETH.balanceOf(depositManager), (val * 30n) / 100n); // 30%
-            expectEqual(await cWETHv3.balanceOf(depositManager), (val * 70n) / 100n); // 70%
+            await wEthVault.requestDeposit(val * 3n, owner, owner);
+            expectEqual(await aWETH.balanceOf(depositManager), val * 3n);
+            expectEqual(await cWETHv3.balanceOf(depositManager), 0n);
+
+            await wEthVault.requestDeposit(val * 7n, owner, owner);
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(val * 3n);
+            expectEqual(await cWETHv3.balanceOf(depositManager), val * 7n);
 
             // Simulate time passage (2 years)
             await network.provider.send('evm_increaseTime', [years(2)]);
@@ -916,7 +927,9 @@ describe('Test mrETH DepositManager', () => {
             expect(await depositManager.totalSupply()).to.be.greaterThan(
                 val * 32n + mockRewardsAmount,
             );
-            expect(await depositManager.totalBufferedSupply()).to.be.greaterThan(mockRewardsAmount);
+            expect((await depositManager.totalBufferedSupply()).bufferedTvl).to.be.greaterThan(
+                mockRewardsAmount,
+            );
         });
 
         it('Should successfully update yield for stETH', async () => {
@@ -1462,6 +1475,166 @@ describe('Test mrETH DepositManager', () => {
             expect(availableDataAfterSetup.availableAmounts.length).to.be.equal(2);
             expect(availableDataAfterSetup.availableAmounts[0]).to.be.equal(ethers.MaxUint256);
             expect(availableDataAfterSetup.availableAmounts[1]).to.be.greaterThanOrEqual(0n);
+        });
+
+        it('Should successfully deposit and withdraw from pool with reached limit, for one pool', async () => {
+            const {
+                depositManager,
+                owner,
+                nativeVault,
+                WETH,
+                defaultWithdrawalCredentials,
+                moleculaBuffer,
+            } = await loadFixture(deployMrETh);
+
+            // 014 966 325 018 190 411n
+            let balanceToReachLimit = (await depositManager.getAvailableAmountToDeposit())
+                .totalAvailableAmount;
+            expect(balanceToReachLimit).to.be.greaterThan(0n);
+
+            // Prepare an impersonated signer to work as a faucet in the test
+            const whaleSigner = await ethers.getImpersonatedSigner(
+                '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+            );
+
+            await whaleSigner.sendTransaction({
+                to: owner,
+                value: balanceToReachLimit,
+            });
+
+            await nativeVault.deposit(balanceToReachLimit, owner, { value: balanceToReachLimit });
+
+            balanceToReachLimit = (await depositManager.getAvailableAmountToDeposit())
+                .totalAvailableAmount;
+            expect(balanceToReachLimit).to.be.greaterThan(0n);
+
+            await nativeVault.deposit(balanceToReachLimit, owner, { value: balanceToReachLimit });
+            balanceToReachLimit = (await depositManager.getAvailableAmountToDeposit())
+                .totalAvailableAmount;
+
+            expect(balanceToReachLimit).to.be.equal(0n);
+
+            expect(await WETH.balanceOf(moleculaBuffer)).to.be.greaterThan(0n);
+
+            // Generate validator keys
+            const { pubkey, signature, depositDataRoot } = createValidatorKeys(
+                defaultWithdrawalCredentials,
+            );
+
+            // Successful staking.
+            await depositManager.stakeNative(32n * 10n ** 18n, pubkey, signature, depositDataRoot);
+
+            // after staking, the balance of WETH in the buffer should be 0.
+            // staking amount within the buffer should be withdrawn from the molecula buffer first.
+            expect(await WETH.balanceOf(moleculaBuffer)).to.be.equal(0n);
+        });
+
+        it('Should successfully deposit and withdraw from pool with reached limit, for two pools', async () => {
+            const {
+                depositManager,
+                owner,
+                nativeVault,
+                WETH,
+                aWETH,
+                cWETHv3,
+                aavePool,
+                aaveBufferLib,
+                compoundBufferLib,
+                defaultWithdrawalCredentials,
+                moleculaBuffer,
+            } = await loadFixture(deployMrETh);
+
+            // Configure two pools with equal portions (50% each)
+            const setPoolData = [
+                {
+                    pool: aavePool,
+                    newPoolData: {
+                        poolToken: aWETH,
+                        poolLib: aaveBufferLib,
+                        poolPortion: 5_000n, // 50%
+                        poolId: 0,
+                    },
+                    auth: true,
+                },
+                {
+                    pool: cWETHv3,
+                    newPoolData: {
+                        poolToken: cWETHv3,
+                        poolLib: compoundBufferLib,
+                        poolPortion: 5_000n, // 50%
+                        poolId: 1,
+                    },
+                    auth: true,
+                },
+            ];
+
+            // Set up pools in the deposit manager
+            await depositManager.setPools(setPoolData, 2);
+
+            // 014 966 325 018 190 411n
+            let balanceToReachLimitAave =
+                (await depositManager.getAvailableAmountToDeposit()).availableAmounts[0] ?? 0n;
+            expect(balanceToReachLimitAave).to.be.greaterThan(0n);
+
+            // Prepare an impersonated signer to work as a faucet in the test
+            const whaleSigner = await ethers.getImpersonatedSigner(
+                '0x00000000219ab540356cBB839Cbe05303d7705Fa',
+            );
+
+            await whaleSigner.sendTransaction({
+                to: owner,
+                value: balanceToReachLimitAave,
+            });
+
+            await nativeVault.deposit(balanceToReachLimitAave, owner, {
+                value: balanceToReachLimitAave,
+            });
+
+            balanceToReachLimitAave =
+                (await depositManager.getAvailableAmountToDeposit()).availableAmounts[0] ?? 0n;
+            expect(balanceToReachLimitAave).to.be.greaterThan(0n);
+
+            const aWETHBalance = await aWETH.balanceOf(depositManager);
+            expect(aWETHBalance).to.be.greaterThan(0n);
+
+            const cWETHv3Balance = await cWETHv3.balanceOf(depositManager);
+            expect(cWETHv3Balance).to.be.greaterThan(0n);
+
+            await nativeVault.deposit(balanceToReachLimitAave, owner, {
+                value: balanceToReachLimitAave,
+            });
+            balanceToReachLimitAave =
+                (await depositManager.getAvailableAmountToDeposit()).availableAmounts[0] ?? 0n;
+
+            expect(balanceToReachLimitAave).to.be.equal(0n);
+            expect(await WETH.balanceOf(moleculaBuffer)).to.be.equal(0n);
+
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(aWETHBalance);
+
+            // all balanceToReachLimitAave amount of deposit should be placed into cWETHv3 pool.
+            expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(
+                cWETHv3Balance + balanceToReachLimitAave,
+            );
+
+            // Generate validator keys
+            const { pubkey, signature, depositDataRoot } = createValidatorKeys(
+                defaultWithdrawalCredentials,
+            );
+
+            // Successful staking unpause
+            await depositManager.stakeNative(32n * 10n ** 18n, pubkey, signature, depositDataRoot);
+
+            // after staking, the balance of aWETH should be less than before staking
+            expect(await aWETH.balanceOf(depositManager)).to.be.lessThan(aWETHBalance);
+
+            // after staking, the balance of aWETH should be greater than before staking minus the amount of staked ETH
+            expect(await aWETH.balanceOf(depositManager)).to.be.greaterThan(
+                aWETHBalance - 32n * 10n ** 18n,
+            );
+
+            // after staking, the balance of cWETHv3 should be greater than before staking
+            // all stake balance should be withdrawn from aWETH pool.
+            expect(await cWETHv3.balanceOf(depositManager)).to.be.greaterThan(cWETHv3Balance);
         });
     });
 });

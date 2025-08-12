@@ -40,6 +40,16 @@ interface IBaseTokenVault {
         uint128 indexed newMinRedeemShares
     );
 
+    /// @dev Emitted when the Vault is initialized with its initial parameters.
+    /// @param asset Address of the token asset for this Vault.
+    /// @param minDepositAssets_ Initial minimum deposit amount in assets.
+    /// @param minRedeemShares_ Initial minimum redemption amount in shares.
+    event VaultInitialized(
+        address indexed asset,
+        uint128 indexed minDepositAssets_,
+        uint128 indexed minRedeemShares_
+    );
+
     // ============ Errors ============
 
     /// @dev Error thrown when the deposit value is less than the minimum one.

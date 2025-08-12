@@ -214,6 +214,10 @@ interface ISupplyManagerV2 {
     /// @dev Returns the Molecula Pool address.
     /// @return pool Molecula Pool address.
     function getMoleculaPool() external view returns (address pool);
+
+    /// @dev Returns the total supply of the Pool (TVL). Reverts if some asset is depegged.
+    /// @return pool Total pool supply.
+    function getValidatedTotalPoolSupply() external view returns (uint256 pool);
 }
 
 /// @title ISupplyManagerV2WithNative.

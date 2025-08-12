@@ -13,5 +13,6 @@ export type { EthereumNetworkConfig } from './types';
 export { ethMrEthMainnetBetaConfig } from './mrEth/ethMrEthMainnetBetaConfig';
 export { ethMrEthMainnetProdConfig } from './mrEth/ethMrEthMainnetProdConfig';
 export { holeskyMrEthConfig } from './mrEth/holeskyMrEthConfig';
+export { hoodiMrEthConfig } from './mrEth/hoodiMrEthConfig';
 export type { mrEthNetworkConfig } from './mrEth/mrEthConfigTypes';
 export { sepoliaMrEthConfig } from './mrEth/sepoliaMrEthConfig';

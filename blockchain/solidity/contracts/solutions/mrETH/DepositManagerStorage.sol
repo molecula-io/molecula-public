@@ -24,6 +24,9 @@ abstract contract DepositManagerStorage is IDepositManagerTypes {
     /// @dev EigenLayer strategy factory contract's address.
     IStrategyFactory public immutable STRATEGY_FACTORY;
 
+    /// @dev Molecula buffer for unlimited deposits.
+    address public moleculaBuffer;
+
     /// @dev Authorized Staker and Restaker in EigenLayer.
     address public authorizedStaker;
 

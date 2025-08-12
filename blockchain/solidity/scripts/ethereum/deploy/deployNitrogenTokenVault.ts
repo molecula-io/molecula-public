@@ -1,3 +1,4 @@
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
@@ -5,17 +6,18 @@ import {
     type EnvironmentType,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT } from '../../../configs/ethereum';
-import { getConfig, readFromFile } from '../../utils/deployUtils';
+import { DEPLOY_GAS_LIMIT, type EthereumNetworkConfig } from '../../../configs/ethereum';
+import { readFromFile } from '../../utils/deployUtils';
 
 export async function deployNitrogenTokenVault(
     hre: HardhatRuntimeEnvironment,
     environment: EnvironmentType,
+    config: EthereumNetworkConfig,
+    account: HardhatEthersSigner,
     token: string,
     minDeposit: bigint,
     minRedeem: bigint,
 ) {
-    const { config, account } = await getConfig(hre, environment);
     const contractsNitrogen: ContractsNitrogen = await readFromFile(
         `${environment}/contracts_nitrogen.json`,
     );

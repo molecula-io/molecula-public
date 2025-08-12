@@ -1,4 +1,5 @@
 /* eslint-disable camelcase, max-lines, no-await-in-loop, no-restricted-syntax, no-bitwise, no-plusplus */
+import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 
@@ -24,10 +25,15 @@ describe('Test Price Checker for TokenVault', () => {
         const usdcFeed = '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6';
         const PriceChecker = await ethers.getContractFactory('PriceChecker');
         const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            USDC,
-            usdcFeed,
-            false,
-            0,
+            [
+                {
+                    asset: USDC,
+                    priceFeed: usdcFeed,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(1),
+                },
+            ],
             poolOwner,
         );
         await usdcVault.setPriceChecker(priceChecker);
@@ -38,7 +44,7 @@ describe('Test Price Checker for TokenVault', () => {
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('EAssetPriceNotCloseToExpected(');
 
-        await priceChecker.setPriceDeviationBps((5 * 10_000) / 100); // 5%
+        await priceChecker.changePriceDeviationBps(USDC, (5 * 10_000) / 100); // 5%
         await usdcVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
@@ -60,10 +66,15 @@ describe('Test Price Checker for TokenVault', () => {
         const sUSDeFeed = '0xFF3BC18cCBd5999CE63E788A1c250a88626aD099';
         const PriceChecker = await ethers.getContractFactory('PriceChecker');
         const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            sUSDe,
-            sUSDeFeed,
-            true,
-            0,
+            [
+                {
+                    asset: sUSDe,
+                    priceFeed: sUSDeFeed,
+                    isPriceFeedEIP4626: true,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(1),
+                },
+            ],
             poolOwner,
         );
         await susdeVault.setPriceChecker(priceChecker);
@@ -74,14 +85,14 @@ describe('Test Price Checker for TokenVault', () => {
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('EAssetPriceNotCloseToExpected(');
 
-        await priceChecker.setPriceDeviationBps((5 * 10_000) / 100); // 5%
+        await priceChecker.changePriceDeviationBps(sUSDe, (5 * 10_000) / 100); // 5%
         await susdeVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
     });
 
     it('Check price for sUSDe using USDe', async () => {
-        const { susdeVault, sUSDe, USDe, user0, poolOwner } = await loadFixture(
+        const { susdeVault, sUSDe, user0, poolOwner } = await loadFixture(
             deployNitrogenWithTokenVault,
         );
 
@@ -93,13 +104,18 @@ describe('Test Price Checker for TokenVault', () => {
         await sUSDe.connect(user0).approve(susdeVault, depositValue);
 
         // USDe / USD
-        const sUSDeFeed = '0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961';
+        const USDeFeed = '0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961';
         const PriceChecker = await ethers.getContractFactory('PriceChecker');
         const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            USDe,
-            sUSDeFeed,
-            false,
-            0,
+            [
+                {
+                    asset: sUSDe,
+                    priceFeed: USDeFeed,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(1),
+                },
+            ],
             poolOwner,
         );
         await susdeVault.setPriceChecker(priceChecker);
@@ -110,7 +126,7 @@ describe('Test Price Checker for TokenVault', () => {
                 ['deposit(uint256,address,address)'](depositValue, user0, user0),
         ).to.be.rejectedWith('EAssetPriceNotCloseToExpected(');
 
-        await priceChecker.setPriceDeviationBps((5 * 10_000) / 100); // 5%
+        await priceChecker.changePriceDeviationBps(sUSDe, (5 * 10_000) / 100); // 5%
         await susdeVault
             .connect(user0)
             ['deposit(uint256,address,address)'](depositValue, user0, user0);
@@ -123,54 +139,68 @@ describe('Test Price Checker for TokenVault', () => {
         const feed = '0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961';
         const PriceChecker = await ethers.getContractFactory('PriceChecker');
         const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            USDC,
-            feed,
-            false,
-            0,
+            [
+                {
+                    asset: USDC,
+                    priceFeed: feed,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(1),
+                },
+            ],
             poolOwner,
         );
         const priceChecker4626 = await PriceChecker.connect(poolOwner).deploy(
-            sUSDe,
-            feed,
-            true,
-            0,
+            [
+                {
+                    asset: sUSDe,
+                    priceFeed: feed,
+                    isPriceFeedEIP4626: true,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(1),
+                },
+            ],
             poolOwner,
         );
 
         await expect(usdcVault.setPriceChecker(priceChecker4626)).to.be.rejectedWith(
-            'EAssetMismatch()',
+            'NoPriceChecker(',
         );
 
-        await priceChecker.setPriceDeviationBps(1);
-        await expect(priceChecker.setPriceDeviationBps(1)).to.be.rejectedWith('ESameValue()');
-        await expect(priceChecker.setPriceDeviationBps(10_001)).to.be.rejectedWith(
+        await priceChecker.changePriceDeviationBps(USDC, 1);
+        await expect(priceChecker.changePriceDeviationBps(USDC, 1)).to.be.rejectedWith(
+            'ESameValue()',
+        );
+        await expect(priceChecker.changePriceDeviationBps(USDC, 10_001)).to.be.rejectedWith(
             'EInvalidPercentage()',
         );
 
-        await expect(priceChecker.setPriceFeed(ethers.ZeroAddress, false)).to.be.rejectedWith(
-            'EZeroAddress()',
+        await expect(
+            priceChecker.setPriceFeed(USDC, ethers.ZeroAddress, false, 500, days(1)),
+        ).to.be.rejectedWith('EBadFeedConfig()');
+
+        await expect(priceChecker.setPriceFeed(USDC, feed, false, 1, days(1))).to.be.rejectedWith(
+            'ESameValue()',
         );
 
-        await expect(priceChecker.setPriceFeed(feed, false)).to.be.rejectedWith('ESameValue()');
+        await priceChecker.removePriceFeed(USDC);
+        await expect(priceChecker.removePriceFeed(USDC)).to.be.rejectedWith('NoPriceChecker(');
 
-        await priceChecker.removePriceFeed();
-        await expect(priceChecker.removePriceFeed()).to.be.rejectedWith('ESameValue()');
-
-        await priceChecker.setPriceFeedAndBps(feed, false, 1);
-        await expect(priceChecker.setPriceFeedAndBps(feed, false, 1)).to.be.rejectedWith(
+        await priceChecker.setPriceFeed(USDC, feed, false, 1, days(1));
+        await expect(priceChecker.setPriceFeed(USDC, feed, false, 1, days(1))).to.be.rejectedWith(
             'ESameValue()',
         );
 
         await expect(
-            priceChecker.connect(user0).setPriceFeedAndBps(user0, true, 1),
+            priceChecker.connect(user0).setPriceFeed(USDC, user0, true, 1, days(1)),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
-        await expect(priceChecker.connect(user0).setPriceDeviationBps(1)).to.be.rejectedWith(
-            'OwnableUnauthorizedAccount(',
-        );
-        await expect(priceChecker.connect(user0).setPriceFeed(user0, true)).to.be.rejectedWith(
-            'OwnableUnauthorizedAccount(',
-        );
-        await expect(priceChecker.connect(user0).removePriceFeed()).to.be.rejectedWith(
+        await expect(
+            priceChecker.connect(user0).changePriceDeviationBps(USDC, 1),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(
+            priceChecker.connect(user0).setPriceFeed(USDC, user0, true, 1, days(1)),
+        ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
+        await expect(priceChecker.connect(user0).removePriceFeed(USDC)).to.be.rejectedWith(
             'OwnableUnauthorizedAccount(',
         );
     });

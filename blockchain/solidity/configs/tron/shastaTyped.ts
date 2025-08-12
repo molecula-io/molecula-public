@@ -53,4 +53,8 @@ export const shastaConfig: TronNetworkConfig = {
     MUSD_TOKEN_MIN_DEPOSIT: 1000000n,
     MUSD_TOKEN_MIN_REDEEM: 1_000_000_000_000_000_000n,
     MUSD_TOKEN_INITIAL_SUPPLY: 10_000_000_000_000_000_000n,
+
+    // Wrapped token info
+    WMUSD_NAME: 'wmUSD  retail test',
+    WMUSD_SYMBOL: 'wmUSDretS',
 };

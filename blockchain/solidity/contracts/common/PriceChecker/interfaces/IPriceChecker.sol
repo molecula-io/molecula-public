@@ -2,24 +2,84 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
-/// @notice IPriceChecker
+/// @title IPriceChecker
+/// @notice Interface for checking asset prices against expected values and managing price feed configurations.
+/// @dev Provides the functionality to set up price feeds, configure deviation thresholds, and validate asset prices.
 interface IPriceChecker {
+    // ============ Structs ============
+
+    /// @dev Configuration struct for price checkers.
+    /// @param asset Address of the asset being checked.
+    /// @param priceFeed Address of the price feed contract.
+    /// @param isPriceFeedEIP4626 `True` if the price feed follows the EIP-4626 standard.
+    /// @param priceDeviationBps Maximum allowed price deviation in basis points (`1/10_000`).
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    struct Checkers {
+        address asset;
+        address priceFeed;
+        bool isPriceFeedEIP4626;
+        uint16 priceDeviationBps;
+        uint32 stalenessThreshold;
+    }
+
+    /// @dev Information about the price checker configuration for a specific asset.
+    /// @param priceFeed Address of the price feed contract used for price checks.
+    /// @param isPriceFeedEIP4626 `True` if the price feed follows the EIP-4626 standard.
+    /// @param priceDeviationBps Maximum allowed price deviation in basis points (`1/10_000`).
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    /// @param isPresent Boolean flag indicating if the configuration is present.
+    struct CheckerInfo {
+        address priceFeed;
+        bool isPriceFeedEIP4626;
+        uint16 priceDeviationBps;
+        uint32 stalenessThreshold;
+        bool isPresent;
+    }
+
     // ============ Events ============
 
     /// @dev Emitted when the price feed is configured.
+    /// @param asset Asset's address.
     /// @param feed Price feed's address.
     /// @param is4626 `True` if it is an EIP-4626 asset feed.
-    event PriceFeedConfigured(address indexed feed, bool indexed is4626);
+    /// @param bps Price deviation value in basis points (e.g., 500 = 5%).
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    event PriceFeedConfigured(
+        address indexed asset,
+        address indexed feed,
+        bool indexed is4626,
+        uint16 bps,
+        uint32 stalenessThreshold
+    );
 
     /// @dev Emitted when the price feed is removed.
-    event PriceFeedRemoved();
+    /// @param asset Asset's address.
+    event PriceFeedRemoved(address indexed asset);
 
-    /// @dev Emitted when the price deviation is set.
+    /// @dev Emitted when the price deviation is changed.
+    /// @param asset Asset's address.
     /// @param oldBps Previous allowed price deviation in basis points.
     /// @param bps New allowed price deviation in basis points.
-    event PriceDeviationBpsSet(uint16 indexed oldBps, uint16 indexed bps);
+    event PriceDeviationBpsChanged(
+        address indexed asset,
+        uint16 indexed oldBps,
+        uint16 indexed bps
+    );
+
+    /// @dev Emitted when the price staleness threshold is changed.
+    /// @param asset Asset's address.
+    /// @param oldThreshold Previous staleness threshold.
+    /// @param newThreshold New staleness threshold.
+    event StalenessThresholdChanged(
+        address indexed asset,
+        uint32 indexed oldThreshold,
+        uint32 indexed newThreshold
+    );
 
     // ============ Errors ============
+
+    /// @dev Error: Chainlink price feed data is stale — exceeded staleness threshold.
+    error EChainlinkPriceFeedStale();
 
     /// @dev Error: Price not set.
     error EPriceNotSet();
@@ -27,61 +87,72 @@ interface IPriceChecker {
     /// @dev Error: Not an EIP-4626 asset.
     error ENotEIP4626Asset();
 
-    /// @dev Error: Too large deviation.
-    error ETooHighDeviation();
+    /// @dev Error: Too low or high staleness threshold.
+    error EBadStalenessThreshold();
+
+    /// @dev Error: Checker is already present.
+    error ECheckerAlreadyPresent();
 
     /// @dev Error: Set the same value.
     error ESameValue();
 
     /// @dev Error for a price check failure.
+    /// @param asset Asset's address.
     /// @param assetPrice Asset's price.
     /// @param expectedPrice Asset's expected price.
     /// @param deviationBps Allowed deviation in basis points.
     error EAssetPriceNotCloseToExpected(
+        address asset,
         uint256 assetPrice,
         uint256 expectedPrice,
         uint256 deviationBps
     );
 
+    /// @dev Error: No price checker configuration exists for the asset.
+    /// @param asset Address of the asset without the price checker configuration.
+    error NoPriceChecker(address asset);
+
+    /// @dev Error: Bad feed configuration.
+    error EBadFeedConfig();
+
     // ============ Core Functions ============
 
-    /// @dev Set the allowed price deviation in basis points (`onlyOwner`).
-    /// @param bps Allowed price deviation in basis points.
-    function setPriceDeviationBps(uint16 bps) external;
-
-    /// @dev Set the price feed address and type (`onlyOwner`).
-    /// @param feed Price feed's address.
-    /// @param is4626 `True` if it is an EIP-4626 asset feed.
-    function setPriceFeed(address feed, bool is4626) external;
-
     /// @dev Set both the price feed and allowed deviation in one call (`onlyOwner`).
+    /// @param asset Asset's address.
     /// @param feed Price feed's address.
     /// @param is4626 `True` if it is an EIP-4626 asset feed.
     /// @param bps Allowed price deviation in basis points.
-    function setPriceFeedAndBps(address feed, bool is4626, uint16 bps) external;
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    function setPriceFeed(
+        address asset,
+        address feed,
+        bool is4626,
+        uint16 bps,
+        uint32 stalenessThreshold
+    ) external;
+
+    /// @dev Change the allowed price deviation in basis points (`onlyOwner`).
+    /// @param asset Asset's address.
+    /// @param bps Allowed price deviation in basis points.
+    function changePriceDeviationBps(address asset, uint16 bps) external;
+
+    /// @dev Change the staleness threshold in seconds (`onlyOwner`).
+    /// @param asset Asset's address.
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    function changeStalenessThreshold(address asset, uint32 stalenessThreshold) external;
 
     /// @dev Remove the price feed configuration (`onlyOwner`).
-    function removePriceFeed() external;
+    /// @param asset Asset's address.
+    function removePriceFeed(address asset) external;
 
     // ============ View Functions ============
 
-    /// @dev Returns an address of the asset to check the price for.
-    /// @return Address of the asset to check the price for.
-    function asset() external returns (address);
+    /// @dev Check if the current asset price is within allowed deviation from the expected price.
+    /// @param asset Asset's address.
+    function checkPrice(address asset) external view;
 
-    /// @dev Returns an address of the Chainlink price feed contract.
-    /// @return Address of the Chainlink price feed contract.
-    function priceFeed() external returns (address);
-
-    /// @dev Returns a boolean flag indicating if the price feed is for an EIP-4626 asset.
-    /// @return Flag indicating if the price feed is for an EIP-4626 asset.
-    function isPriceFeedEIP4626() external returns (bool);
-
-    /// @dev Returns the maximum allowed price deviation in basis points (e.g., 500 = 5%).
-    /// @return Maximum allowed price deviation in basis points (e.g., 500 = 5%).
-    function priceDeviationBps() external returns (uint16);
-
-    /// @dev Check if the current asset price is within allowed deviation from expected price.
-    /// @notice Reverts with `ETooHighDeviation` if the price deviation is larger than the allowed one.
-    function checkPrice() external view;
+    /// @dev Verifies that a price checker configuration exists for the specified asset.
+    /// @param asset Address of the asset to verify.
+    /// @notice Reverts with the `NoPriceChecker` error if no configuration exists for the asset.
+    function ensureHasPriceFeed(address asset) external view;
 }

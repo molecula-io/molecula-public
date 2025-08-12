@@ -6,12 +6,13 @@ import type { ContractsCarbon } from '@molecula-monorepo/blockchain.addresses';
 import { deployCarbon } from '../scripts/tron/deploy/deployCarbonTron';
 import { deployExecutor } from '../scripts/tron/deploy/deployExecutor';
 import { deployMockUSDT, deployUsdtOFT } from '../scripts/tron/deploy/deployMockTron';
+import { deploywmUSD } from '../scripts/tron/deploy/deploywmUSD';
 import { migrateAccountantLZwithOracle } from '../scripts/tron/migration/migrateAccountantLZwithOracle';
 import {
-    handleError,
-    writeToFile,
-    readFromFile,
     getEnvironment,
+    handleError,
+    readFromFile,
+    writeToFile,
 } from '../scripts/utils/deployUtils';
 
 const tronMajorScope = scope('tronScope', 'Scope for major ethereum deployment flow');
@@ -135,4 +136,24 @@ tronMajorScope
         } catch (error) {
             handleError(error);
         }
+    });
+
+tronMajorScope
+    .task('deploywmUSD', 'Deploys wmUSD (Candy) on Tron')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n TRON Deployment');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        const contractsCarbon: ContractsCarbon = await readFromFile(
+            `${environment}/contracts_carbon.json`,
+        );
+
+        // Execute deployment
+        contractsCarbon.tron.wmUSD = await deploywmUSD(hre, contractsCarbon, environment);
+
+        writeToFile(`${environment}/contracts_carbon.json`, contractsCarbon);
     });

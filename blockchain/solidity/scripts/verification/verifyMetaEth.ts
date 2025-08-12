@@ -4,6 +4,7 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { type ContractsMetaEth, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
+import { ETH_VIRTUAL_OFFSET } from '../../configs/ethereum';
 import { readFromFile, getEnvironmentConfig } from '../utils/deployUtils';
 
 import { verifyContract } from './verificationUtils';
@@ -31,6 +32,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         meta.eth.metaPoolTreasury,
         config.META_APY,
         meta.eth.rebaseTokenV2,
+        ETH_VIRTUAL_OFFSET,
     ]);
 
     await verifyContract(hre, 'RebaseTokenV2', meta.eth.rebaseTokenV2, [
@@ -48,6 +50,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
             meta.eth.rebaseTokenV2,
             meta.eth.supplyManagerV2,
             config.META_GUARDIAN,
+            hre.ethers.ZeroAddress,
         ]);
     }
 

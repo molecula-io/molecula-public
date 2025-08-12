@@ -53,7 +53,7 @@ contract DepositManager is
     }
 
     /**
-     * @dev Initializes the DepositManager contract with required addresses and configurations.
+     * @dev Initializes the `DepositManager` contract with required addresses and configurations.
      * @param initialOwner_ Address that will own the contract.
      * @param authorizedStaker_ Address authorized to perform staking operations.
      * @param guardian_ Address that can pause the contract.
@@ -97,13 +97,17 @@ contract DepositManager is
 
     /// @inheritdoc IDepositManager
     function initialize(
+        address moleculaBuffer_,
         uint16 bufferPercent_,
         SetPoolData[] calldata setPoolData_
     ) external onlyOwner initializer checkBPS(bufferPercent_) {
-        // Set initial buffer percentage.
+        // Set the Molecula Buffer contract's address.
+        _setMoleculaBuffer(moleculaBuffer_);
+
+        // Set the initial buffer percentage.
         bufferPercentage = bufferPercent_;
 
-        // Set initial pools.
+        // Set initial Pools.
         _setPools(setPoolData_, setPoolData_.length);
     }
 
@@ -124,7 +128,7 @@ contract DepositManager is
         // Delegate deposited LRT tokens for the chosen operator.
         _restakeTokens(token, value);
 
-        // Emit the request deposit event.
+        // Emit a request deposit event.
         emit Deposit(token, vault, value);
 
         return _convertTokenToETH(getStrategy(token), value);
@@ -139,6 +143,7 @@ contract DepositManager is
     ) external payable only(SUPPLY_MANAGER) returns (uint256 moleculaTokenAssets) {
         // Convert ETH to WETH and deposit into the Pools.
         IWETH(WETH).deposit{value: msg.value}();
+
         _depositIntoPools(msg.value);
 
         return msg.value;
@@ -155,7 +160,7 @@ contract DepositManager is
         bytes32 depositDataRoot
     ) external only(authorizedStaker) {
         // Calculate the buffered supply.
-        uint256 bufferedTvl = totalBufferedSupply();
+        (uint256 bufferedTvl, uint256[] memory bufferedTvls) = totalBufferedSupply();
 
         // Revert if the value is greater than the buffered supply.
         if (value > bufferedTvl) {
@@ -185,7 +190,7 @@ contract DepositManager is
         }
 
         // Call to withdraw the value from the Pools.
-        _withdrawFromPools(value, bufferedTvl);
+        _withdrawFromPools(value, bufferedTvl, bufferedTvls);
 
         // Convert the WETH amount into ETH.
         IWETH(WETH).withdraw(value);
@@ -196,7 +201,7 @@ contract DepositManager is
         // Delegate the deposited ETH tokens for the chosen operator.
         IDelegator(delegator).stakeNative{value: value}(pubkey, signature, depositDataRoot);
 
-        // Emit the deposit event.
+        // Emit a deposit event.
         emit StakeNative(value, pubkey, signature, depositDataRoot);
     }
 
@@ -279,7 +284,7 @@ contract DepositManager is
 
         uint256 length = claim.tokenLeaves.length;
 
-        // Process claimed rewards — i.e., restake them if the asset is a supported collateral;
+        // Process claimed rewards — restake them if the asset is supported as collateral.
         // Otherwise, forward to the reward destination.
         for (uint256 i = 0; i < length; ++i) {
             // Get the token and its balance.
@@ -321,10 +326,10 @@ contract DepositManager is
     function chooseDelegatorForDeposit() public view stakeNotPaused returns (address) {
         // Get the total restaked TVL and individual operator TVLs.
         (uint256 restakedTvl, uint256[] memory operatorDelegatorTVLs) = totalRestakedSupply();
-        // Ensure the Operator list is not empty.
+        // Ensure the operator list is not empty.
         if (operatorsArray.length == 0) revert EOperatorNotExists();
 
-        // For single operator case, return its delegator directly.
+        // For the single operator case, return its delegator directly.
         if (operatorsArray.length == 1) {
             return operatorsDelegators[operatorsArray[0]].delegator;
         }
@@ -370,28 +375,47 @@ contract DepositManager is
 
     /// @inheritdoc IDepositManager
     function totalSupply() public view returns (uint256) {
+        (uint256 bufferedTvl, ) = totalBufferedSupply();
         (uint256 restakedTvl, ) = totalRestakedSupply();
-        return totalBufferedSupply() + restakedTvl;
+
+        return bufferedTvl + restakedTvl;
+    }
+
+    /// @inheritdoc IMoleculaPoolV2
+    function validatedTotalSupply() external view virtual override returns (uint256 pool) {
+        pool = totalSupply();
     }
 
     /**
-     * @dev Calculates total buffered supply including the yield from LP tokens.
+     * @dev Calculates the total buffered supply including the yield from LP tokens.
      * @return bufferedTvl Total ETH supply in the buffer.
+     * @return bufferedTvls Array of ETH supply in each Pool.
      */
-    function totalBufferedSupply() public view returns (uint256 bufferedTvl) {
+    function totalBufferedSupply()
+        public
+        view
+        returns (uint256 bufferedTvl, uint256[] memory bufferedTvls)
+    {
         uint256 length = poolsArray.length;
+        bufferedTvls = new uint256[](length);
 
         // Gets all withdrawable tokens from LP.
         for (uint256 i = 0; i < length; ++i) {
             address pool = poolsArray[i];
             PoolData memory _poolData = poolData[pool];
 
-            bufferedTvl += IBufferInteractor(_poolData.poolLib).getEthBalance(
+            uint256 poolTvl = IBufferInteractor(_poolData.poolLib).getEthBalance(
                 pool,
                 _poolData.poolToken,
                 address(this)
             );
+
+            // Add the Pool TVL to the total buffered TVL and store it in the array.
+            bufferedTvl += poolTvl;
+            bufferedTvls[i] = poolTvl;
         }
+
+        bufferedTvl += IERC20(WETH).balanceOf(moleculaBuffer);
     }
 
     /// @inheritdoc IDepositManager
@@ -401,7 +425,7 @@ contract DepositManager is
         virtual
         returns (uint256 restakedTvl, uint256[] memory operatorDelegatorTVLs)
     {
-        // Get strategy manager contract.
+        // Get the strategy manager contract.
         IStrategyManager strategyManager = DELEGATION_MANAGER.strategyManager();
 
         // Initialize an array to store the TVL for each operator.
@@ -447,7 +471,7 @@ contract DepositManager is
                 operatorEthBalance += pendingNativeSupply + uint256(podOwnerShares);
             }
 
-            // Add this operator's TVL to total and store in the array.
+            // Add this operator's TVL to total and store it in the array.
             restakedTvl += operatorEthBalance;
             operatorDelegatorTVLs[i] = operatorEthBalance;
         }
@@ -486,7 +510,7 @@ contract DepositManager is
 
     /// @inheritdoc IDepositManager
     function getAvailableAmountToDeposit()
-        external
+        public
         view
         returns (uint256[] memory availableAmounts, uint256 totalAvailableAmount)
     {
@@ -498,14 +522,14 @@ contract DepositManager is
             address pool = poolsArray[i];
             PoolData memory _poolData = poolData[pool];
 
-            // Get available amount to deposit for each pool
+            // Get the available amount to deposit for each Pool.
             uint256 availableAmount = IBufferInteractor(_poolData.poolLib)
                 .getAvailableAmountToDeposit(pool, WETH, _poolData.poolToken);
 
-            // Increment availableAmounts for each pool
+            // Increment `availableAmounts` for each Pool.
             availableAmounts[i] = availableAmount;
 
-            // Increment totalAvailableAmount for each pool, if it's reached the max value, set it to max value
+            // Increment `totalAvailableAmount` for each Pool. If it's reached the maximum value, set it to the maximum value.
             if (availableAmount == type(uint256).max || totalAvailableAmount == type(uint256).max) {
                 totalAvailableAmount = type(uint256).max;
             } else {
@@ -537,7 +561,7 @@ contract DepositManager is
             revert EContractAlreadyExists();
         }
 
-        // Deploy the minimal proxy clone for the delegatorImplementation contract.
+        // Deploy the minimal proxy clone for the `delegatorImplementation` contract.
         address cloneAddress = delegatorImplementation.cloneDeterministic(salt);
 
         // Check if the contract is deployed at the expected address.
@@ -693,12 +717,18 @@ contract DepositManager is
         if (setPoolData.auth) {
             if (poolData[setPoolData.pool].poolPortion == 0) {
                 poolsArray.push(setPoolData.pool);
+
+                // Approve WETH to the Pool.
+                IERC20(WETH).forceApprove(setPoolData.pool, type(uint256).max);
             }
 
             poolData[setPoolData.pool] = setPoolData.newPoolData;
         } else {
             PoolData memory _poolData = poolData[setPoolData.pool];
             poolsArray[_poolData.poolId] = poolsArray[poolsArray.length - 1];
+
+            // Revoke the WETH approval from the Pool.
+            IERC20(WETH).forceApprove(setPoolData.pool, 0);
 
             poolsArray.pop();
 
@@ -711,7 +741,7 @@ contract DepositManager is
 
             // Withdraws the deleted Pool's balance.
             if (balanceEthToRebalance > 0) {
-                _executeWithdraw(setPoolData.pool, balanceEthToRebalance);
+                _executeWithdraw(setPoolData.pool, _poolData.poolLib, balanceEthToRebalance);
             }
 
             delete poolData[setPoolData.pool];
@@ -722,8 +752,8 @@ contract DepositManager is
 
     /**
      * @dev Authorizes new Pools.
-     * @param setPoolData Array of SetPoolData structs.
-     * @param expectedPoolLength Expected length of the poolsArray after adding and removing pools.
+     * @param setPoolData Array of `SetPoolData` structs.
+     * @param expectedPoolLength Expected length of `poolsArray` after adding and removing Pools.
      * @return filteredPoolsData Array of Pools' data after filtering by auth true.
      * @return balanceEthToRebalance Total amount of ETH withdrawn from the LPs.
      */
@@ -733,7 +763,7 @@ contract DepositManager is
     ) internal returns (PoolData[] memory filteredPoolsData, uint256 balanceEthToRebalance) {
         uint256 length = setPoolData.length;
 
-        // ExpectedPoolLength could not be greater than the length of the setPoolData, because of the removed pools.
+        // `ExpectedPoolLength` could not be greater than the length of the setPoolData, given the removed Pools.
         if (expectedPoolLength > length) {
             revert EIncorrectLength();
         }
@@ -765,7 +795,7 @@ contract DepositManager is
             revert EWrongPortion();
         }
 
-        // Check if the poolsArray length is equal to the expectedPoolLength.
+        // Check if the `poolsArray` length is equal to `expectedPoolLength`.
         if (poolsArray.length != expectedPoolLength) {
             revert EIncorrectExpectedPoolLength();
         }
@@ -788,6 +818,35 @@ contract DepositManager is
         bufferPercentage = newBufferPercentage;
 
         emit BufferPercentageChanged(newBufferPercentage);
+    }
+
+    /// @inheritdoc IDepositManager
+    function setMoleculaBuffer(address newMoleculaBuffer) external onlyOwner {
+        _setMoleculaBuffer(newMoleculaBuffer);
+    }
+
+    /**
+     * @dev Sets the Molecula Buffer contract's address.
+     * @param newMoleculaBuffer New Molecula Buffer contract's address.
+     */
+    function _setMoleculaBuffer(
+        address newMoleculaBuffer
+    ) internal notZeroAddress(newMoleculaBuffer) {
+        // If the new Molecula Buffer has balance, revoke the approval from the old Molecula Buffer.
+        if (moleculaBuffer != address(0)) {
+            if (IERC20(WETH).balanceOf(moleculaBuffer) != 0) {
+                revert EMoleculaBufferHasBalance();
+            }
+
+            // Revoke the WETH approval from the Molecula Buffer.
+            IERC20(WETH).forceApprove(moleculaBuffer, 0);
+        }
+
+        moleculaBuffer = newMoleculaBuffer;
+
+        // Approve WETH to the Molecula Buffer.
+        IERC20(WETH).forceApprove(moleculaBuffer, type(uint256).max);
+        emit MoleculaBufferChanged(newMoleculaBuffer);
     }
 
     /// @inheritdoc IDepositManager
@@ -884,14 +943,22 @@ contract DepositManager is
 
             // Withdraw extra balance of the Pool.
             if (actualPoolsBalances[i] > expectedPoolsBalances[i]) {
-                _executeWithdraw(pool, actualPoolsBalances[i] - expectedPoolsBalances[i]);
+                _executeWithdraw(
+                    pool,
+                    newPoolsData[i].poolLib,
+                    actualPoolsBalances[i] - expectedPoolsBalances[i]
+                );
             }
         }
 
         // Deposit into Pools after withdrawing all extra balances.
         for (uint256 i = 0; i < length; ++i) {
             if (expectedPoolsBalances[i] > actualPoolsBalances[i]) {
-                _executeDeposit(poolsArray[i], expectedPoolsBalances[i] - actualPoolsBalances[i]);
+                _executeDeposit(
+                    poolsArray[i],
+                    poolData[poolsArray[i]].poolLib,
+                    expectedPoolsBalances[i] - actualPoolsBalances[i]
+                );
             }
         }
     }
@@ -903,126 +970,160 @@ contract DepositManager is
     function _depositIntoPools(uint256 value) internal {
         uint256 length = poolsArray.length;
 
+        // Track the remaining value to deposit.
+        uint256 remainingValue = value;
+
+        // Get the available amounts to deposit for each Pool.
+        (uint256[] memory availableAmounts, ) = getAvailableAmountToDeposit();
+
         // If only one Pool exists, deposit all the value without calculations.
         if (length == 1) {
-            return _executeDeposit(poolsArray[0], value);
-        }
+            uint256 depositAmount = value < availableAmounts[0] ? value : availableAmounts[0];
+            remainingValue -= depositAmount;
+            _executeDeposit(poolsArray[0], poolData[poolsArray[0]].poolLib, depositAmount);
+        } else {
+            (uint256 bufferTvl, ) = totalBufferedSupply();
 
-        // Track total amount distributed to ensure accurate distribution.
-        uint256 distributedAmount = 0;
+            // Iterate through Pools and deposit based on the TVL requirements.
+            for (uint256 i = 0; i < length && remainingValue > 0; ++i) {
+                PoolData memory _poolData = poolData[poolsArray[i]];
 
-        // Distribute deposits across all Pools based on their portions.
-        for (uint256 i = 0; i < length; ++i) {
-            PoolData memory _poolData = poolData[poolsArray[i]];
+                if (_poolData.poolPortion > 0) {
+                    // Get the Pool TVL for portion limits calculation.
+                    uint256 poolTvl = IBufferInteractor(_poolData.poolLib).getEthBalance(
+                        poolsArray[i],
+                        _poolData.poolToken,
+                        address(this)
+                    );
 
-            if (_poolData.poolPortion > 0) {
-                uint256 depositValue;
-                unchecked {
-                    if (i != length - 1) {
-                        // Calculate the amount to deposit to the Pool by distribution of the deposit portions.
-                        depositValue =
-                            (value * _poolData.poolPortion) /
+                    unchecked {
+                        // Calculate the required TVL based on the Pool portion.
+                        uint256 requiredTvl = ((bufferTvl + value) * _poolData.poolPortion) /
                             ConstantsCoreV2.PERCENTAGE_FACTOR;
-                    } else {
-                        // If it's the last Pool, deposit the entire remaining value.
-                        depositValue = value - distributedAmount;
-                    }
 
-                    // Update the total distributed amount.
-                    distributedAmount += depositValue;
+                        // Check if the Pool needs more TVL to satisfy its portion.
+                        if (poolTvl < requiredTvl) {
+                            // Calculate how much we can deposit to this Pool.
+                            uint256 maxDepositToPool = availableAmounts[i];
+                            uint256 depositAmount = remainingValue < maxDepositToPool
+                                ? remainingValue
+                                : maxDepositToPool;
+
+                            remainingValue -= depositAmount;
+                            _executeDeposit(poolsArray[i], _poolData.poolLib, depositAmount);
+                        }
+                    }
                 }
-                // Call the Pool to deposit the value.
-                _executeDeposit(poolsArray[i], depositValue);
             }
         }
+
+        // If `remainingValue` is greater than 0, deposit it into the Molecula buffer.
+        _executeDeposit(moleculaBuffer, moleculaBuffer, remainingValue);
     }
 
     /**
      * @dev Withdraws funds from the Pools according to their portions.
      * @param value Total amount to withdraw.
      * @param bufferedTvl Total ETH supply in the buffer.
+     * @param bufferedTvls Array of ETH supply in each pool.
      */
-    function _withdrawFromPools(uint256 value, uint256 bufferedTvl) internal {
+    function _withdrawFromPools(
+        uint256 value,
+        uint256 bufferedTvl,
+        uint256[] memory bufferedTvls
+    ) internal {
         uint256 length = poolsArray.length;
 
-        // If only one Pool exists, withdraw all the value without calculations.
-        if (length == 1) {
-            return _executeWithdraw(poolsArray[0], value);
+        // Track the remaining value to withdraw.
+        uint256 remainingValue = value;
+
+        // First, withdraw from `MoleculaBuffer` if it has funds.
+        uint256 moleculaBufferBalance = IBufferInteractor(moleculaBuffer).getEthBalance(
+            moleculaBuffer,
+            WETH,
+            address(this)
+        );
+
+        // If `MoleculaBuffer` has funds, withdraw from it.
+        if (moleculaBufferBalance > 0) {
+            unchecked {
+                uint256 withdrawAmountFromBuffer = remainingValue < moleculaBufferBalance
+                    ? remainingValue
+                    : moleculaBufferBalance;
+                if (withdrawAmountFromBuffer > 0) {
+                    _executeWithdraw(moleculaBuffer, moleculaBuffer, withdrawAmountFromBuffer);
+                    remainingValue -= withdrawAmountFromBuffer;
+                }
+            }
         }
 
-        // Track the total amount withdrawn to ensure accurate distribution.
-        uint256 withdrawnAmount = 0;
+        // If the remaining value to withdraw is 0, return the function.
+        // slither-disable-next-line incorrect-equality
+        if (remainingValue == 0) {
+            return;
+        }
 
-        // Withdraw from Pools while maintaining their relative portions.
-        for (uint256 i = 0; i < length; ++i) {
-            // Get the current pool address and its configuration.
-            address pool = poolsArray[i];
-            PoolData memory _poolData = poolData[pool];
+        // If only one Pool exists, withdraw all the remaining value without calculation.
+        if (length == 1) {
+            return _executeWithdraw(poolsArray[0], poolData[poolsArray[0]].poolLib, remainingValue);
+        }
 
-            if (_poolData.poolPortion > 0) {
-                uint256 amountToWithdraw;
-
-                // Get the Pool TVL for portion withdrawal calculations.
-                uint256 poolTvl = IBufferInteractor(_poolData.poolLib).getEthBalance(
-                    pool,
-                    _poolData.poolToken,
-                    address(this)
-                );
-
+        // If we still need to withdraw more, withdraw from Pools to align closer to the target proportions.
+        // Withdraw from Pools to align closer to the target proportions.
+        for (uint256 i = 0; i < length && remainingValue > 0; ++i) {
+            PoolData memory _poolData = poolData[poolsArray[i]];
+            if (_poolData.poolPortion > 0 && bufferedTvls[i] > 0) {
                 unchecked {
-                    if (i != length - 1) {
-                        // Calculate the amount to withdraw to maintain Pool portions.
-                        amountToWithdraw =
-                            poolTvl -
-                            ((_poolData.poolPortion * (bufferedTvl - value)) /
-                                ConstantsCoreV2.PERCENTAGE_FACTOR);
-                    } else {
-                        // If it's the last Pool, withdraw the entire remaining value.
-                        amountToWithdraw = value - withdrawnAmount;
+                    // Calculate the target TVL for this Pool based on its portion.
+                    uint256 targetTvl = ((bufferedTvl - value) * _poolData.poolPortion) /
+                        ConstantsCoreV2.PERCENTAGE_FACTOR;
+
+                    // Calculate how much we can withdraw from this Pool.
+                    uint256 currentTvl = bufferedTvls[i];
+                    uint256 maxWithdrawFromPool = currentTvl > targetTvl
+                        ? currentTvl - targetTvl
+                        : 0;
+
+                    if (maxWithdrawFromPool > 0) {
+                        uint256 withdrawAmount = remainingValue < maxWithdrawFromPool
+                            ? remainingValue
+                            : maxWithdrawFromPool;
+
+                        if (withdrawAmount > 0) {
+                            _executeWithdraw(poolsArray[i], _poolData.poolLib, withdrawAmount);
+                            remainingValue -= withdrawAmount;
+                        }
                     }
-
-                    // Update the total withdrawn amount.
-                    withdrawnAmount += amountToWithdraw;
                 }
-
-                // Call the Pool to withdraw the value.
-                _executeWithdraw(poolsArray[i], amountToWithdraw);
             }
         }
     }
 
     /**
-     * @dev Executes a deposit into a Pool.
+     * @dev Deposits into a Pool.
      * @param pool Address of the Pool.
-     * @param value Amount to Deposit.
+     * @param poolLib Address of the Pool library.
+     * @param value Amount to deposit.
      */
-    function _executeDeposit(address pool, uint256 value) internal {
-        // Approve WETH to the Pool.
-        IERC20(WETH).forceApprove(pool, value);
+    function _executeDeposit(address pool, address poolLib, uint256 value) internal {
+        if (value > 0) {
+            // Get `calldata` for deposit into the Pool.
+            bytes memory data = IBufferInteractor(poolLib).encodeSupply(WETH, address(this), value);
 
-        // Get `calldata` for deposit into the Pool.
-        bytes memory data = IBufferInteractor(poolData[pool].poolLib).encodeSupply(
-            WETH,
-            address(this),
-            value
-        );
-
-        // slither-disable-next-line unused-return
-        pool.functionCall(data);
+            // slither-disable-next-line unused-return
+            pool.functionCall(data);
+        }
     }
 
     /**
-     * @dev Executes a withdrawal from a Pool.
+     * @dev Withdraws from a Pool.
      * @param pool Pool's address.
+     * @param poolLib Pool library's address.
      * @param value Amount to withdraw.
      */
-    function _executeWithdraw(address pool, uint256 value) internal {
+    function _executeWithdraw(address pool, address poolLib, uint256 value) internal {
         // Get `calldata` for withdrawal from the Pool.
-        bytes memory data = IBufferInteractor(poolData[pool].poolLib).encodeWithdraw(
-            WETH,
-            address(this),
-            value
-        );
+        bytes memory data = IBufferInteractor(poolLib).encodeWithdraw(WETH, address(this), value);
         // slither-disable-next-line unused-return
         pool.functionCall(data);
     }

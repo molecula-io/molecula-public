@@ -1,8 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as dotenv from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/config';
-// disabled due to current CI
-// import '@nomicfoundation/hardhat-foundry';
+
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-toolbox';
 import '@typechain/hardhat';
@@ -120,6 +119,18 @@ const config: HardhatUserConfig = {
                 },
             },
         }),
+        ...(process.env.ETHEREUM_SEED_PHRASE && {
+            hoodi: {
+                url: 'https://0xrpc.io/hoodi', // public rpc no need to store in env
+                accounts: {
+                    mnemonic: process.env.ETHEREUM_SEED_PHRASE,
+                    path: "m/44'/60'/0'/0",
+                    initialIndex: 0,
+                    count: 20,
+                    passphrase: '',
+                },
+            },
+        }),
         ...(process.env.JSON_RPC_URL &&
             process.env.ETHEREUM_SEED_PHRASE && {
                 ethereum: {
@@ -164,7 +175,19 @@ const config: HardhatUserConfig = {
                 sepolia: process.env.ETHEREUM_API_KEY,
                 ethereum: process.env.ETHEREUM_API_KEY,
                 holesky: process.env.ETHEREUM_API_KEY,
+                hoodi: process.env.ETHEREUM_API_KEY,
             },
+            customChains: [
+                // hoodi is not in the default hardhat chains
+                {
+                    network: 'hoodi',
+                    chainId: 560048,
+                    urls: {
+                        apiURL: 'https://api-hoodi.etherscan.io/api',
+                        browserURL: 'https://hoodi.etherscan.io',
+                    },
+                },
+            ],
         },
     }),
 

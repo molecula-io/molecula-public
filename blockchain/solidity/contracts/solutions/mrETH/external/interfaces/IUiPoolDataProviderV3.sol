@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://etherscan.io/address/0x3F78BBD206e4D3c504Eb854232EdA7e47E9Fd8FC#code#F16#L1
+ * Link to the original contract:
+ * https://etherscan.io/address/0x3F78BBD206e4D3c504Eb854232EdA7e47E9Fd8FC#code#F16#L1
  */
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;

@@ -173,3 +173,14 @@ export type PoolsTokensRetailMainnet =
 export type RetailThirdPartyPoolCurrency =
     | keyof typeof staticPoolCurrenciesRetailMainnet
     | keyof typeof staticPoolCurrenciesRetailTestnet;
+
+/**
+ * A type annotation for molecula tokens which can be used in MoleculaPool
+ * for Retail solution in all networks.
+ */
+export type RetailMoleculaPoolCurrency = Extract<keyof typeof evmMoleculaTokenAddresses, 'mUSDe'>;
+
+/**
+ * A type annotation for the union of third-party tokens and Molecula tokens for Retail solutions
+ */
+export type RetailPoolCurrency = RetailThirdPartyPoolCurrency | RetailMoleculaPoolCurrency;

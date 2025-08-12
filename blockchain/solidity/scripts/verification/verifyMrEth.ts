@@ -3,28 +3,40 @@ import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 import type { ContractsMrEth } from '@molecula-monorepo/blockchain.addresses/deploy';
 
+import { ETH_VIRTUAL_OFFSET } from '../../configs/ethereum/constants';
 import { readFromFile, getMrEthEnvironmentConfig } from '../utils/deployUtils';
 
 import { verifyContract } from './verificationUtils';
 
 export async function runVerify(hre: HardhatRuntimeEnvironment) {
     const envType =
-        hre.network.name === 'holesky' || hre.network.name === 'sepolia'
-            ? EnvironmentType.devnet
-            : EnvironmentType['mainnet/beta'];
+        hre.network.name === 'ethereum' ? EnvironmentType['mainnet/beta'] : EnvironmentType.devnet;
+
     const config = getMrEthEnvironmentConfig(envType, hre.network.name);
 
     const contractsConfig: ContractsMrEth = await readFromFile(`${envType}/contracts_mr_eth.json`);
 
     // Select the appropriate contract configuration based on network
-    const contractToVerify =
-        hre.network.name === 'holesky' && 'holesky' in contractsConfig
-            ? contractsConfig.holesky
-            : contractsConfig.eth;
+    let contractToVerify;
+
+    if (hre.network.name === 'holesky' && 'holesky' in contractsConfig) {
+        contractToVerify = contractsConfig.holesky;
+    } else if (hre.network.name === 'hoodi' && 'hoodi' in contractsConfig) {
+        contractToVerify = contractsConfig.hoodi;
+    } else {
+        contractToVerify = contractsConfig.eth;
+    }
 
     const account = (await hre.ethers.getSigners())[0]!;
 
     await verifyContract(hre, 'Delegator', contractToVerify.delegatorImplementation, []);
+
+    await verifyContract(hre, 'MoleculaBuffer', contractToVerify.moleculaBuffer, [
+        config.MOLECULA_BUFFER_NAME,
+        config.MOLECULA_BUFFER_SYMBOL,
+        account.address,
+        config.WETH_ADDRESS,
+    ]);
 
     await verifyContract(hre, 'DepositManager', contractToVerify.depositManager, [
         account.address,
@@ -44,6 +56,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         contractToVerify.depositManager,
         config.APY_FORMATTER,
         contractToVerify.mrETH,
+        ETH_VIRTUAL_OFFSET,
     ]);
 
     await verifyContract(hre, 'RewardBearingToken', contractToVerify.mrETH, [

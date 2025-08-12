@@ -19,12 +19,12 @@ import {ShareToken} from "./ShareToken.sol";
 contract RewardBearingToken is IIssuer, ERC20, Ownable2Step, Permit, ShareToken {
     // ============ Constructor ============
 
-    /// @dev Initializes the RewardBearingToken contract
-    /// @param name_ The name of the token
-    /// @param symbol_ The symbol of the token
-    /// @param initialOwner The address of the initial owner
-    /// @param oracle_ The address of the oracle contract
-    /// @param supplyManager The address of the supply manager contract
+    /// @dev Initializes the `RewardBearingToken` contract.
+    /// @param name_ Token's name.
+    /// @param symbol_ Token's symbol.
+    /// @param initialOwner Initial owner's address.
+    /// @param oracle_ Oracle contract's address.
+    /// @param supplyManager Supply manager contract's address.
     constructor(
         string memory name_,
         string memory symbol_,

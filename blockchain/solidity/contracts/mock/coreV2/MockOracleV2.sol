@@ -45,7 +45,7 @@ contract MockOracleV2 is Ownable, IOracleV2 {
         _shares = shares;
     }
 
-    function getTotalPoolSupply() external view returns (uint256 pool) {
+    function getTotalPoolSupply() public view returns (uint256 pool) {
         return _pool;
     }
 

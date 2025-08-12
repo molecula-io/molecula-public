@@ -1,5 +1,26 @@
 #!/bin/bash
 
+NO_CLEAN_CACHE=false
+
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --no-clean-cache)
+      NO_CLEAN_CACHE=true
+      shift # past argument
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
 source ./install_utils.sh
 
 if [ "$(uname | tr '[:upper:]' '[:lower:]' | grep -o 'linux')" ] ; then
@@ -22,8 +43,10 @@ rm_global "artifacts"
 echo "Removing previous builds..."
 rm_global "build"
 
-echo "Removing cache..."
-rm_global "cache"
+if [[ "${NO_CLEAN_CACHE}" == false ]]; then
+  echo "Removing cache..."
+  rm_global "cache"
+fi
 
 echo "Removing forge cache..."
 rm_global "cache_forge"

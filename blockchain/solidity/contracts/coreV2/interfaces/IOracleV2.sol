@@ -8,7 +8,7 @@ pragma solidity ^0.8.24;
 interface IOracleV2 {
     // ============ View Functions ============
 
-    /// @dev Returns the total pool supply value.
+    /// @dev Returns the total Pool supply value.
     /// @return pool Total pool supply value.
     function getTotalPoolSupply() external view returns (uint256 pool);
 
@@ -16,8 +16,8 @@ interface IOracleV2 {
     /// @return shares Total shares supply value.
     function getTotalSharesSupply() external view returns (uint256 shares);
 
-    /// @dev Returns both the total pool and shares supply values.
-    /// @return pool Total pool supply value.
+    /// @dev Returns both the total Pool and shares supply values.
+    /// @return pool Total Pool supply value.
     /// @return shares Total shares supply value.
     function getTotalSupply() external view returns (uint256 pool, uint256 shares);
 

@@ -6,3 +6,4 @@ export * from './deployNitrogen';
 export * from './deployExecutor';
 export * from './deployMrEth';
 export * from './deployMetaEth';
+export * from './deployMock';

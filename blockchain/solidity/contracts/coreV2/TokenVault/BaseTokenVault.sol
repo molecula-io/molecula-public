@@ -197,6 +197,7 @@ abstract contract BaseTokenVault is
         _asset = asset_;
         minDepositAssets = minDepositAssets_;
         minRedeemShares = minRedeemShares_;
+        emit VaultInitialized(asset_, minDepositAssets_, minRedeemShares_);
     }
 
     /// @dev We support ERC-7540 for the deposit flow, while it is not asynchronous.

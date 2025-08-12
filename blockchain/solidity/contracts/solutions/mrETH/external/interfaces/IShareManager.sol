@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IShareManager.sol
+ * Link to the original contract:
+ * https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/interfaces/IShareManager.sol
  */
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.27;

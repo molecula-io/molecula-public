@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-syntax, no-await-in-loop */
 
+import { ethers } from 'hardhat';
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
@@ -93,6 +94,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
             contractsNitrogen.eth.supplyManager,
             contractsNitrogen.eth.rebaseTokenOwner,
             config.GUARDIAN_ADDRESS,
+            ethers.ZeroAddress,
         ]);
     }
 

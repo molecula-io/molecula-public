@@ -39,6 +39,8 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
         supplyManagerFutureAddress,
         [],
         guardian,
+        ethers.ZeroAddress,
+        poolKeeper,
     );
 
     // deploy supply manager
@@ -71,14 +73,12 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
         rewardBearingToken,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
     const usdeVault = await TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rewardBearingToken,
         supplyManagerV2,
         guardian,
-        ethers.ZeroAddress,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');
@@ -127,7 +127,7 @@ export async function deployCoreV2RewardBearingToken() {
         10n ** 18n, // minRedeemShares
     );
 
-    // Add tokenVault into moleculaRebaseToken's white list
+    // Add tokenVault into moleculaRebaseToken's whitelist
     const codeHash = keccak256((await coreV2.usdcVault.getDeployedCode())!);
     await coreV2.rewardBearingToken.setCodeHash(codeHash, true);
     await coreV2.rewardBearingToken.addTokenVault(coreV2.usdcVault);

@@ -15,26 +15,35 @@ import {IPriceChecker} from "./interfaces/IPriceChecker.sol";
 contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
     // ============ State Variables ============
 
-    /// @dev Address of the asset to check the price for.
-    address internal immutable _ASSET;
+    /// @dev Minimal staleness threshold.
+    uint32 internal constant _MIN_STALENESS_THRESHOLD = 15 seconds;
 
-    /// @inheritdoc IPriceChecker
-    address public priceFeed;
+    /// @dev Maximal staleness threshold.
+    uint32 internal constant _MAX_STALENESS_THRESHOLD = 7 days;
 
-    /// @inheritdoc IPriceChecker
-    bool public isPriceFeedEIP4626;
-
-    /// @inheritdoc IPriceChecker
-    uint16 public priceDeviationBps;
+    /// @dev Maps asset addresses to their price checker configurations.
+    mapping(address asset => CheckerInfo) public checkers;
 
     // ============ Modifiers ============
 
     /// @dev Checks that the asset is an EIP-4626 asset if the price feed is for an EIP-4626 asset.
     /// @param asset_ Address of the asset to check the price for.
-    /// @param isPriceFeedEIP4626_ Flag indicating if the price feed is for an EIP-4626 asset.
+    /// @param isPriceFeedEIP4626_ Boolean flag indicating if the price feed is for an EIP-4626 asset.
     modifier checkForEIP4626Asset(address asset_, bool isPriceFeedEIP4626_) {
         if (isPriceFeedEIP4626_ && !_hasConvertToAssets(asset_)) {
             revert ENotEIP4626Asset();
+        }
+        _;
+    }
+
+    /// @dev Check that staleness threshold is in an adequate range.
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    modifier checkStalenessThreshold(uint32 stalenessThreshold) {
+        if (
+            stalenessThreshold < _MIN_STALENESS_THRESHOLD ||
+            stalenessThreshold > _MAX_STALENESS_THRESHOLD
+        ) {
+            revert EBadStalenessThreshold();
         }
         _;
     }
@@ -43,101 +52,140 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
 
     /// @notice Initializes the PriceChecker contract.
     /// @dev Sets up the initial configuration for the price checking functionality.
-    /// @param asset_ Address of the asset to check the price for.
-    ///     If `isPriceFeedEIP4626` is `true`, this should be an EIP-4626 Vault token address.
-    /// @param priceFeed_ Address of the Chainlink price feed contract.
-    /// @param isPriceFeedEIP4626_ Flag indicating if the price feed is for an EIP-4626 asset.
-    /// @param priceDeviationBps_ Maximum allowed price deviation in basis points (e.g., 500 = 5%).
+    /// @param checkers_ Array of initial price checker configurations to set up.
     /// @param initialOwner Address of the initial contract owner.
-    constructor(
-        address asset_,
-        address priceFeed_,
-        bool isPriceFeedEIP4626_,
-        uint16 priceDeviationBps_,
-        address initialOwner
-    )
-        notZeroAddress(asset_)
-        notZeroAddress(priceFeed_)
-        checkBPS(priceDeviationBps_)
-        checkForEIP4626Asset(asset_, isPriceFeedEIP4626_)
-        Ownable(initialOwner)
-    {
-        _ASSET = asset_;
-        priceFeed = priceFeed_;
-        isPriceFeedEIP4626 = isPriceFeedEIP4626_;
-        priceDeviationBps = priceDeviationBps_;
-    }
-
-    // ============ Core Functions ============
-
-    /// @inheritdoc IPriceChecker
-    function setPriceDeviationBps(uint16 bps) external virtual override onlyOwner {
-        bool changed = _setPriceDeviationBps(bps);
-        if (!changed) {
-            revert ESameValue();
+    constructor(Checkers[] memory checkers_, address initialOwner) Ownable(initialOwner) {
+        uint256 length = checkers_.length;
+        for (uint256 i = 0; i < length; ++i) {
+            Checkers memory checker = checkers_[i];
+            if (checkers[checker.asset].isPresent) {
+                revert ECheckerAlreadyPresent();
+            }
+            _setPriceFeed(
+                checker.asset,
+                checker.priceFeed,
+                checker.isPriceFeedEIP4626,
+                checker.priceDeviationBps,
+                checker.stalenessThreshold
+            );
         }
     }
 
-    /// @inheritdoc IPriceChecker
-    function setPriceFeed(address feed, bool is4626) external virtual override onlyOwner {
-        bool changed = _setPriceFeed(feed, is4626);
-        if (!changed) {
-            revert ESameValue();
-        }
-    }
+    // ============ Owner's Functions ============
 
     /// @inheritdoc IPriceChecker
-    function removePriceFeed() external virtual override onlyOwner {
-        if (priceFeed == address(0)) {
-            revert ESameValue();
-        }
-        priceFeed = address(0);
-        emit PriceFeedRemoved();
-    }
-
-    /// @inheritdoc IPriceChecker
-    function setPriceFeedAndBps(
+    function setPriceFeed(
+        address asset,
         address feed,
         bool is4626,
-        uint16 bps
-    ) external virtual override onlyOwner {
-        bool changedFeed = _setPriceFeed(feed, is4626);
-        bool changedBps = _setPriceDeviationBps(bps);
-        if (!changedFeed && !changedBps) {
+        uint16 bps,
+        uint32 stalenessThreshold
+    ) public virtual override onlyOwner {
+        // Check that the new price feed configuration is the same as the previous one.
+        CheckerInfo storage checkerInfo = checkers[asset];
+        if (
+            checkerInfo.priceFeed == feed &&
+            checkerInfo.isPriceFeedEIP4626 == is4626 &&
+            checkerInfo.priceDeviationBps == bps &&
+            checkerInfo.stalenessThreshold == stalenessThreshold
+        ) {
             revert ESameValue();
         }
+
+        // Set the new price feed configuration.
+        _setPriceFeed(asset, feed, is4626, bps, stalenessThreshold);
+
+        // Emit an event to log the operation.
+        emit PriceFeedConfigured(asset, feed, is4626, bps, stalenessThreshold);
+    }
+
+    /// @inheritdoc IPriceChecker
+    function changePriceDeviationBps(
+        address asset,
+        uint16 bps
+    ) external virtual override onlyOwner checkBPS(bps) {
+        CheckerInfo storage checkerInfo = _getPriceCheckerOrThrow(asset);
+
+        // Check that the new price deviation is the same as the previous one.
+        uint16 oldBps = checkerInfo.priceDeviationBps;
+        if (oldBps == bps) {
+            revert ESameValue();
+        }
+
+        // Set the price deviation in basis points.
+        checkerInfo.priceDeviationBps = bps;
+
+        // Emit an event to log the operation.
+        emit PriceDeviationBpsChanged(asset, oldBps, bps);
+    }
+
+    /// @inheritdoc IPriceChecker
+    function changeStalenessThreshold(
+        address asset,
+        uint32 stalenessThreshold
+    ) external virtual override onlyOwner checkStalenessThreshold(stalenessThreshold) {
+        CheckerInfo storage checkerInfo = _getPriceCheckerOrThrow(asset);
+
+        // Check that the new threshold is the same as the previous one.
+        uint32 oldThreshold = checkerInfo.stalenessThreshold;
+        if (oldThreshold == stalenessThreshold) {
+            revert ESameValue();
+        }
+
+        // Set the price deviation in basis points.
+        checkerInfo.stalenessThreshold = stalenessThreshold;
+
+        // Emit an event to log the operation.
+        emit StalenessThresholdChanged(asset, oldThreshold, stalenessThreshold);
+    }
+
+    /// @inheritdoc IPriceChecker
+    function removePriceFeed(address asset) external virtual override onlyOwner {
+        // Check that the asset is present. Otherwise, throw an exception.
+        _getPriceCheckerOrThrow(asset);
+
+        // Remove the checker for the asset.
+        delete checkers[asset];
+
+        // Emit an event to log the operation.
+        emit PriceFeedRemoved(asset);
     }
 
     // ============ View Functions ============
 
-    /// @inheritdoc IPriceChecker
-    function asset() external view override returns (address) {
-        return _ASSET;
-    }
-
     /// @dev Checks that the underlying asset price is around 1 USD (1 ETH, 1 BTC, etc.), within the allowed deviation.
-    /// @notice Check might be performed on the EIP-4626 token's underlying asset if:
-    /// - The TokenVault uses an EIP-4626 token as its underlying asset.
-    /// - The price feed is not available for the token itself.
-    function checkPrice() external view {
+    ///      If a price feed is set for the token, then check that the token price is within the allowed deviation.
+    ///      If the price feed is not set but the asset is present, do nothing.
+    ///      Otherwise, throw an exception.
+    ///
+    ///      Check might be performed on the EIP-4626 token's underlying asset if:
+    ///          - The TokenVault uses an EIP-4626 token as its underlying asset.
+    ///          - The price feed is not available for the token itself.
+    /// @param asset Address of the asset to check the price for.
+    function checkPrice(address asset) external view virtual override {
+        CheckerInfo storage checkerInfo = _getPriceCheckerOrThrow(asset);
+
+        // No need to check the price for assets with no price feed as it's OK for native tokens (ETH)
+        // or pegged tokens (wETH), and some other tokens to not have a price feed.
+        if (checkerInfo.priceFeed == address(0)) {
+            return;
+        }
+
         // Find the expected price for the asset, in the units of the price feed.
         uint256 expectedPrice;
-        uint8 feedDecimals = AggregatorV3Interface(priceFeed).decimals();
+        uint8 feedDecimals = AggregatorV3Interface(checkerInfo.priceFeed).decimals();
         // If the price feed is for an EIP-4626 asset (i.e., a Vault token),
         // we need to determine how much of the underlying asset one Vault token represents,
         // and then normalize that amount to the price feed's decimals.
-        if (isPriceFeedEIP4626) {
-            // Get the EIP-4626 Vault token address.
-            address erc4626 = _ASSET;
-
+        if (checkerInfo.isPriceFeedEIP4626) {
             // Convert one Vault token to the amount of the underlying asset it represents.
             // This should be an expected price of the asset which is yet to be normalized
             // to match the decimals of the price feed.
-            uint256 oneUnit4626 = uint256(10) ** _getDecimalsOr18(erc4626);
-            expectedPrice = IERC4626(erc4626).convertToAssets(oneUnit4626);
+            uint256 oneUnit4626 = uint256(10) ** _getDecimalsOr18(asset);
+            expectedPrice = IERC4626(asset).convertToAssets(oneUnit4626);
 
             // Get the decimals for the underlying asset.
-            address underlyingAsset = IERC4626(erc4626).asset();
+            address underlyingAsset = IERC4626(asset).asset();
             uint8 underlyingAssetDecimals = _getDecimalsOr18(underlyingAsset);
 
             // Normalize the expected price to match the decimals of the price feed.
@@ -148,7 +196,9 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
         }
 
         // Get the asset price.
-        uint256 assetPrice = uint256(_checkAndGetFeedPrice(priceFeed));
+        uint256 assetPrice = uint256(
+            _getFeedPrice(checkerInfo.priceFeed, checkerInfo.stalenessThreshold)
+        );
 
         uint256 absDiff = assetPrice > expectedPrice
             ? assetPrice - expectedPrice
@@ -159,68 +209,118 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
         // `|assetPrice - expectedPrice| / expectedPrice < epsilon`
         // `|assetPrice - expectedPrice| / expectedPrice < priceDeviationBps / 10_000`
         // `|assetPrice - expectedPrice| * 10_000 < priceDeviationBps * expectedPrice`
-        if (absDiff * ConstantsCoreV2.PERCENTAGE_FACTOR > priceDeviationBps * expectedPrice) {
-            revert EAssetPriceNotCloseToExpected(assetPrice, expectedPrice, priceDeviationBps);
+        if (
+            absDiff * ConstantsCoreV2.PERCENTAGE_FACTOR >
+            checkerInfo.priceDeviationBps * expectedPrice
+        ) {
+            revert EAssetPriceNotCloseToExpected(
+                asset,
+                assetPrice,
+                expectedPrice,
+                checkerInfo.priceDeviationBps
+            );
         }
+    }
+
+    /// @inheritdoc IPriceChecker
+    function ensureHasPriceFeed(address asset) public view virtual override {
+        _getPriceCheckerOrThrow(asset);
     }
 
     // ============ Internal Functions ============
 
+    /// @dev Gets the price feed configuration if presented. Otherwise, throws an exception.
+    /// @param asset Asset's address.
+    /// @return checkerInfo Price feed configuration.
+    function _getPriceCheckerOrThrow(
+        address asset
+    ) internal view virtual returns (CheckerInfo storage checkerInfo) {
+        checkerInfo = checkers[asset];
+        if (!checkerInfo.isPresent) {
+            revert NoPriceChecker(asset);
+        }
+    }
+
     /// @dev Gets the latest price from a Chainlink price feed and validates it.
-    /// @param feed Address of the Chainlink price feed contract.
-    /// @return price Latest price from the feed, reverts if the price is negative.
-    function _checkAndGetFeedPrice(address feed) internal view virtual returns (int256 price) {
-        // Check that the price is present.
+    /// @param feed Chainlink price feed contract's address.
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    /// @return price Latest price from the feed. Reverts if the price is negative.
+    function _getFeedPrice(
+        address feed,
+        uint32 stalenessThreshold
+    ) internal view virtual returns (int256 price) {
+        uint256 updatedAt;
         // slither-disable-next-line unused-return
-        (, price, , , ) = AggregatorV3Interface(feed).latestRoundData();
+        (, price, , updatedAt, ) = AggregatorV3Interface(feed).latestRoundData();
+
+        // Check that the price is present.
         if (price <= 0) {
             revert EPriceNotSet();
         }
+
+        // Check if the price feed data is stale based on the configured threshold.
+        if (updatedAt + stalenessThreshold < block.timestamp) {
+            revert EChainlinkPriceFeedStale();
+        }
     }
 
-    /// @dev Set the price feed address and type.
+    /// @dev Set the price feed address, type, and allowed price deviation in basis points.
+    /// @param asset Address of the asset to set price feed for.
     /// @param feed Price feed's address.
     /// @param is4626 `True` if it is an EIP-4626 asset feed.
-    /// @return changed `True` if the feed configuration is changed, `false` if the same values are provided.
+    /// @param bps New price deviation value in basis points (e.g., 500 = 5%).
+    /// @param stalenessThreshold Staleness threshold in seconds.
     function _setPriceFeed(
+        address asset,
         address feed,
-        bool is4626
-    ) internal notZeroAddress(feed) checkForEIP4626Asset(_ASSET, is4626) returns (bool changed) {
-        if (priceFeed != feed || isPriceFeedEIP4626 != is4626) {
-            // Check that the price is present.
-            _checkAndGetFeedPrice(feed);
-
-            // Note: Chainlink's AggregatorV3Interface does not expose the asset pair or
-            // the underlying asset on-chain. As a result, we cannot programmatically verify
-            // that the price feed corresponds to the provided `_asset`, or to the underlying
-            // asset of `_asset` if it's an EIP-4626 token.
-
-            // Set the price feed configuration.
-            priceFeed = feed;
-            isPriceFeedEIP4626 = is4626;
-
-            // Emit an event to log the operation.
-            emit PriceFeedConfigured(feed, is4626);
-
-            changed = true;
+        bool is4626,
+        uint16 bps,
+        uint32 stalenessThreshold
+    ) internal virtual notZeroAddress(asset) {
+        if (feed == address(0)) {
+            // If there is no feed, than all another parameter must be equal to zero.
+            if (is4626 || bps != 0 || stalenessThreshold != 0) {
+                revert EBadFeedConfig();
+            }
+        } else {
+            // Validate the price feed.
+            _checkPriceFeed(asset, feed, is4626, bps, stalenessThreshold);
         }
+
+        // Note: Chainlink's AggregatorV3Interface does not expose the asset pair or
+        // the underlying asset on-chain. As a result, we cannot programmatically verify
+        // that the price feed corresponds to the provided `_asset`, or to the underlying
+        // asset of `_asset` if it's an EIP-4626 token.
+
+        checkers[asset] = CheckerInfo({
+            priceFeed: feed,
+            isPriceFeedEIP4626: is4626,
+            priceDeviationBps: bps,
+            stalenessThreshold: stalenessThreshold,
+            isPresent: true
+        });
     }
 
-    /// @dev Sets the allowed price deviation in basis points.
+    /// @dev Check the price feed configuration.
+    /// @param asset Address of the asset to set a price feed for.
+    /// @param feed Price feed's address.
+    /// @param is4626 `True` if it is an EIP-4626 asset feed.
     /// @param bps New price deviation value in basis points (e.g., 500 = 5%).
-    /// @return changed `True` if the value is changed, false if the same value are provided.
-    function _setPriceDeviationBps(
-        uint16 bps
-    ) internal virtual checkBPS(bps) returns (bool changed) {
-        uint16 oldBps = priceDeviationBps;
-        if (oldBps != bps) {
-            // Set the price deviation in basis points.
-            priceDeviationBps = bps;
-
-            // Emit an event to log the operation.
-            emit PriceDeviationBpsSet(oldBps, bps);
-
-            changed = true;
-        }
+    /// @param stalenessThreshold Staleness threshold in seconds.
+    function _checkPriceFeed(
+        address asset,
+        address feed,
+        bool is4626,
+        uint16 bps,
+        uint32 stalenessThreshold
+    )
+        internal
+        virtual
+        checkForEIP4626Asset(asset, is4626)
+        checkBPS(bps)
+        checkStalenessThreshold(stalenessThreshold)
+    {
+        // Check that the price is present.
+        _getFeedPrice(feed, stalenessThreshold);
     }
 }

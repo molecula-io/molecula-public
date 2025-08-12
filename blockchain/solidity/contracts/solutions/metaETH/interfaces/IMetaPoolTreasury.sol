@@ -173,13 +173,13 @@ interface IMetaPoolTreasury {
 
     /**
      * @dev Returns the total supply of the pool (TVL).
+     * @param doCheckPrice Boolean flag indicating whether to perform price checks during calculation.
      * @return supply Total pool supply.
      * @return totalRedeem Total redeem value.
      */
-    function totalPoolsSupplyAndRedeem()
-        external
-        view
-        returns (uint256 supply, uint256 totalRedeem);
+    function totalPoolsSupplyAndRedeem(
+        bool doCheckPrice
+    ) external view returns (uint256 supply, uint256 totalRedeem);
 
     /**
      * @dev Returns the list of the ERC20 Pool.

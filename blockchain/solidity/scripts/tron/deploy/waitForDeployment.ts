@@ -5,6 +5,7 @@ export async function waitForDeployment(
     tronWeb: TronWeb,
     transaction: CreateSmartContractTransaction,
 ): Promise<string> {
+    console.log('waiting for 5s ...');
     // Sleep for 5 seconds
     // Wait to ensure that the transaction appears in the scanner.
     // eslint-disable-next-line no-promise-executor-return

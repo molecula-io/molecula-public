@@ -1,3 +1,5 @@
+/* eslint-disable no-await-in-loop, no-restricted-syntax, max-lines */
+
 import { scope } from 'hardhat/config';
 
 import type { ContractsCore, ContractsNitrogen } from '@molecula-monorepo/blockchain.addresses';
@@ -10,12 +12,16 @@ import {
     deployNitrogen,
     deployExecutor,
     deployMrEth,
+    deploymrETHMockAavePool,
     deployMetaEth,
+    deployUSDT,
+    deployUsdtOFT,
 } from '../scripts/ethereum';
 import { deployNitrogenTokenVault } from '../scripts/ethereum/deploy/deployNitrogenTokenVault';
 import { deployRebaseTokenOwner } from '../scripts/ethereum/deploy/deployRebaseTokenOwner';
 import { deploylmUSD, deploywmUSD } from '../scripts/ethereum/deploy/deploywmUSD';
 import {
+    getConfig,
     getEnvironment,
     handleError,
     readFromFile,
@@ -223,6 +229,7 @@ ethereumMajorScope
         console.log('minRedeem:', taskArgs.minRedeem);
 
         const environment = getEnvironment(hre, taskArgs.environment);
+        const { account, config } = await getConfig(hre, environment);
         const contractsNitrogen: ContractsNitrogen = await readFromFile(
             `${environment}/contracts_nitrogen.json`,
         );
@@ -230,12 +237,62 @@ ethereumMajorScope
         const nitrogenTokenVault = await deployNitrogenTokenVault(
             hre,
             environment,
+            config,
+            account,
             taskArgs.token,
             taskArgs.minDeposit,
             taskArgs.minRedeem,
         );
         // @ts-ignore
         contractsNitrogen.eth.tokenVaults[taskArgs.tokenName] = nitrogenTokenVault;
+
+        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
+    });
+
+ethereumMajorScope
+    .task('deployAllNitrogenTokenVault', 'Deploys all NitrogenTokenVault contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const { account, config } = await getConfig(hre, environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        const moleculaPoolTreasuryV2 = await hre.ethers.getContractAt(
+            'MoleculaPoolTreasuryV2',
+            contractsNitrogen.eth.moleculaPool,
+        );
+        const pool = await moleculaPoolTreasuryV2.getTokenPool();
+        console.log();
+        for (const tokenParams of pool) {
+            const token = await hre.ethers.getContractAt('IERC20Metadata', tokenParams.token);
+            const symbol = await token.symbol();
+            console.log(`Deploying token vault for ${symbol}`);
+            if (symbol === 'mUSDe') {
+                // We skip mUSDe because we cannot set infinity allowance for mUSDe in NitrogenTokenVault.init function
+                console.log('Skipped');
+            } else {
+                const minDeposit = tokenParams.isERC4626
+                    ? config.MUSD_TOKEN_MIN_DEPOSIT / 2n
+                    : config.MUSD_TOKEN_MIN_DEPOSIT;
+                const nitrogenTokenVault = await deployNitrogenTokenVault(
+                    hre,
+                    environment,
+                    config,
+                    account,
+                    tokenParams.token,
+                    minDeposit,
+                    config.MUSD_TOKEN_MIN_REDEEM,
+                );
+                // @ts-ignore
+                contractsNitrogen.eth.tokenVaults[symbol] = nitrogenTokenVault;
+            }
+            console.log();
+        }
 
         writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
     });
@@ -255,12 +312,47 @@ ethereumMajorScope
 
         if (hre.network.name === 'holesky') {
             contractsMrEth.holesky = deployedMrEth;
+        } else if (hre.network.name === 'hoodi') {
+            contractsMrEth.hoodi = deployedMrEth;
         } else {
             contractsMrEth.eth = deployedMrEth;
         }
 
         writeToFile(`${environment}/contracts_mr_eth.json`, contractsMrEth);
         console.log('Deployment and file write completed successfully.');
+    });
+
+ethereumMajorScope
+    .task('deployAaveMock', 'Deploys mock contracts')
+    .addFlag('withUsdt', 'Deploy USDT contract')
+    .addFlag('withUsdtOft', 'Deploy UsdtOFT contract')
+    .addFlag('withMrEthMock', 'Deploy mrETHMockAavePool contract')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Network:', hre.network.name);
+        console.log('With USDT:', taskArgs.withUsdt);
+        console.log('With UsdtOft:', taskArgs.withUsdtOft);
+        console.log('With MrEthMock:', taskArgs.withMrEthMock);
+
+        // Deploy USDT if flag is provided
+        if (taskArgs.withUsdt) {
+            console.log('Deploying USDT...');
+            await deployUSDT(hre);
+            console.log('Deployment of USDT completed successfully.');
+        }
+
+        // Deploy UsdtOFT if flag is provided
+        if (taskArgs.withUsdtOft) {
+            console.log('Deploying UsdtOFT...');
+            await deployUsdtOFT(hre);
+            console.log('Deployment of UsdtOFT completed successfully.');
+        }
+
+        // Deploy mrETHMockAavePool (default behavior unless explicitly disabled)
+        if (taskArgs.withMrEthMock) {
+            console.log('Deploying mrETHMockAavePool...');
+            await deploymrETHMockAavePool(hre);
+            console.log('Deployment of mrETHMockAavePool completed successfully.');
+        }
     });
 
 ethereumMajorScope

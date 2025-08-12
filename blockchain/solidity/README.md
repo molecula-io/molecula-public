@@ -489,7 +489,7 @@ Security audit reports are stored in the `audits/` directory. Always review thes
 
 ### Getting Help
 
-1. Check the [Issues](../../issues) page for known problems
+1. Check the [Issues](https://github.com/molecula-io/molecula-public/issues) page for known problems
 2. Review the test files for examples of proper usage
 3. Consult the [Hardhat documentation](https://hardhat.org/docs)
 4. Check [Foundry documentation](https://book.getfoundry.sh/)

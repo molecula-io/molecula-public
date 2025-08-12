@@ -8,7 +8,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Guardian} from "./../../common/pausable/Guardian.sol";
+import {PriceCheckerClient} from "./../../common/PriceChecker/PriceCheckerClient.sol";
 import {ConstantsCoreV2} from "./../../coreV2/Constants.sol";
+import {ERC1271} from "./../../coreV2/ERC1271.sol";
 import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {IMoleculaPoolV2} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {IMoleculaPoolV2WithNativeToken} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
@@ -25,9 +27,11 @@ contract MetaPoolTreasury is
     IMetaPoolTreasury,
     IMoleculaPoolV2,
     IMoleculaPoolV2WithNativeToken,
+    ERC1271,
     Ownable2Step,
     PausableExecute,
-    PausableFulfillRedeemRequests
+    PausableFulfillRedeemRequests,
+    PriceCheckerClient
 {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -79,16 +83,22 @@ contract MetaPoolTreasury is
      * @param supplyManagerAddress Supply Manager's address.
      * @param whiteList List of whitelisted addresses.
      * @param guardianAddress Guardian address that can pause the contract.
+     * @param priceChecker_ Price checker contract's address.
+     * @param signer_ Initial signer address for the ERC1271 validation.
      */
     constructor(
         address initialOwner,
         address poolKeeperAddress,
         address supplyManagerAddress,
         address[] memory whiteList,
-        address guardianAddress
+        address guardianAddress,
+        address priceChecker_,
+        address signer_
     )
         Ownable(initialOwner)
         Guardian(guardianAddress)
+        PriceCheckerClient(priceChecker_)
+        ERC1271(signer_)
         notZeroAddress(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
     {
@@ -290,6 +300,18 @@ contract MetaPoolTreasury is
         emit DeletedFromWhiteList(target);
     }
 
+    /// @inheritdoc PriceCheckerClient
+    function setPriceChecker(address newPriceChecker) public virtual override {
+        super.setPriceChecker(newPriceChecker);
+
+        // Validates that the price checker is properly set for each asset.
+        uint256 len = _pool.length;
+        for (uint256 i = 0; i < len; ++i) {
+            address token = _pool[i];
+            _validatePriceChecker(token);
+        }
+    }
+
     /// @inheritdoc Ownable2Step
     function transferOwnership(address newOwner) public virtual override(Ownable, Ownable2Step) {
         // Initiate ownership transfer.
@@ -347,24 +369,33 @@ contract MetaPoolTreasury is
     // ============ View Functions ============
 
     /// @inheritdoc IMetaPoolTreasury
-    function totalPoolsSupplyAndRedeem()
-        public
-        view
-        virtual
-        override
-        returns (uint256 totalMoleculaAssets, uint256 totalRedeem)
-    {
+    function totalPoolsSupplyAndRedeem(
+        bool doCheckPrice
+    ) public view virtual override returns (uint256 totalMoleculaAssets, uint256 totalRedeem) {
         uint256 len = _pool.length;
         for (uint256 i = 0; i < len; ++i) {
+            // Get the token address.
             address token = _pool[i];
+
+            if (doCheckPrice) {
+                // If a price feed is set for the token, then check that the token price is within the allowed deviation.
+                // If the price feed is not set but asset is present, do nothing.
+                // Otherwise, throw an exception.
+                checkPrice(token);
+            }
+
+            // Get the Vault associated with the token.
             IBaseTokenVault tokenVault = IBaseTokenVault(_getTokenVault(token));
 
+            // Get the token balance.
             uint256 assets = token == ConstantsCoreV2.NATIVE_TOKEN
                 ? address(this).balance
                 : IERC20(token).balanceOf(address(this));
 
+            // Increase the total available asset balance.
             totalMoleculaAssets += tokenVault.convertAssetsToMoleculaAssets(assets);
 
+            // Increase the total asset balance to redeem.
             totalRedeem += tokenVault.convertAssetsToMoleculaAssets(
                 poolMap[token].requestedRedeemAssets
             );
@@ -373,12 +404,12 @@ contract MetaPoolTreasury is
 
     /// @inheritdoc IMoleculaPoolV2
     function totalSupply() public view virtual override returns (uint256 totalPool) {
-        (uint256 totalMoleculaAssets, uint256 totalRedeem) = totalPoolsSupplyAndRedeem();
-        if (totalRedeem < totalMoleculaAssets) {
-            unchecked {
-                totalPool = totalMoleculaAssets - totalRedeem;
-            }
-        }
+        totalPool = _totalSupply(false);
+    }
+
+    /// @inheritdoc IMoleculaPoolV2
+    function validatedTotalSupply() public view virtual override returns (uint256 totalPool) {
+        totalPool = _totalSupply(true);
     }
 
     /// @inheritdoc IMetaPoolTreasury
@@ -394,11 +425,14 @@ contract MetaPoolTreasury is
         super._transferOwnership(newOwner);
     }
 
-    /**
-     * @dev Add the token to the Pool.
-     * @param token ERC20 token address.
-     */
+    /// @dev Add the token to the Pool.
+    /// @param token ERC20 token address.
     function _addToken(address token) internal virtual {
+        // If the price feed is set for the token, then check that the token price is within the allowed deviation.
+        // If the price feed is not set but asset is present, do nothing.
+        // Otherwise, throw an exception.
+        checkPrice(token);
+
         // Ensure that the token is not duplicated.
         if (poolMap[token].isPresent) {
             revert EDuplicatedToken();
@@ -418,10 +452,9 @@ contract MetaPoolTreasury is
         emit TokenAdded(token);
     }
 
-    /**
-     * @dev Delete the token from the Pool.
-     * @param token Token address.
-     */
+    /// @dev Removes a token from the Pool and transfers the remaining balance to the owner.
+    /// @param token Address of the token to remove.
+    /// @notice Checks for pending redemptions and handles the remaining token balance.
     function _removeToken(address token) internal virtual {
         // Check if the token has pending redemptions.
         if (poolMap[token].requestedRedeemAssets > 0) {
@@ -522,10 +555,8 @@ contract MetaPoolTreasury is
     function _getTokenVault(address token) internal view virtual returns (address vault) {
         address moleculaToken = ISupplyManagerV2(SUPPLY_MANAGER).moleculaToken();
 
+        // Note: `VaultContainer` throws an exception if there is no Vault for the token.
         vault = VaultContainer(moleculaToken).vault(token);
-        if (vault == address(0)) {
-            revert EZeroAddress();
-        }
     }
 
     /// @dev Check that token is in the Pool and not blocked. Decrease redeem assets for the token.
@@ -537,5 +568,19 @@ contract MetaPoolTreasury is
     ) internal virtual tokenIsPresent(token) tokenIsNotBlocked(token) {
         // Reduce the assets to redeem for the correct `totalSupply` calculation.
         poolMap[token].requestedRedeemAssets -= assets;
+    }
+
+    /// @dev Returns the total supply of the Pool (TVL).
+    /// @param doCheckPrice Boolean flag indicating whether to perform price checks during calculation.
+    /// @return totalPool Total pool supply.
+    function _totalSupply(bool doCheckPrice) internal view virtual returns (uint256 totalPool) {
+        (uint256 totalMoleculaAssets, uint256 totalRedeem) = totalPoolsSupplyAndRedeem(
+            doCheckPrice
+        );
+        if (totalRedeem < totalMoleculaAssets) {
+            unchecked {
+                totalPool = totalMoleculaAssets - totalRedeem;
+            }
+        }
     }
 }

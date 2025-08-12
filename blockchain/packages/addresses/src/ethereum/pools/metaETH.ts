@@ -77,7 +77,7 @@ export const poolCurrenciesMetaETHMainnetBeta = {
  * A type annotation for all ERC-20 tokens which can be used in MoleculaPool
  * for MetaETH solution in Mainnet.
  */
-export type PoolsTokensMetaETHMainnet =
+export type MetaETHPoolCurrency =
     | keyof typeof poolCurrenciesMetaETHMainnetProd
     | keyof typeof poolCurrenciesMetaETHMainnetBeta;
 

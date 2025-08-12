@@ -73,7 +73,7 @@ contract DepositManagerMathTest is MrEthSetup {
 
         // Get initial state
         uint256 initialTotalSupply = depositManager.totalSupply();
-        uint256 initialBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 initialBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // First, make a deposit to have funds in buffer
         vm.startPrank(testUser);
@@ -86,7 +86,7 @@ contract DepositManagerMathTest is MrEthSetup {
 
         // Get final state
         uint256 finalTotalSupply = depositManager.totalSupply();
-        uint256 finalBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 finalBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // Verify supply decreased correctly
         assertApproxEqAbs(
@@ -129,7 +129,7 @@ contract DepositManagerMathTest is MrEthSetup {
 
         // Get initial state
         uint256 initialTotalSupply = depositManager.totalSupply();
-        uint256 initialBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 initialBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // Perform withdrawal
         vm.startPrank(authorizedStaker);
@@ -142,7 +142,7 @@ contract DepositManagerMathTest is MrEthSetup {
         );
         // Get final state
         uint256 finalTotalSupply = depositManager.totalSupply();
-        uint256 finalBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 finalBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // Verify supply decreased correctly
         assertApproxEqAbs(
@@ -188,7 +188,7 @@ contract DepositManagerMathTest is MrEthSetup {
 
         // Get initial state
         uint256 initialTotalSupply = depositManager.totalSupply();
-        uint256 initialBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 initialBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // Perform withdrawal
         vm.startPrank(authorizedStaker);
@@ -201,7 +201,7 @@ contract DepositManagerMathTest is MrEthSetup {
         );
         // Get final state
         uint256 finalTotalSupply = depositManager.totalSupply();
-        uint256 finalBufferedSupply = depositManager.totalBufferedSupply();
+        (uint256 finalBufferedSupply, ) = depositManager.totalBufferedSupply();
 
         // Verify supply decreased correctly
         assertApproxEqAbs(
@@ -352,7 +352,7 @@ contract DepositManagerMathTest is MrEthSetup {
      * @notice Checks that actual pool balances match expected proportions
      */
     function _verifyPoolProportions() internal view {
-        uint256 totalBuffered = depositManager.totalBufferedSupply();
+        (uint256 totalBuffered, ) = depositManager.totalBufferedSupply();
         for (uint256 i = 0; i < poolDataArray.length; i++) {
             uint256 expectedBalance = (totalBuffered * poolDataArray[i].poolPortion) /
                 PERCENTAGE_FACTOR;

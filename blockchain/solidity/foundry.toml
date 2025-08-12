@@ -16,7 +16,7 @@ fs_permissions = [
 ]
 
 remappings = [
-    "@chainlink/=../../node_modules/@chainlink/",
+    "@chainlink/=node_modules/@chainlink/",
     "@openzeppelin/=node_modules/@openzeppelin/", 
     "@layerzerolabs/=node_modules/@layerzerolabs/",
     "@aave/=node_modules/@aave/",

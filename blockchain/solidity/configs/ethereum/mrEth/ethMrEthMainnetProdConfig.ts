@@ -50,6 +50,12 @@ export const ethMrEthMainnetProdConfig: mrEthNetworkConfig = {
     /** mrETH token minimum redeem. */
     MRETH_TOKEN_MIN_REDEEM: 10n ** 18n,
 
+    /** Molecula Buffer name. */
+    MOLECULA_BUFFER_NAME: 'Molecula Buffer Token',
+
+    /** Molecula Buffer symbol. */
+    MOLECULA_BUFFER_SYMBOL: 'mwETH',
+
     /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mUSD holder. */
     APY_FORMATTER: 8_000,
 };

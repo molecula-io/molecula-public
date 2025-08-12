@@ -16,6 +16,8 @@ import {MoleculaPoolTreasuryV2, TokenType} from "./../../core/MoleculaPoolTreasu
 import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {BaseTokenVault} from "./../../coreV2/TokenVault/BaseTokenVault.sol";
 import {CommonTokenVault} from "./../../coreV2/TokenVault/CommonTokenVault.sol";
+import {IBaseTokenVault} from "./../../coreV2/TokenVault/interfaces/ITokenVault.sol";
+import {VaultPriceChecker} from "./../../coreV2/TokenVault/VaultPriceChecker.sol";
 import {INitrogenTokenVault} from "./interfaces/INitrogenTokenVault.sol";
 
 /// @dev Specialized Vault implementing asynchronous redemption flows following the ERC-7540 standard,
@@ -23,7 +25,7 @@ import {INitrogenTokenVault} from "./interfaces/INitrogenTokenVault.sol";
 /// RebaseTokenOwner for token supply management and MoleculaPoolTreasury for the underlying asset handling.
 /// @notice Price feed configuration is used to check that the asset price is approximately equal
 /// to the expected price, within the allowed deviation.
-contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, PriceCheckerClient {
+contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, VaultPriceChecker {
     using SafeERC20 for IERC20;
 
     // ============ State Variables ============
@@ -60,6 +62,16 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Pr
     }
 
     // ============ Core Functions ============
+
+    /// @inheritdoc IBaseTokenVault
+    function init(
+        address asset_,
+        uint128 minDepositAssets_,
+        uint128 minRedeemShares_
+    ) public virtual override {
+        super.init(asset_, minDepositAssets_, minRedeemShares_);
+        _validatePriceChecker(asset_);
+    }
 
     /// @inheritdoc IAgent
     // slither-disable-next-line locked-ether
@@ -150,7 +162,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Pr
         public
         view
         virtual
-        override(CommonTokenVault, PriceCheckerClient)
+        override(CommonTokenVault, VaultPriceChecker)
         returns (address)
     {
         return super.asset();
@@ -224,8 +236,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Pr
         uint256 assets,
         address receiver,
         address owner
-    ) internal virtual override returns (uint256 requestId, uint256 shares) {
-        checkPrice();
+    ) internal virtual override validatePrice returns (uint256 requestId, uint256 shares) {
         return super._requestDeposit(assets, receiver, owner);
     }
 
@@ -234,8 +245,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Pr
         uint256 shares,
         address controller,
         address owner
-    ) internal virtual override returns (uint256 requestId) {
-        checkPrice();
+    ) internal virtual override validatePrice returns (uint256 requestId) {
         return super._requestRedeem(shares, controller, owner);
     }
 

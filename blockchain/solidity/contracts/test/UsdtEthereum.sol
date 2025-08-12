@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT
 /**
  * Submitted for verification at Etherscan.io on 2017-11-28
- * link to original contract https://etherscan.io/address/0xdac17f958d2ee523a2206206994597c13d831ec7#code
+ * Link to the original contract:
+ * https://etherscan.io/address/0xdac17f958d2ee523a2206206994597c13d831ec7#code
  */
 
 // solhint-disable-next-line compiler-version

@@ -7,8 +7,6 @@ import {IAgent} from "../../contracts/common/interfaces/IAgent.sol";
 
 // Import options and fee structures used by OApp contracts
 import {IOAppOptionsType3, EnforcedOptionParam} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/interfaces/IOAppOptionsType3.sol";
-import {MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
-import {MessagingReceipt} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppSender.sol";
 
 // Import the mock AccountantLZ, UsdtOFT, and USDT contracts for testing cross-chain operations
 import {MockAccountantLZ} from "../../contracts/mock/lz/MockAccountantLZ.sol";

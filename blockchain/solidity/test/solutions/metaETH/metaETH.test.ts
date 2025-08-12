@@ -1,4 +1,5 @@
 /* eslint-disable camelcase, max-lines, no-await-in-loop, no-restricted-syntax, no-bitwise, no-plusplus */
+import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 
@@ -463,37 +464,100 @@ describe('Meta ETH', () => {
         );
     });
 
-    it('Check price for stETH', async () => {
-        const { stETHVault, stETH, user0, poolOwner } = await loadFixture(deployMetaEth);
+    it('Check adding token', async () => {
+        const { rebaseTokenV2, stETHVault, stETH, metaPoolTreasury } =
+            await loadFixture(deployMetaEth);
 
-        const decimals: bigint = await stETH.decimals();
-        const depositValue = 100n * 10n ** decimals;
+        await rebaseTokenV2.removeTokenVault(stETHVault);
+        await expect(metaPoolTreasury.addToken(stETH)).to.be.rejectedWith(
+            'EnumerableMapNonexistentKey(',
+        );
+    });
 
-        // Grand USD and approve tokens for vault
-        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
-        await stETH.connect(user0).approve(stETHVault, depositValue);
+    it('Check price checker in meta pool', async () => {
+        const { stETH, wETH, metaPoolTreasury, poolOwner } = await loadFixture(deployMetaEth);
 
         // STETH / ETH
         const stETHFeed = '0x86392dC19c0b719886221c78AB11eb8Cf5c52812';
         const PriceChecker = await ethers.getContractFactory('PriceChecker');
         const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            stETH,
-            stETHFeed,
-            false,
-            0,
+            [
+                {
+                    asset: stETH,
+                    priceFeed: stETHFeed,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: days(3),
+                },
+                {
+                    asset: wETH,
+                    priceFeed: ethers.ZeroAddress,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: 0,
+                },
+                {
+                    asset: NATIVE_TOKEN,
+                    priceFeed: ethers.ZeroAddress,
+                    isPriceFeedEIP4626: false,
+                    priceDeviationBps: 0,
+                    stalenessThreshold: 0,
+                },
+            ],
             poolOwner,
         );
-        await stETHVault.setPriceChecker(priceChecker);
-        //
-        await expect(
-            stETHVault
-                .connect(user0)
-                ['deposit(uint256,address,address)'](depositValue, user0, user0),
-        ).to.be.rejectedWith('EAssetPriceNotCloseToExpected(');
+        await metaPoolTreasury.setPriceChecker(priceChecker);
+    });
 
-        await priceChecker.setPriceDeviationBps((5 * 10_000) / 100); // 5%
-        await stETHVault
-            .connect(user0)
-            ['deposit(uint256,address,address)'](depositValue, user0, user0);
+    it('Check ERC-1271', async () => {
+        const { metaPoolTreasury, poolKeeper, user0 } = await loadFixture(deployMetaEth);
+
+        expect(await metaPoolTreasury.signatureAuthority()).to.be.equal(poolKeeper);
+
+        const message = 'Hello, OpenZeppelin!';
+        const messageHash = ethers.hashMessage(message);
+        const signature = await poolKeeper.signMessage(message);
+
+        let result = await metaPoolTreasury.isValidSignature(messageHash, signature);
+        expect(result).to.be.equal('0x1626ba7e');
+
+        result = await metaPoolTreasury.isValidSignature(ethers.hashMessage('Hello!'), signature);
+        expect(result).to.be.equal('0xffffffff');
+
+        await metaPoolTreasury.setSigner(user0);
+        result = await metaPoolTreasury.isValidSignature(
+            messageHash,
+            await user0.signMessage(message),
+        );
+        expect(result).to.be.equal('0x1626ba7e');
+    });
+
+    it('Check wmetaETH', async () => {
+        const { wmetaETH, rebaseTokenV2, user0, stETH, metaPoolTreasury, stETHVault } =
+            await loadFixture(deployMetaEth);
+
+        // Deposit stETH
+        const decimals: bigint = await stETH.decimals();
+        const depositValue = 2n * 10n ** decimals;
+        await grantERC20(user0, stETH, 2n * depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        const income = 5n * 10n ** 18n;
+        await grantERC20(metaPoolTreasury, stETH, income, FAUCET.stETH);
+
+        // Convert metaETH to wmetaETH
+        const shares = await rebaseTokenV2.sharesOf(user0);
+        const rebaseAssets = await rebaseTokenV2.balanceOf(user0);
+        await rebaseTokenV2.connect(user0).approve(wmetaETH, rebaseAssets);
+        await wmetaETH.connect(user0).wrap(rebaseAssets);
+        expectEqual(await wmetaETH.balanceOf(user0), shares);
+        expectEqual(await rebaseTokenV2.balanceOf(user0), 0n);
+
+        // Convert wmetaETH to metaETH
+        await wmetaETH.connect(user0).unwrap(await wmetaETH.balanceOf(user0));
+        expect(await wmetaETH.balanceOf(user0)).to.be.equal(0);
+        expectEqual(await rebaseTokenV2.balanceOf(user0), rebaseAssets);
     });
 });

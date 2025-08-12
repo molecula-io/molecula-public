@@ -43,6 +43,10 @@ interface IMoleculaPoolV2 {
     /// @return pool Total pool supply.
     function totalSupply() external view returns (uint256 pool);
 
+    /// @dev Returns the total supply of the Pool (TVL). Reverts if some asset is depegged.
+    /// @return pool Total pool supply.
+    function validatedTotalSupply() external view returns (uint256 pool);
+
     // ============ Admin Functions ============
 
     /// @dev Adds a new token Vault.

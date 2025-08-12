@@ -58,7 +58,7 @@ abstract contract VaultContainer is IVaultContainer, IERC7575Share, Ownable, ERC
         // Add the Token Vault to the allowed ones.
         isTokenVaultAllowed[tokenVault] = true;
 
-        emit TokenVaultAdded(tokenVault);
+        emit VaultUpdate(asset, tokenVault);
     }
 
     /// @inheritdoc IVaultContainer
@@ -73,7 +73,7 @@ abstract contract VaultContainer is IVaultContainer, IERC7575Share, Ownable, ERC
         // Remove the token Vault from the allowed ones.
         delete isTokenVaultAllowed[tokenVault];
 
-        emit TokenVaultRemoved(tokenVault);
+        emit VaultUpdate(asset, address(0));
     }
 
     /// @inheritdoc IVaultContainer

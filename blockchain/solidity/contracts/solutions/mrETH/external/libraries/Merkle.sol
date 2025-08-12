@@ -1,5 +1,6 @@
 /**
- * Link to original contract https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/libraries/Merkle.sol
+ * Link to the original contract:
+ * https://github.com/Layr-Labs/eigenlayer-contracts/blob/main/src/contracts/libraries/Merkle.sol
  */
 // SPDX-License-Identifier: MIT
 // Adapted from OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/MerkleProof.sol)

@@ -48,4 +48,8 @@ export const tronMainnetProdConfig: TronNetworkConfig = {
     MUSD_TOKEN_MIN_DEPOSIT: 1_000_000n,
     MUSD_TOKEN_MIN_REDEEM: 500_000_000_000_000_000n,
     MUSD_TOKEN_INITIAL_SUPPLY: 10_000_000_000_000_000_000n,
+
+    // Wrapped token info
+    WMUSD_NAME: 'Wrapped Molecula USD',
+    WMUSD_SYMBOL: 'wmUSD',
 };

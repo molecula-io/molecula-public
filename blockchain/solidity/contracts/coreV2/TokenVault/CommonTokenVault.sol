@@ -26,7 +26,7 @@ abstract contract CommonTokenVault is BaseTokenVault, IERC7575, IERC7540Deposit 
         address asset_,
         uint128 minDepositAssets_,
         uint128 minRedeemShares_
-    ) external virtual override onlyOwner {
+    ) public virtual override onlyOwner {
         _init(asset_, minDepositAssets_, minRedeemShares_);
 
         // Infinity approve to the Molecula Pool.

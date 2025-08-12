@@ -9,15 +9,14 @@ export async function deploymUSDLock(
     // Find an account address corresponding to the given PRIVATE_KEY
     const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
 
+    // TODO the MUSDLock is compiled using solc v0.8.30
     const artifact = await hre.artifacts.readArtifact('MUSDLock');
 
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
-            feeLimit: 2000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
-            // @ts-ignore (probably wrong type annotation)
+            feeLimit: 2_000_000_000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000SUN
             abi: artifact.abi,
             bytecode: artifact.bytecode,
-            // @ts-ignore (probably wrong type annotation)
             parameters: [rebaseTokenAddress],
         },
         issuerAddress,

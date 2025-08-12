@@ -1,3 +1,15 @@
+/**
+ * Deploy Mock Contracts Script
+ *
+ * Usage via hardhat task (requires at least one flag):
+ * - Deploy USDT: npx hardhat ethereumScope deployAaveMock --with-usdt --network <network>
+ * - Deploy UsdtOFT: npx hardhat ethereumScope deployAaveMock --with-usdt-oft --network <network>
+ * - Deploy mrETHMockAavePool: npx hardhat ethereumScope deployAaveMock --with-mr-eth-mock --network <network>
+ * - Deploy multiple contracts: npx hardhat ethereumScope deployAaveMock --with-usdt --with-usdt-oft --with-mr-eth-mock --network <network>
+ *
+ * Note: At least one flag must be specified to deploy any contract.
+ */
+
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
@@ -60,17 +72,3 @@ export async function deploymrETHMockAavePool(hre: HardhatRuntimeEnvironment) {
 
     await verifyContract(hre, 'MockAavePool', mrETHMockAddress, []);
 }
-
-async function main() {
-    const hardhat = await import('hardhat');
-    const hre: HardhatRuntimeEnvironment = hardhat.default;
-
-    await deployUSDT(hre);
-    await deployUsdtOFT(hre);
-    await deploymrETHMockAavePool(hre);
-}
-
-main().catch(error => {
-    console.error('Failed to deploy:', error);
-    process.exit(1);
-});

@@ -211,6 +211,18 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
         `Delegator implementation deployed successfully at ${await delegatorImplementation.getAddress()}`,
     );
 
+    // Deploy MoleculaBuffer
+    const MoleculaBuffer = await hre.ethers.getContractFactory('MoleculaBuffer');
+    const moleculaBuffer = await MoleculaBuffer.deploy(
+        config.MOLECULA_BUFFER_NAME,
+        config.MOLECULA_BUFFER_SYMBOL,
+        account.address,
+        config.WETH_ADDRESS,
+        { gasLimit: DEPLOY_GAS_LIMIT },
+    );
+    await moleculaBuffer.waitForDeployment();
+    console.log(`MoleculaBuffer deployed successfully at ${await moleculaBuffer.getAddress()}`);
+
     // Calculate future contract addresses for proper initialization
     const transactionCount = await account.getNonce();
 
@@ -248,7 +260,7 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
     console.log(`DepositManager deployed successfully at ${await depositManager.getAddress()}`);
 
     // Initialize DepositManager with Aave pool configuration
-    let tx = await depositManager.initialize(0, [
+    let tx = await depositManager.initialize(await moleculaBuffer.getAddress(), 0, [
         {
             pool: aavePool,
             newPoolData: {
@@ -312,6 +324,7 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
         ...coreV2,
         depositManager: await depositManager.getAddress(),
         delegatorImplementation: await delegatorImplementation.getAddress(),
+        moleculaBuffer: await moleculaBuffer.getAddress(),
     };
 
     return eth;

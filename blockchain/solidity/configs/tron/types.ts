@@ -25,10 +25,12 @@ export type TronNetworkConfig = {
     // System contracts
     USDT_ADDRESS: TronAddress;
     USDT_OFT: TronAddress;
+
     // Authorized wallets
     OWNER: TronAddress;
     ORACLE_AUTHORIZED_UPDATER: TronAddress;
     ACCOUNTANT_AUTHORIZED_LZ_CONFIGURATOR: TronAddress;
+
     // Token info
     MUSD_TOKEN_NAME: string;
     MUSD_TOKEN_SYMBOL: string;
@@ -36,4 +38,8 @@ export type TronNetworkConfig = {
     MUSD_TOKEN_MIN_DEPOSIT: bigint;
     MUSD_TOKEN_MIN_REDEEM: bigint;
     MUSD_TOKEN_INITIAL_SUPPLY: bigint;
+
+    // wrapped token info
+    WMUSD_NAME: string;
+    WMUSD_SYMBOL: string;
 };

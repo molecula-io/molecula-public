@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 /**
- * link to original contract https://tronscan.io/#/token20/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/code
+ * Link to the original contract:
+ * https://tronscan.io/#/token20/TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t/code
  */
 
 // solhint-disable-next-line compiler-version

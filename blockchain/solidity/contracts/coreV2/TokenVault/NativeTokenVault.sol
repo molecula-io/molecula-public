@@ -30,7 +30,7 @@ abstract contract NativeTokenVault is INativeTokenVault, BaseTokenVault, IERC757
         address asset_,
         uint128 minDepositAssets_,
         uint128 minRedeemShares_
-    ) external virtual override onlyOwner {
+    ) public virtual override onlyOwner {
         if (asset_ != ConstantsCoreV2.NATIVE_TOKEN) {
             revert EWrongNativeAddress();
         }

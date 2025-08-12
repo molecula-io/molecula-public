@@ -10,11 +10,19 @@ export async function verifyContract(
     console.log(`Verifying "${contractName}" at ${address} ...`);
     let verified = true;
     try {
-        await hre.run('verify:verify', {
-            address,
-            constructorArguments,
-            contract: contractName,
-        });
+        // Check that contractName is a fully qualified name, e.g. "contracts/AContract.sol:TheContract"
+        if (contractName.includes('/')) {
+            await hre.run('verify:verify', {
+                address,
+                constructorArguments,
+                contract: contractName,
+            });
+        } else {
+            await hre.run('verify:verify', {
+                address,
+                constructorArguments,
+            });
+        }
     } catch (e) {
         console.log(`Failed to verify "${contractName}" with error:`, e);
         verified = false;
