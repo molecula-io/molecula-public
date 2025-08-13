@@ -12,6 +12,7 @@
     },
     "tron": {
         "rebaseToken": "TMEMLpAc5MAG6WdDUByxUJSf6rvg9NqBMc",
+        "rebaseTokenOwner": "",
         "oracle": "TXj4BJHokJ5jwc4CULfYoQjfzUCuXGXVVN",
         "accountantLZ": "TDf3bfKjKeSWh6JoEGwyYh6Qnmr7ceQ8m2",
         "mUSDLock": "TFmBqTmyQXxZSBP7cDqGdEdm7fzPmVg86y",

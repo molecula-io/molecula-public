@@ -16,6 +16,7 @@ import {
     deployMetaEth,
     deployUSDT,
     deployUsdtOFT,
+    deployOFTVault,
 } from '../scripts/ethereum';
 import { deployNitrogenTokenVault } from '../scripts/ethereum/deploy/deployNitrogenTokenVault';
 import { deployRebaseTokenOwner } from '../scripts/ethereum/deploy/deployRebaseTokenOwner';
@@ -369,4 +370,25 @@ ethereumMajorScope
         };
 
         writeToFile(`${environment}/contracts_meta_eth.json`, result);
+    });
+
+ethereumMajorScope
+    .task('deployOFTVault', 'Deploys OFTVault contract')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        const oftVaultAddress = await deployOFTVault(hre, contractsNitrogen, environment);
+        writeToFile(`${environment}/contracts_nitrogen.json`, {
+            eth: {
+                ...contractsNitrogen,
+                oftVault: oftVaultAddress,
+            },
+        });
     });

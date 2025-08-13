@@ -7,3 +7,4 @@ export * from './deployExecutor';
 export * from './deployMrEth';
 export * from './deployMetaEth';
 export * from './deployMock';
+export * from './deployOFTVault';

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.24;
 
 import {IERC7540Operator} from "../external/interfaces/IERC7540.sol";
 

@@ -37,6 +37,7 @@
         "deploy:pool:production": "        yarn compile && dotenv  -e .env.production -- hardhat ethereumScope deployMoleculaPoolTreasuryV2 --network ethereum --environment mainnet/prod",
         "deploy:pool:test": "              yarn compile &&                               hardhat ethereumScope deployMoleculaPoolTreasuryV2 --network sepolia --environment devnet",
         "deploy:rebaseTokenOwner:test": "  yarn compile &&                               hardhat ethereumScope deployRebaseTokenOwner --network sepolia --environment devnet",
+        "deploy:tron:rebaseTokenOwner:test": "  yarn compile &&                               hardhat tronScope deployRebaseTokenOwner --network shasta --environment devnet",
         "deploy:tron:wmUSD:beta": "        yarn compile && dotenv  -e .env.production -- hardhat tronScope deploywmUSD --network tron --environment mainnet/beta",
         "deploy:tron:wmUSD:production": "  yarn compile && dotenv  -e .env.production -- hardhat tronScope deploywmUSD --network tron --environment mainnet/prod",
         "deploy:tron:wmUSD:test": "        yarn compile &&                               hardhat tronScope deploywmUSD --network shasta --environment devnet",

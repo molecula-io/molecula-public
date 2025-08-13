@@ -5,3 +5,6 @@ export * from './deployMockTron';
 export * from './deploymUSDLock';
 export * from './deployOracle';
 export * from './deployRebaseToken';
+export * from './deploywmUSD';
+export * from './deployRebaseTokenOwner';
+export * from './deployOFTVault';

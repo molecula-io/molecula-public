@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.30;
+pragma solidity ^0.8.24;
 
 import {OptionsBuilder} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OptionsBuilder.sol";
 import {OApp, Origin, MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
@@ -36,11 +36,11 @@ contract OFTVault is
     /// @dev Constant for the LayerZero EID representing Ethereum.
     uint32 internal immutable _ETHEREUM_EID;
 
-    /// @dev Address of the Oracle contract used for total supply synchronization.
-    address public immutable ORACLE;
-
     /// @dev Address of the IIssuer-compliant contract responsible for minting and burning.
     address public immutable ISSUER;
+
+    /// @dev Address of the Oracle contract used for the total supply synchronization.
+    address public oracle;
 
     /// @dev Per-EID configuration of LayerZero, receive gas limits.
     ///      Must be set for every destination chain before bridging. Otherwise, the bridging will revert.
@@ -53,25 +53,25 @@ contract OFTVault is
      * @param endpoint LayerZero endpoint address for cross-chain messaging.
      * @param ethereumEid EID representing Ethereum within LayerZero.
      * @param initialOwner Contract owner used for implementing the OApp and Ownable logic.
-     * @param rebaseTokenOwner IIssuer address authorized to mint and burn shares.
-     * @param oracle ISetterOracle address of the supply Oracle contract.
+     * @param issuer IIssuer address authorized to mint and burn shares.
+     * @param oracleAddress ISetterOracle address of the supply Oracle contract (SupplyManager's address in case of ETH).
      */
     constructor(
         address endpoint,
         uint32 ethereumEid,
         address initialOwner,
-        address rebaseTokenOwner,
-        address oracle
+        address issuer,
+        address oracleAddress
     )
         OApp(endpoint, initialOwner)
         Ownable(initialOwner)
         notZero(ethereumEid)
-        notZeroAddress(rebaseTokenOwner)
-        notZeroAddress(oracle)
+        notZeroAddress(issuer)
+        notZeroAddress(oracleAddress)
     {
         _ETHEREUM_EID = ethereumEid;
-        ISSUER = rebaseTokenOwner;
-        ORACLE = oracle;
+        ISSUER = issuer;
+        oracle = oracleAddress;
         _LOCAL_EID_V2 = ILayerZeroEndpointV2(endpoint).eid();
     }
 
@@ -104,6 +104,14 @@ contract OFTVault is
         lzOptions = _buildOptions(dstEid);
         // Get the LayerZero fee in the native gas token.
         fee = _quote(dstEid, payload, lzOptions, false);
+    }
+
+    /**
+     * @dev Sets the Oracle contract address.
+     * @param oracleAddress Oracle contract address.
+     */
+    function setOracle(address oracleAddress) external notZeroAddress(oracleAddress) onlyOwner {
+        oracle = oracleAddress;
     }
 
     /**
@@ -191,7 +199,7 @@ contract OFTVault is
     ) internal view virtual returns (bytes memory payload) {
         if (_LOCAL_EID_V2 == _ETHEREUM_EID) {
             // If bridging from Ethereum, include the total supply data.
-            (uint256 pool, uint256 sharesSupply) = ISetterOracle(ORACLE).getTotalSupply();
+            (uint256 pool, uint256 sharesSupply) = ISetterOracle(oracle).getTotalSupply();
             payload = abi.encode(shares, receiver, pool, sharesSupply);
         } else {
             // For all the other chains, send only the share and receiver data.
@@ -251,7 +259,7 @@ contract OFTVault is
                 (uint256, address, uint256, uint256)
             );
             // Synchronize the Oracle total supply.
-            ISetterOracle(ORACLE).setTotalSupply(pool, oracleShares);
+            ISetterOracle(oracle).setTotalSupply(pool, oracleShares);
         } else if (_srcEid != _ETHEREUM_EID && _payload.length == 64) {
             // From other chains, decode only the share and receiver data.
             (shares, receiver) = abi.decode(_payload, (uint256, address));

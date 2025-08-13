@@ -12,6 +12,7 @@
     },
     "tron": {
         "rebaseToken": "",
+        "rebaseTokenOwner": "",
         "oracle": "",
         "accountantLZ": "",
         "mUSDLock": "",

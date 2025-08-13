@@ -3,10 +3,15 @@ import { scope } from 'hardhat/config';
 
 import type { ContractsCarbon } from '@molecula-monorepo/blockchain.addresses';
 
-import { deployCarbon } from '../scripts/tron/deploy/deployCarbonTron';
-import { deployExecutor } from '../scripts/tron/deploy/deployExecutor';
-import { deployMockUSDT, deployUsdtOFT } from '../scripts/tron/deploy/deployMockTron';
-import { deploywmUSD } from '../scripts/tron/deploy/deploywmUSD';
+import {
+    deployCarbon,
+    deployExecutor,
+    deployMockUSDT,
+    deployUsdtOFT,
+    deploywmUSD,
+    deployRebaseTokenOwner,
+    deployOFTVault,
+} from '../scripts/tron/deploy';
 import { migrateAccountantLZwithOracle } from '../scripts/tron/migration/migrateAccountantLZwithOracle';
 import {
     getEnvironment,
@@ -44,6 +49,26 @@ tronMajorScope
         } catch (error) {
             handleError(error);
         }
+    });
+
+tronMajorScope
+    .task('deployRebaseTokenOwner', 'Deploys RebaseTokenOwner contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsCarbon: ContractsCarbon = await readFromFile(
+            `${environment}/contracts_carbon.json`,
+        );
+
+        contractsCarbon.tron.rebaseTokenOwner = await deployRebaseTokenOwner(
+            hre,
+            contractsCarbon,
+            environment,
+        );
+        writeToFile(`${environment}/contracts_carbon.json`, contractsCarbon);
     });
 
 tronMajorScope
@@ -156,4 +181,34 @@ tronMajorScope
         contractsCarbon.tron.wmUSD = await deploywmUSD(hre, contractsCarbon, environment);
 
         writeToFile(`${environment}/contracts_carbon.json`, contractsCarbon);
+    });
+
+tronMajorScope
+    .task('deployOFTVault', 'Deploys OFTVault contract')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n TRON Deployment');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        try {
+            const contractsCarbon: ContractsCarbon = await readFromFile(
+                `${environment}/contracts_carbon.json`,
+            );
+
+            // Execute deployment
+            const oftVaultAddress = await deployOFTVault(hre, contractsCarbon, environment);
+
+            writeToFile(`${environment}/contracts_executor.json`, {
+                ...contractsCarbon,
+                tron: {
+                    ...contractsCarbon.tron,
+                    oftVault: oftVaultAddress,
+                },
+            });
+            console.log('Deployment of TronOFTVault contract completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
     });
