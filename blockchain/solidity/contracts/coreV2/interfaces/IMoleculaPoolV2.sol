@@ -16,24 +16,26 @@ interface IMoleculaPoolV2 {
     /// @dev Deposits assets to the pool.
     /// @param requestId Deposit operation's ID.
     /// @param token Deposit token.
-    /// @param from Sender's address.
+    /// @param tokenVault Token Vault's address.
     /// @param assets Deposit amount.
     /// @return moleculaTokenAssets Formatted deposit amount.
     function deposit(
         uint256 requestId,
         address token,
-        address from,
+        address tokenVault,
         uint256 assets
     ) external returns (uint256 moleculaTokenAssets);
 
     /// @dev Executes a Redemption operation request.
     /// @param requestId Redemption operation's ID.
     /// @param token Redemption ERC20 token.
+    /// @param tokenVault Token Vault's address that has `token` as an asset.
     /// @param moleculaTokenAssets Formatted redeem operation value.
     /// @return assets Redemption assets.
     function requestRedeem(
         uint256 requestId,
         address token,
+        address tokenVault,
         uint256 moleculaTokenAssets
     ) external returns (uint256 assets);
 
@@ -65,13 +67,13 @@ interface IMoleculaPoolV2WithNativeToken is IMoleculaPoolV2 {
     /// @dev Deposits native tokens to the pool.
     /// @param requestId Deposit operation's ID.
     /// @param token Native token address.
-    /// @param from Sender's address.
+    /// @param tokenVault Token Vault's address.
     /// @param assets Deposit amount in the native token.
     /// @return moleculaTokenAssets Formatted deposit amount.
     function depositNativeToken(
         uint256 requestId,
         address token,
-        address from,
+        address tokenVault,
         uint256 assets
     ) external payable returns (uint256 moleculaTokenAssets);
 

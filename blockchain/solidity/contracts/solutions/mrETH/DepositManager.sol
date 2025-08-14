@@ -317,8 +317,12 @@ contract DepositManager is
     function grantNativeToken(address receiver, uint256 nativeTokenAmount) external {}
 
     /// @inheritdoc IMoleculaPoolV2
-    // solhint-disable-next-line no-empty-blocks
-    function requestRedeem(uint256, address, uint256) external returns (uint256 values) {}
+    function requestRedeem(
+        uint256,
+        address,
+        address,
+        uint256 // solhint-disable-next-line no-empty-blocks
+    ) external virtual override returns (uint256 values) {}
 
     // ============ VIEW FUNCTIONS ============
 

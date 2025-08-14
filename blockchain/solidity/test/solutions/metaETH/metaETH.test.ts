@@ -86,8 +86,8 @@ describe('Meta ETH', () => {
     });
 
     it('Test execute', async () => {
-        const { user0, metaPoolTreasury, stETH, poolKeeper } = await loadFixture(deployMetaEth);
-
+        const { user0, metaPoolTreasury, stETH, poolKeeper, approveSelector } =
+            await loadFixture(deployMetaEth);
         const encodedBalanceOf = stETH.interface.encodeFunctionData('balanceOf', [user0.address]);
         const execEncodedBalanceOf = [
             {
@@ -100,8 +100,12 @@ describe('Meta ETH', () => {
             metaPoolTreasury
                 .connect(poolKeeper)
                 .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE),
-        ).to.be.rejectedWith('ENotInWhiteList(');
-        await metaPoolTreasury.addInWhiteList(stETH);
+        ).to.be.rejectedWith('ENotPresentInWhiteList(');
+        await metaPoolTreasury.addInWhiteList(stETH, approveSelector);
+        await metaPoolTreasury.addInWhiteList(
+            stETH,
+            stETH.interface.getFunction('balanceOf').selector,
+        );
 
         await expect(metaPoolTreasury.connect(user0).pauseExecute()).to.be.rejectedWith(
             'ENotAuthorizedForPause()',
@@ -133,6 +137,7 @@ describe('Meta ETH', () => {
                 value: 1,
             },
         ];
+        await metaPoolTreasury.addInWhiteList(testSeqno, '0x00000000');
 
         const prevCounter = await testSeqno.seqno();
         await metaPoolTreasury
@@ -144,6 +149,13 @@ describe('Meta ETH', () => {
 
     it('Test approve execute', async () => {
         const { user0, metaPoolTreasury, stETH, poolKeeper } = await loadFixture(deployMetaEth);
+
+        await metaPoolTreasury.setSpenderInWhiteList(user0, true);
+        await metaPoolTreasury.addInWhiteList(
+            stETH,
+            stETH.interface.getFunction('approve').selector,
+        );
+
         const encodedApprove = stETH.interface.encodeFunctionData('approve', [
             user0.address,
             100500,
@@ -169,11 +181,11 @@ describe('Meta ETH', () => {
                 value: 0,
             },
         ];
+        await metaPoolTreasury.setSpenderInWhiteList(user0, false);
         await expect(
             metaPoolTreasury.connect(poolKeeper).execute(execArgs0, ValueMode.USE_MESSAGE_VALUE),
-        ).to.be.rejectedWith('ENotInWhiteList()');
-        await metaPoolTreasury.addInWhiteList(user0.address);
-        expect(await metaPoolTreasury.isInWhiteList(user0.address)).to.be.equal(true);
+        ).to.be.rejectedWith('ENotInWhiteListSpender()');
+        await metaPoolTreasury.setSpenderInWhiteList(user0, true);
 
         await metaPoolTreasury.setBlockToken(stETH, true);
         await expect(
@@ -186,6 +198,11 @@ describe('Meta ETH', () => {
 
     it('Test approve execute with value', async () => {
         const { metaPoolTreasury, testSeqno, poolKeeper } = await loadFixture(deployMetaEth);
+
+        await metaPoolTreasury.addInWhiteList(
+            testSeqno,
+            testSeqno.interface.getFunction('incAndPay').selector,
+        );
 
         const encodedData = testSeqno.interface.encodeFunctionData('incAndPay', [12n]);
         const execArgs0 = [
@@ -212,6 +229,11 @@ describe('Meta ETH', () => {
         expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(0);
         await grantETH(metaPoolTreasury, 100500);
 
+        await metaPoolTreasury.addInWhiteList(
+            testSeqno,
+            testSeqno.interface.getFunction('incAndPay').selector,
+        );
+
         const encodedData = testSeqno.interface.encodeFunctionData('incAndPay', [12n]);
         const execArgs0 = [
             {
@@ -233,6 +255,11 @@ describe('Meta ETH', () => {
     it('Test sending value and pool balance', async () => {
         const { metaPoolTreasury, testSeqno, poolKeeper } = await loadFixture(deployMetaEth);
         const { provider } = ethers;
+
+        await metaPoolTreasury.addInWhiteList(
+            testSeqno,
+            testSeqno.interface.getFunction('incAndPay').selector,
+        );
 
         expect(await provider.getBalance(metaPoolTreasury)).to.be.equal(0);
         await grantETH(metaPoolTreasury, 100500);
@@ -275,11 +302,11 @@ describe('Meta ETH', () => {
     });
 
     it('Test white list', async () => {
-        const { testSeqno, metaPoolTreasury } = await loadFixture(deployMetaEth);
-        await metaPoolTreasury.deleteFromWhiteList(testSeqno);
-        await expect(metaPoolTreasury.deleteFromWhiteList(testSeqno)).to.be.rejectedWith(
-            'ENotPresentInWhiteList(',
-        );
+        const { testSeqno, metaPoolTreasury, approveSelector } = await loadFixture(deployMetaEth);
+        await metaPoolTreasury.deleteFromWhiteList(testSeqno, approveSelector);
+        await expect(
+            metaPoolTreasury.deleteFromWhiteList(testSeqno, approveSelector),
+        ).to.be.rejectedWith('ENotPresentInWhiteList(');
     });
 
     it('Owner does not receive eth', async () => {
@@ -322,7 +349,7 @@ describe('Meta ETH', () => {
     });
 
     it('Test errors', async () => {
-        const { metaPoolTreasury, user0 } = await loadFixture(deployMetaEth);
+        const { metaPoolTreasury, user0, approveSelector } = await loadFixture(deployMetaEth);
         await expect(metaPoolTreasury.fulfillRedeemRequests([])).to.be.rejectedWith(
             'EEmptyArray()',
         );
@@ -350,7 +377,9 @@ describe('Meta ETH', () => {
                 .depositNativeToken(0, ethers.ZeroAddress, ethers.ZeroAddress, 0),
         ).to.be.rejectedWith('ENotAuthorized(');
         await expect(
-            metaPoolTreasury.connect(user0).requestRedeem(0, ethers.ZeroAddress, 0),
+            metaPoolTreasury
+                .connect(user0)
+                .requestRedeem(0, ethers.ZeroAddress, ethers.ZeroAddress, 0),
         ).to.be.rejectedWith('ENotAuthorized(');
         await expect(
             metaPoolTreasury.connect(user0).grantNativeToken(ethers.ZeroAddress, 0),
@@ -374,10 +403,12 @@ describe('Meta ETH', () => {
             metaPoolTreasury.connect(user0).setBlockToken(ethers.ZeroAddress, true),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
         await expect(
-            metaPoolTreasury.connect(user0).addInWhiteList(ethers.ZeroAddress),
+            metaPoolTreasury.connect(user0).addInWhiteList(ethers.ZeroAddress, approveSelector),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
         await expect(
-            metaPoolTreasury.connect(user0).deleteFromWhiteList(ethers.ZeroAddress),
+            metaPoolTreasury
+                .connect(user0)
+                .deleteFromWhiteList(ethers.ZeroAddress, approveSelector),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
         await expect(
             metaPoolTreasury.connect(user0).pauseFulfillRedeemRequests(),
@@ -386,11 +417,11 @@ describe('Meta ETH', () => {
             metaPoolTreasury.connect(user0).unpauseFulfillRedeemRequests(),
         ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
 
-        await expect(metaPoolTreasury.addInWhiteList(ethers.ZeroAddress)).to.be.rejectedWith(
-            'EZeroAddress()',
-        );
-        await metaPoolTreasury.addInWhiteList(user0);
-        await expect(metaPoolTreasury.addInWhiteList(user0)).to.be.rejectedWith(
+        await expect(
+            metaPoolTreasury.addInWhiteList(ethers.ZeroAddress, approveSelector),
+        ).to.be.rejectedWith('EZeroAddress()');
+        await metaPoolTreasury.addInWhiteList(user0, approveSelector);
+        await expect(metaPoolTreasury.addInWhiteList(user0, approveSelector)).to.be.rejectedWith(
             'EAlreadyAddedInWhiteList()',
         );
 

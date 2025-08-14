@@ -18,6 +18,7 @@ import {ISupplyManagerV2WithNative} from "./../../coreV2/interfaces/ISupplyManag
 import {ISupplyManagerV2} from "./../../coreV2/interfaces/ISupplyManagerV2.sol";
 import {VaultContainer} from "./../../coreV2/Tokens/VaultContainer.sol";
 import {IBaseTokenVault} from "./../../coreV2/TokenVault/interfaces/ITokenVault.sol";
+import {WhitelistedExecutor} from "./../../coreV2/WhitelistedExecutor.sol";
 import {IMetaPoolTreasury} from "./interfaces/IMetaPoolTreasury.sol";
 import {PausableExecute} from "./PausableExecute.sol";
 import {PausableFulfillRedeemRequests} from "./PausableFulfillRedeem.sol";
@@ -27,6 +28,7 @@ contract MetaPoolTreasury is
     IMetaPoolTreasury,
     IMoleculaPoolV2,
     IMoleculaPoolV2WithNativeToken,
+    WhitelistedExecutor,
     ERC1271,
     Ownable2Step,
     PausableExecute,
@@ -34,7 +36,6 @@ contract MetaPoolTreasury is
     PriceCheckerClient
 {
     using SafeERC20 for IERC20;
-    using Address for address;
     using Address for address payable;
 
     // ============ State Variables ============
@@ -50,9 +51,6 @@ contract MetaPoolTreasury is
 
     /// @dev Mapping of the ERC20 Pool.
     mapping(address token => TokenInfo) public poolMap;
-
-    /// @dev Whitelist of addresses callable by this contract.
-    mapping(address target => bool) public isInWhiteList;
 
     // ============ Modifiers ============
 
@@ -90,7 +88,7 @@ contract MetaPoolTreasury is
         address initialOwner,
         address poolKeeperAddress,
         address supplyManagerAddress,
-        address[] memory whiteList,
+        WhiteList[] memory whiteList,
         address guardianAddress,
         address priceChecker_,
         address signer_
@@ -99,16 +97,12 @@ contract MetaPoolTreasury is
         Guardian(guardianAddress)
         PriceCheckerClient(priceChecker_)
         ERC1271(signer_)
+        WhitelistedExecutor(whiteList)
         notZeroAddress(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
     {
         poolKeeper = poolKeeperAddress;
         SUPPLY_MANAGER = supplyManagerAddress;
-
-        uint256 whiteListLength = whiteList.length;
-        for (uint256 i = 0; i < whiteListLength; ++i) {
-            _addInWhiteList(whiteList[i]);
-        }
     }
 
     // ============ Anybody's Functions ============
@@ -162,7 +156,7 @@ contract MetaPoolTreasury is
     function deposit(
         uint256 /*requestId*/,
         address token,
-        address from,
+        address tokenVault,
         uint256 assets
     )
         external
@@ -174,18 +168,16 @@ contract MetaPoolTreasury is
     {
         // Transfer assets to the token holder.
         // slither-disable-next-line arbitrary-send-erc20
-        IERC20(token).safeTransferFrom(from, address(this), assets);
+        IERC20(token).safeTransferFrom(tokenVault, address(this), assets);
 
-        moleculaTokenAssets = IBaseTokenVault(_getTokenVault(token)).convertAssetsToMoleculaAssets(
-            assets
-        );
+        moleculaTokenAssets = IBaseTokenVault(tokenVault).convertAssetsToMoleculaAssets(assets);
     }
 
     /// @inheritdoc IMoleculaPoolV2WithNativeToken
     function depositNativeToken(
         uint256 /*requestId*/,
         address token,
-        address /*from*/,
+        address tokenVault,
         uint256 /*assets*/
     )
         external
@@ -196,15 +188,14 @@ contract MetaPoolTreasury is
         tokenIsPresent(token)
         returns (uint256 moleculaTokenAssets)
     {
-        moleculaTokenAssets = IBaseTokenVault(_getTokenVault(token)).convertAssetsToMoleculaAssets(
-            msg.value
-        );
+        moleculaTokenAssets = IBaseTokenVault(tokenVault).convertAssetsToMoleculaAssets(msg.value);
     }
 
     /// @inheritdoc IMoleculaPoolV2
     function requestRedeem(
         uint256 /*requestId*/,
         address token,
+        address tokenVault,
         uint256 moleculaTokenAssets
     )
         external
@@ -214,12 +205,15 @@ contract MetaPoolTreasury is
         tokenIsPresent(token)
         returns (uint256 assets)
     {
-        assets = IBaseTokenVault(_getTokenVault(token)).convertMoleculaAssetsToAssets(
-            moleculaTokenAssets
-        );
+        assets = IBaseTokenVault(tokenVault).convertMoleculaAssetsToAssets(moleculaTokenAssets);
 
         // Must reduce the Pool amount to correctly calculate `totalSupply` upon redemption.
         poolMap[token].requestedRedeemAssets += assets;
+
+        if (token != ConstantsCoreV2.NATIVE_TOKEN) {
+            // Increase the MetaPoolTreasury's allowance toward `tokenVault` by `assets`.
+            IERC20(token).safeIncreaseAllowance(tokenVault, assets);
+        }
     }
 
     /// @inheritdoc IMoleculaPoolV2WithNativeToken
@@ -233,18 +227,12 @@ contract MetaPoolTreasury is
     /// @inheritdoc IMoleculaPoolV2
     function addTokenVault(address tokenVault) external virtual override only(SUPPLY_MANAGER) {
         address asset = IERC7575(tokenVault).asset();
-        if (asset != ConstantsCoreV2.NATIVE_TOKEN) {
-            IERC20(asset).forceApprove(tokenVault, type(uint256).max);
-        }
         _addToken(asset);
     }
 
     /// @inheritdoc IMoleculaPoolV2
     function removeTokenVault(address tokenVault) external virtual override only(SUPPLY_MANAGER) {
         address asset = IERC7575(tokenVault).asset();
-        if (asset != ConstantsCoreV2.NATIVE_TOKEN) {
-            IERC20(asset).forceApprove(tokenVault, 0);
-        }
         if (poolMap[asset].isPresent) {
             _removeToken(asset);
         }
@@ -283,21 +271,6 @@ contract MetaPoolTreasury is
 
         tokenInfo.isBlocked = isBlocked;
         emit TokenBlockedChanged(token, isBlocked);
-    }
-
-    /// @inheritdoc IMetaPoolTreasury
-    function addInWhiteList(address target) external virtual override onlyOwner {
-        _addInWhiteList(target);
-        emit AddedInWhiteList(target);
-    }
-
-    /// @inheritdoc IMetaPoolTreasury
-    function deleteFromWhiteList(address target) external virtual override onlyOwner {
-        if (!isInWhiteList[target]) {
-            revert ENotPresentInWhiteList();
-        }
-        delete isInWhiteList[target];
-        emit DeletedFromWhiteList(target);
     }
 
     /// @inheritdoc PriceCheckerClient
@@ -490,63 +463,13 @@ contract MetaPoolTreasury is
         emit TokenRemoved(token);
     }
 
-    /**
-     * @dev Add the target in the whitelist.
-     * @param target Address.
-     */
-    function _addInWhiteList(address target) internal virtual notZeroAddress(target) {
-        if (isInWhiteList[target]) {
-            revert EAlreadyAddedInWhiteList();
-        }
-        isInWhiteList[target] = true;
-    }
-
-    /**
-     * @dev Execute transactions on behalf of the whitelisted contract.
-     * Allows the `approve` calls to tokens in `poolMap` and `poolMap` without whitelisting.
-     * @param target Address.
-     * @param data Encoded function data.
-     * @param value Value to attach.
-     * @return result Result of the function call.
-     */
+    /// @inheritdoc WhitelistedExecutor
     function _execute(
         address target,
         bytes calldata data,
         uint256 value
-    ) internal virtual tokenIsNotBlocked(target) returns (bytes memory result) {
-        // Decode the function selector.
-        bytes4 selector = bytes4(data);
-
-        // Allow approval calls for any ERC-20 token, but only to whitelisted spender contracts.
-        if (selector == IERC20.approve.selector) {
-            // Ensure that the value is zero.
-            if (value != 0) {
-                revert EMsgValueIsNotZero();
-            }
-
-            // Decode `approve(spender, amount)` to get the spender address.
-            address spender;
-            // slither-disable-next-line assembly, solhint-disable-next-line no-inline-assembly
-            assembly {
-                spender := calldataload(add(data.offset, 4)) // skip: 4 bytes selector
-            }
-
-            // Ensure that the spender is whitelisted.
-            if (!isInWhiteList[spender]) {
-                revert ENotInWhiteList();
-            }
-
-            // Execute the function call.
-            return target.functionCall(data);
-        }
-
-        // Otherwise, check the whitelist.
-        if (!isInWhiteList[target]) {
-            revert ENotInWhiteList();
-        }
-
-        // Execute the function call.
-        return target.functionCallWithValue(data, value);
+    ) internal virtual override tokenIsNotBlocked(target) returns (bytes memory result) {
+        return super._execute(target, data, value);
     }
 
     /// @dev Gets the Token Vault's address for a token.
@@ -582,5 +505,12 @@ contract MetaPoolTreasury is
                 totalPool = totalMoleculaAssets - totalRedeem;
             }
         }
+    }
+
+    /// @inheritdoc WhitelistedExecutor
+    function _isAllowedForApprove(
+        address target
+    ) internal virtual override returns (bool isAllowed) {
+        isAllowed = poolMap[target].isPresent;
     }
 }

@@ -643,52 +643,59 @@ describe('Test Nitrogen solution', () => {
         });
 
         it('Test white list', async () => {
-            const { moleculaPool, poolOwner, malicious } = await loadFixture(deployMoleculaPool);
+            const { moleculaPool, poolOwner, malicious, approveSelector } =
+                await loadFixture(deployMoleculaPool);
 
             // Test deleteFromWhiteList
             expect(
                 await moleculaPool
                     .connect(poolOwner)
-                    .isInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                    .isWhitelistedSignature(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.true;
             await moleculaPool
                 .connect(poolOwner)
-                .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS);
+                .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector);
             await expect(
                 moleculaPool
                     .connect(poolOwner)
-                    .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                    .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.rejectedWith('ENotPresentInWhiteList()');
 
             // Test addInWhiteList
             expect(
                 await moleculaPool
                     .connect(poolOwner)
-                    .isInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                    .isWhitelistedSignature(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.false;
-            await moleculaPool.connect(poolOwner).addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS);
+            await moleculaPool
+                .connect(poolOwner)
+                .addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector);
             expect(
                 await moleculaPool
                     .connect(poolOwner)
-                    .isInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                    .isWhitelistedSignature(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.true;
             await expect(
-                moleculaPool.connect(poolOwner).addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                moleculaPool
+                    .connect(poolOwner)
+                    .addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.rejectedWith('EAlreadyAdded');
 
             // Test wrong user0
             await expect(
-                moleculaPool.connect(malicious).addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                moleculaPool
+                    .connect(malicious)
+                    .addInWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.rejectedWith('OwnableUnauthorizedAccount');
             await expect(
                 moleculaPool
                     .connect(malicious)
-                    .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS),
+                    .deleteFromWhiteList(ethMainnetBetaConfig.USDT_ADDRESS, approveSelector),
             ).to.be.rejectedWith('OwnableUnauthorizedAccount');
         });
 
         it('Test execute', async () => {
-            const { moleculaPool, randAccount, poolOwner, USDT } =
+            const { moleculaPool, randAccount, poolOwner, USDT, approveSelector } =
                 await loadFixture(deployNitrogenWithUSDT);
             const keeperSigner = await ethers.getImpersonatedSigner(
                 await moleculaPool.poolKeeper(),
@@ -702,16 +709,20 @@ describe('Test Nitrogen solution', () => {
             ]);
             await expect(
                 moleculaPool.connect(keeperSigner).execute(USDT.getAddress(), encodedBalanceOf),
-            ).to.be.rejectedWith('ENotInWhiteList()');
+            ).to.be.rejectedWith('ENotPresentInWhiteList()');
             await expect(
                 moleculaPool.connect(keeperSigner).execute(USDT.getAddress(), encodedApprove),
-            ).to.be.rejectedWith('ENotInWhiteList()');
+            ).to.be.rejectedWith('ENotInWhiteListSpender()');
+
+            await moleculaPool.setSpenderInWhiteList(randAccount, true);
             await expect(
                 moleculaPool
                     .connect(keeperSigner)
                     .execute(USDT.getAddress(), encodedApprove, { value: 1 }),
             ).to.be.rejectedWith('EMsgValueIsNotZero()');
-            await moleculaPool.connect(poolOwner).addInWhiteList(randAccount.address);
+            await moleculaPool
+                .connect(poolOwner)
+                .addInWhiteList(randAccount.address, approveSelector);
             await moleculaPool.connect(keeperSigner).execute(USDT.getAddress(), encodedApprove);
 
             expect(
@@ -721,12 +732,16 @@ describe('Test Nitrogen solution', () => {
             const testSeqnoFactory = await ethers.getContractFactory('TestSeqno');
             const testSeqno = await testSeqnoFactory.connect(randAccount).deploy();
             const encodedIncAndPay = testSeqno.interface.encodeFunctionData('incAndPay', [13n]);
-            await moleculaPool.connect(poolOwner).addInWhiteList(testSeqno.getAddress());
+            await moleculaPool
+                .connect(poolOwner)
+                .addInWhiteList(testSeqno, testSeqno.interface.getFunction('incAndPay').selector);
             await moleculaPool
                 .connect(keeperSigner)
                 .execute(testSeqno.getAddress(), encodedIncAndPay, { value: 124 });
             expect(await testSeqno.seqno()).to.be.equal(13n);
             expect(await randAccount.provider.getBalance(testSeqno.getAddress())).to.be.equal(124);
+
+            await moleculaPool.addInWhiteList(testSeqno, '0x00000000');
 
             // Call receive function
             await moleculaPool
@@ -738,6 +753,10 @@ describe('Test Nitrogen solution', () => {
             );
 
             // Call touch function
+            await moleculaPool.addInWhiteList(
+                testSeqno,
+                testSeqno.interface.getFunction('touch').selector,
+            );
             const encodedTouch = testSeqno.interface.encodeFunctionData('touch');
             await moleculaPool
                 .connect(keeperSigner)
@@ -770,23 +789,23 @@ describe('Test Nitrogen solution', () => {
 
             await expect(
                 moleculaPool.deposit(ethers.ZeroAddress, 0n, ethers.ZeroAddress, 0n),
-            ).to.be.rejectedWith('EBadSender()');
+            ).to.be.rejectedWith('ENotAuthorized()');
 
             await expect(moleculaPool.requestRedeem(ethers.ZeroAddress, 0n)).to.be.rejectedWith(
-                'EBadSender()',
+                'ENotAuthorized()',
             );
 
             await expect(moleculaPool.connect(randAccount).redeem([])).to.be.rejectedWith(
                 'EEmptyArray()',
             );
 
-            await expect(moleculaPool.addInWhiteList(ethers.ZeroAddress)).to.be.rejectedWith(
-                'EZeroAddress()',
-            );
+            await expect(
+                moleculaPool.addInWhiteList(ethers.ZeroAddress, '0x00000000'),
+            ).to.be.rejectedWith('EZeroAddress()');
 
-            await expect(moleculaPool.deleteFromWhiteList(ethers.ZeroAddress)).to.be.rejectedWith(
-                'ENotPresentInWhiteList()',
-            );
+            await expect(
+                moleculaPool.deleteFromWhiteList(ethers.ZeroAddress, '0x00000000'),
+            ).to.be.rejectedWith('ENotPresentInWhiteList()');
 
             const encodedTransfer = USDT.interface.encodeFunctionData('transfer', [
                 malicious.address,
@@ -794,15 +813,15 @@ describe('Test Nitrogen solution', () => {
             ]);
             await expect(
                 moleculaPool.connect(randAccount).execute(USDT.getAddress(), encodedTransfer),
-            ).to.be.rejectedWith('EBadSender()');
+            ).to.be.rejectedWith('ENotAuthorized()');
 
             await expect(
                 moleculaPool.connect(randAccount).setAgent(ethers.ZeroAddress, true),
-            ).to.be.rejectedWith('EBadSender()');
+            ).to.be.rejectedWith('ENotAuthorized()');
 
             await expect(
                 moleculaPool.connect(randAccount).migrate(ethers.ZeroAddress),
-            ).to.be.rejectedWith('EBadSender()');
+            ).to.be.rejectedWith('ENotAuthorized()');
 
             await moleculaPool.setPoolKeeper(randAccount);
         });
@@ -817,7 +836,7 @@ describe('Test Nitrogen solution', () => {
                     [],
                     poolOwner.address,
                     poolOwner.address,
-                    [ethers.ZeroAddress],
+                    [{ target: ethers.ZeroAddress, selector: '0x00000000' }],
                     poolOwner.address,
                 ),
             ).to.be.rejectedWith('EZeroAddress()');

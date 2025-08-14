@@ -192,6 +192,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
         assets = IMoleculaPoolV2(_MOLECULA_POOL).requestRedeem(
             requestId,
             token,
+            msg.sender,
             moleculaTokenAssets
         );
 

@@ -199,11 +199,11 @@ describe('Test Carbon', () => {
 
             expect(await USDT.balanceOf(accountantLZ)).to.equal(0n);
 
-            tx = await moleculaPool.redeem([operationId], { value: 1_000_000_000_000_000_000n });
+            await moleculaPool.redeem([operationId], { value: 1_000_000_000_000_000_000n });
 
             expect(await USDT.balanceOf(accountantLZ)).to.equal(99_800_100n);
 
-            tx = await mockLZEndpoint.lzReceive(
+            await mockLZEndpoint.lzReceive(
                 await accountantLZ.getAddress(),
                 ethMainnetBetaConfig.LAYER_ZERO_ETHEREUM_EID,
                 ethers.zeroPadValue(await agentLZ.getAddress(), 32),

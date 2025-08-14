@@ -63,27 +63,10 @@ interface IMetaPoolTreasury {
     /// @dev Error: The `redeem` or `execute` function with the blocked token is called.
     error ETokenBlocked();
 
-    /// @dev Error: Target address is not in the whitelist.
-    error ENotInWhiteList();
-
-    /// @dev Error: Target address has already been added.
-    error EAlreadyAddedInWhiteList();
-
-    /// @dev Error: Target address is not in the whitelist.
-    error ENotPresentInWhiteList();
-
     /// @dev Error: Wrong attached message value.
     error EWrongMsgValue();
 
     // ============ Events ============
-
-    /// @dev Emitted when the target has been added in the whitelist.
-    /// @param target Address.
-    event AddedInWhiteList(address indexed target);
-
-    /// @dev Emitted when the target has been deleted from the whitelist.
-    /// @param target Address.
-    event DeletedFromWhiteList(address indexed target);
 
     /// @dev Emitted when `token` is blocked or unblocked.
     /// @param token Token address.
@@ -143,18 +126,6 @@ interface IMetaPoolTreasury {
     /// @param token Token address.
     /// @param isBlocked Boolean flag indicating whether the token is blocked.
     function setBlockToken(address token, bool isBlocked) external;
-
-    /**
-     * @dev Add the target in the whitelist.
-     * @param target Address.
-     */
-    function addInWhiteList(address target) external;
-
-    /**
-     * @dev Delete the target from the whitelist.
-     * @param target Address.
-     */
-    function deleteFromWhiteList(address target) external;
 
     /**
      * @dev Execute transactions on behalf of the whitelisted contract.

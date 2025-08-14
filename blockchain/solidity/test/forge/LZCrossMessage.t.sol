@@ -28,6 +28,7 @@ import {OperationStatus} from "../../contracts/common/rebase/structures/Operatio
 
 // Import the SupplyManager contract used on the Ethereum side of the test
 import {SupplyManager} from "../../contracts/core/SupplyManager.sol";
+import {IWhitelistedExecutor} from "../../contracts/coreV2/interfaces/IWhitelistedExecutor.sol";
 
 /// @title LZCrossMessageTest
 /// @notice This contract tests the cross-chain messaging flows between an AgentLZ
@@ -146,6 +147,13 @@ contract LZCrossMessageTest is TestHelperOz5 {
             address[] memory tokens = new address[](1);
             tokens[0] = address(usdtEth);
 
+            IWhitelistedExecutor.WhiteList[]
+                memory whiteList = new IWhitelistedExecutor.WhiteList[](1);
+            whiteList[0] = IWhitelistedExecutor.WhiteList({
+                target: address(usdtEth),
+                selector: usdtEth.approve.selector
+            });
+
             address spEthPredict = vm.computeCreateAddress(address(this), nonce + 1);
 
             // Deploy a Supply Manager instance on Ethereum.
@@ -154,7 +162,7 @@ contract LZCrossMessageTest is TestHelperOz5 {
                 tokens,
                 address(this),
                 spEthPredict,
-                tokens,
+                whiteList,
                 address(this)
             );
             usdtEth.mint(address(mpTreasuryEth), initialPoolBalance);

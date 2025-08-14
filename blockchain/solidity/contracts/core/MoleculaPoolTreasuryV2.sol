@@ -12,7 +12,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IAgent} from "./../common/interfaces/IAgent.sol";
 import {IMoleculaPool} from "./../common/interfaces/IMoleculaPool.sol";
 import {ISupplyManager} from "./../common/interfaces/ISupplyManager.sol";
-import {ZeroValueChecker} from "./../common/ZeroValueChecker.sol";
+import {WhitelistedExecutor} from "./../coreV2/WhitelistedExecutor.sol";
 
 /**
  * @dev Token parameters.
@@ -49,7 +49,7 @@ struct TokenInfo {
 }
 
 /// @notice MoleculaPoolTreasuryV2
-contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker {
+contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecutor {
     using SafeERC20 for IERC20;
     using Address for address;
 
@@ -74,17 +74,11 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
     /// @dev Mapping of the ERC20 Pool.
     mapping(address token => TokenInfo) public poolMap;
 
-    /// @dev Whitelist of addresses callable by this contract.
-    mapping(address => bool) public isInWhiteList;
-
     /// @dev Error: Not a smart-contract.
     error ENotContract();
 
     /// @dev Error: Not an ERC20 token pool.
     error ENotERC20PoolToken();
-
-    /// @dev Error: Provided array is empty.
-    error EEmptyArray();
 
     /// @dev Error: Duplicated token.
     error EDuplicatedToken();
@@ -100,15 +94,6 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
 
     /// @dev Error: The `redeem` or `execute` function with the blocked token is called.
     error ETokenBlocked();
-
-    /// @dev Error: The target address is not in the whitelist.
-    error ENotInWhiteList();
-
-    /// @dev Error: The target address has already been added.
-    error EAlreadyAddedInWhiteList();
-
-    /// @dev Error: The target address is not in the whitelist.
-    error ENotPresentInWhiteList();
 
     /// @dev Error: The `execute` function is called while being paused as the `isExecutePaused` flag is set.
     error EExecutePaused();
@@ -146,14 +131,10 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
     /// @param isBlocked New token status.
     event TokenBlockedChanged(address indexed token, bool indexed isBlocked);
 
-    /// @dev Throws an error if called with the wrong sender.
-    /// @param expectedSender Expected sender.
-    modifier only(address expectedSender) {
-        if (msg.sender != expectedSender) {
-            revert EBadSender();
-        }
-        _;
-    }
+    /// @dev Emitted upon adding or removing a new Agent.
+    /// @param agent Agent's address.
+    /// @param auth Boolean flag indicating if an Agent is added.
+    event AgentSet(address indexed agent, bool indexed auth);
 
     /// @dev Check that `msg.sender` is the Owner or Guardian.
     modifier onlyAuthForPause() {
@@ -177,13 +158,14 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
         address[] memory tokens,
         address poolKeeperAddress,
         address supplyManagerAddress,
-        address[] memory whiteList,
+        WhiteList[] memory whiteList,
         address guardianAddress
     )
         Ownable(initialOwner)
-        checkNotZero(poolKeeperAddress)
-        checkNotZero(supplyManagerAddress)
-        checkNotZero(guardianAddress)
+        WhitelistedExecutor(whiteList)
+        notZeroAddress(poolKeeperAddress)
+        notZeroAddress(supplyManagerAddress)
+        notZeroAddress(guardianAddress)
     {
         uint256 tokensLength = tokens.length;
         for (uint256 i = 0; i < tokensLength; ++i) {
@@ -192,10 +174,6 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
         poolKeeper = poolKeeperAddress;
         SUPPLY_MANAGER = supplyManagerAddress;
 
-        uint256 whiteListLength = whiteList.length;
-        for (uint256 i = 0; i < whiteListLength; ++i) {
-            _addInWhiteList(whiteList[i]);
-        }
         guardian = guardianAddress;
     }
 
@@ -396,7 +374,7 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
      */
     function setPoolKeeper(
         address poolKeeperAddress
-    ) external onlyOwner checkNotZero(poolKeeperAddress) {
+    ) external onlyOwner notZeroAddress(poolKeeperAddress) {
         poolKeeper = poolKeeperAddress;
     }
 
@@ -486,38 +464,6 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
     }
 
     /**
-     * @dev Add the target in the whitelist.
-     * @param target Address.
-     */
-    function _addInWhiteList(address target) private checkNotZero(target) {
-        if (isInWhiteList[target]) {
-            revert EAlreadyAddedInWhiteList();
-        }
-        isInWhiteList[target] = true;
-    }
-
-    /**
-     * @dev Add the target in the whitelist.
-     * @param target Address.
-     */
-    function addInWhiteList(address target) external onlyOwner {
-        _addInWhiteList(target);
-        emit AddedInWhiteList(target);
-    }
-
-    /**
-     * @dev Delete the target from the whitelist.
-     * @param target Address.
-     */
-    function deleteFromWhiteList(address target) external onlyOwner {
-        if (!isInWhiteList[target]) {
-            revert ENotPresentInWhiteList();
-        }
-        delete isInWhiteList[target];
-        emit DeletedFromWhiteList(target);
-    }
-
-    /**
      * @dev Execute transactions on behalf of the whitelisted contract.
      * Allows the `approve` calls to tokens in `poolMap` and `poolMap` without whitelisting.
      * @param target Address.
@@ -531,43 +477,12 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
         if (isExecutePaused) {
             revert EExecutePaused();
         }
+
         if (poolMap[target].isBlocked) {
             revert ETokenBlocked();
         }
 
-        // Decode the function selector.
-        bytes4 selector = bytes4(data);
-
-        // Allow approval calls for any ERC-20 token, but only to whitelisted spender contracts.
-        if (selector == IERC20.approve.selector) {
-            // Ensure that the value is zero.
-            if (msg.value != 0) {
-                revert EMsgValueIsNotZero();
-            }
-
-            // Decode `approve(spender, amount)` to get the spender address.
-            address spender;
-            // slither-disable-next-line assembly, solhint-disable-next-line no-inline-assembly
-            assembly {
-                spender := calldataload(add(data.offset, 4)) // Skip: 4 bytes selector.
-            }
-
-            // Ensure the spender is whitelisted.
-            if (!isInWhiteList[spender]) {
-                revert ENotInWhiteList();
-            }
-
-            // Execute the function call.
-            return target.functionCall(data);
-        }
-
-        // Otherwise, check the whitelist.
-        if (!isInWhiteList[target]) {
-            revert ENotInWhiteList();
-        }
-
-        // Execute the function call.
-        return target.functionCallWithValue(data, msg.value);
+        return _execute(target, data, msg.value);
     }
 
     /**
@@ -587,6 +502,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
     /// @inheritdoc IMoleculaPool
     function setAgent(address agent, bool auth) external only(SUPPLY_MANAGER) {
         _setAgent(agent, auth);
+
+        // Emit an event to log the operation.
+        emit AgentSet(agent, auth);
     }
 
     /// @dev Transfer all the balance of `fromAddress` to this contract.
@@ -653,7 +571,7 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
 
     /// @dev Change the Guardian's address.
     /// @param newGuardian New Guardian's address.
-    function changeGuardian(address newGuardian) external onlyOwner checkNotZero(newGuardian) {
+    function changeGuardian(address newGuardian) external onlyOwner notZeroAddress(newGuardian) {
         guardian = newGuardian;
     }
 
@@ -720,5 +638,22 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, ZeroValueChecker
             tokenInfo.isBlocked = isBlocked;
             emit TokenBlockedChanged(token, isBlocked);
         }
+    }
+
+    /// @inheritdoc Ownable2Step
+    function transferOwnership(address newOwner) public virtual override(Ownable, Ownable2Step) {
+        super.transferOwnership(newOwner);
+    }
+
+    /// @inheritdoc Ownable2Step
+    function _transferOwnership(address newOwner) internal virtual override(Ownable, Ownable2Step) {
+        super._transferOwnership(newOwner);
+    }
+
+    /// @inheritdoc WhitelistedExecutor
+    function _isAllowedForApprove(
+        address target
+    ) internal virtual override returns (bool isAllowed) {
+        isAllowed = poolMap[target].tokenType != TokenType.None;
     }
 }

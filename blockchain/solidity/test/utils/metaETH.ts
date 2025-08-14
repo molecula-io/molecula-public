@@ -47,13 +47,15 @@ export async function deployMetaEthWithoutInit() {
         '0x7A493Be5c2ce014cD049Bf178a1ac0Db1B434744',
     );
 
+    const approveSelector = stETH.interface.getFunction('approve').selector;
+
     // deploy mock distributed pool
     const MetaPoolTreasury = await ethers.getContractFactory('MetaPoolTreasury');
     const metaPoolTreasury = await MetaPoolTreasury.connect(poolOwner).deploy(
         poolOwner,
         poolKeeper,
         supplyManagerFutureAddress,
-        [testSeqno],
+        [{ target: testSeqno, selector: approveSelector }],
         guardian,
         ethers.ZeroAddress,
         poolKeeper,
@@ -135,6 +137,7 @@ export async function deployMetaEthWithoutInit() {
         testSeqno,
         randAccount,
         wmetaETH,
+        approveSelector,
     };
 }
 

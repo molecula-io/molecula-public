@@ -40,7 +40,7 @@ export type EthereumNetworkConfig = {
 
     MOLECULA_POOL_TOKENS: PoolData[];
     META_POOL_TOKENS: PoolData[];
-    WHITE_LIST: string[];
+    WHITE_LIST: { target: string; selector: string }[];
 
     GUARDIAN_ADDRESS: EVMAddress;
 

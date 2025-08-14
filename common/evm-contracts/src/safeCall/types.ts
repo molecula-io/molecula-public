@@ -4,6 +4,7 @@ import type {
     Executor,
     IMoleculaPoolV2,
     MoleculaPoolTreasury,
+    MoleculaPoolTreasuryV2,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import type {
@@ -73,6 +74,7 @@ export type EvmContractGasCall<Contract extends PickFunctions<Contract>, Respons
 export type AllEvmContracts =
     | IMoleculaPoolV2
     | MoleculaPoolTreasury
+    | MoleculaPoolTreasuryV2
     | AgentLZ
     | AccountantAgent
     | ERC20

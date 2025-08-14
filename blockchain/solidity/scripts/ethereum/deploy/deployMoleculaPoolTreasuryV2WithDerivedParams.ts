@@ -53,7 +53,14 @@ export async function deployMoleculaPoolTreasuryV2WithDerivedParams(
     //    - supplyManager address from deployments
     //    - the environment's whitelist
     //    - V1's guardian address
-    const constructorArguments: [string, string[], string, string, string[], string] = [
+    const constructorArguments: [
+        string,
+        string[],
+        string,
+        string,
+        { target: string; selector: string }[],
+        string,
+    ] = [
         await moleculaPoolTreasury.owner(), // Owner for V2
         tokens.map(x => x.token), // ERC20 token addresses
         await moleculaPoolTreasury.poolKeeper(), // Pool keeper role

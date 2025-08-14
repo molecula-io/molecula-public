@@ -1291,7 +1291,7 @@ describe('Test mrETH DepositManager', () => {
             ).to.be.rejectedWith('OwnableUnauthorizedAccount(');
 
             await depositManager.grantNativeToken(ethers.ZeroAddress, 1);
-            await depositManager.requestRedeem(1, ethers.ZeroAddress, 1);
+            await depositManager.requestRedeem(1, ethers.ZeroAddress, ethers.ZeroAddress, 1);
 
             await expect(
                 depositManager.addStrategies(

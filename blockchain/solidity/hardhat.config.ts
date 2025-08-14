@@ -72,124 +72,101 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             gasPrice: 40_000_000_000,
-            ...(process.env.JSON_RPC_URL &&
-                process.env.FORK_BLOCK_NUMBER && {
-                    forking: {
-                        url: process.env.JSON_RPC_URL,
-                        blockNumber: parseInt(process.env.FORK_BLOCK_NUMBER, 10),
-                    },
-                }),
+            forking: {
+                url: process.env.JSON_RPC_URL as string,
+                blockNumber: parseInt(process.env.FORK_BLOCK_NUMBER as string, 10),
+            },
         },
-        ...(process.env.JSON_RPC_URL_SEPOLIA &&
-            process.env.ETHEREUM_SEED_PHRASE && {
-                sepolia: {
-                    url: process.env.JSON_RPC_URL_SEPOLIA,
-                    accounts: {
-                        mnemonic: process.env.ETHEREUM_SEED_PHRASE,
-                        path: "m/44'/60'/0'/0",
-                        initialIndex: 0,
-                        count: 20,
-                        passphrase: '',
-                    },
-                },
-            }),
-        ...(process.env.JSON_RPC_URL_SEPOLIA &&
-            process.env.FIREBLOCKS_API_KEY &&
-            process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH && {
-                sepolia_fireblocks: {
-                    url: process.env.JSON_RPC_URL_SEPOLIA,
-                    fireblocks: {
-                        privateKey: process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH,
-                        apiKey: process.env.FIREBLOCKS_API_KEY,
-                        vaultAccountIds: [1, 2],
-                        logRequestsAndResponses: true,
-                        logTransactionStatusChanges: true,
-                    },
-                },
-            }),
-        ...(process.env.ETHEREUM_SEED_PHRASE && {
-            holesky: {
-                url: 'https://1rpc.io/holesky', // public rpc no need to store in env
-                accounts: {
-                    mnemonic: process.env.ETHEREUM_SEED_PHRASE,
-                    path: "m/44'/60'/0'/0",
-                    initialIndex: 0,
-                    count: 20,
-                    passphrase: '',
-                },
+        sepolia: {
+            url: process.env.JSON_RPC_URL_SEPOLIA as string,
+            accounts: {
+                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
+                path: "m/44'/60'/0'/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
             },
-        }),
-        ...(process.env.ETHEREUM_SEED_PHRASE && {
-            hoodi: {
-                url: 'https://0xrpc.io/hoodi', // public rpc no need to store in env
-                accounts: {
-                    mnemonic: process.env.ETHEREUM_SEED_PHRASE,
-                    path: "m/44'/60'/0'/0",
-                    initialIndex: 0,
-                    count: 20,
-                    passphrase: '',
-                },
+        },
+        sepolia_fireblocks: {
+            url: process.env.JSON_RPC_URL_SEPOLIA as string,
+            fireblocks: {
+                privateKey: process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH as string,
+                apiKey: process.env.FIREBLOCKS_API_KEY as string,
+                vaultAccountIds: [1, 2],
+                logRequestsAndResponses: true,
+                logTransactionStatusChanges: true,
             },
-        }),
-        ...(process.env.JSON_RPC_URL &&
-            process.env.ETHEREUM_SEED_PHRASE && {
-                ethereum: {
-                    url: process.env.JSON_RPC_URL,
-                    accounts: {
-                        mnemonic: process.env.ETHEREUM_SEED_PHRASE,
-                        path: "m/44'/60'/0'/0",
-                        initialIndex: 0,
-                        count: 20,
-                        passphrase: '',
-                    },
-                },
-            }),
-        ...(process.env.TRON_SEED_PHRASE && {
-            shasta: {
-                url: shastaConfig.RPC_URL,
-                accounts: {
-                    mnemonic: process.env.TRON_SEED_PHRASE,
-                    path: "m/44'/195'/0'/0/0",
-                    initialIndex: 0,
-                    count: 20,
-                    passphrase: '',
-                },
+        },
+        holesky: {
+            url: 'https://1rpc.io/holesky', // public rpc no need to store in env
+            accounts: {
+                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
+                path: "m/44'/60'/0'/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
             },
-        }),
-        ...(process.env.TRON_SEED_PHRASE && {
-            tron: {
-                url: tronMainnetProdConfig.RPC_URL,
-                accounts: {
-                    mnemonic: process.env.TRON_SEED_PHRASE,
-                    path: "m/44'/195'/0'/0/0",
-                    initialIndex: 0,
-                    count: 20,
-                    passphrase: '',
-                },
+        },
+        hoodi: {
+            url: 'https://0xrpc.io/hoodi', // public rpc no need to store in env
+            accounts: {
+                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
+                path: "m/44'/60'/0'/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
             },
-        }),
+        },
+        ethereum: {
+            url: process.env.JSON_RPC_URL as string,
+            accounts: {
+                mnemonic: process.env.ETHEREUM_SEED_PHRASE as string,
+                path: "m/44'/60'/0'/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
+            },
+        },
+        shasta: {
+            url: shastaConfig.RPC_URL,
+            accounts: {
+                mnemonic: process.env.TRON_SEED_PHRASE as string,
+                path: "m/44'/195'/0'/0/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
+            },
+        },
+        tron: {
+            url: tronMainnetProdConfig.RPC_URL,
+            accounts: {
+                mnemonic: process.env.TRON_SEED_PHRASE as string,
+                path: "m/44'/195'/0'/0/0",
+                initialIndex: 0,
+                count: 20,
+                passphrase: '',
+            },
+        },
     },
-    ...(process.env.ETHEREUM_API_KEY && {
-        etherscan: {
-            apiKey: {
-                sepolia: process.env.ETHEREUM_API_KEY,
-                ethereum: process.env.ETHEREUM_API_KEY,
-                holesky: process.env.ETHEREUM_API_KEY,
-                hoodi: process.env.ETHEREUM_API_KEY,
-            },
-            customChains: [
-                // hoodi is not in the default hardhat chains
-                {
-                    network: 'hoodi',
-                    chainId: 560048,
-                    urls: {
-                        apiURL: 'https://api-hoodi.etherscan.io/api',
-                        browserURL: 'https://hoodi.etherscan.io',
-                    },
-                },
-            ],
+    etherscan: {
+        apiKey: {
+            sepolia: process.env.ETHEREUM_API_KEY as string,
+            ethereum: process.env.ETHEREUM_API_KEY as string,
+            holesky: process.env.ETHEREUM_API_KEY as string,
+            hoodi: process.env.ETHEREUM_API_KEY as string,
         },
-    }),
+        customChains: [
+            // hoodi is not in the default hardhat chains
+            {
+                network: 'hoodi',
+                chainId: 560048,
+                urls: {
+                    apiURL: 'https://api-hoodi.etherscan.io/api',
+                    browserURL: 'https://hoodi.etherscan.io',
+                },
+            },
+        ],
+    },
 
     mocha: {
         timeout: 10 * 60 * 1000, // 10 min
