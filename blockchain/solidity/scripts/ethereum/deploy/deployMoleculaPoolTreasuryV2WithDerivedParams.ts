@@ -60,6 +60,7 @@ export async function deployMoleculaPoolTreasuryV2WithDerivedParams(
         string,
         { target: string; selector: string }[],
         string,
+        string,
     ] = [
         await moleculaPoolTreasury.owner(), // Owner for V2
         tokens.map(x => x.token), // ERC20 token addresses
@@ -67,6 +68,7 @@ export async function deployMoleculaPoolTreasuryV2WithDerivedParams(
         contractsNitrogen.eth.supplyManager, // SupplyManager address
         config.WHITE_LIST, // Whitelist addresses
         await moleculaPoolTreasury.guardian(), // Guardian role
+        hre.ethers.ZeroAddress,
     ];
 
     // 7. Load the contract factory for V2

@@ -12,6 +12,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IAgent} from "./../common/interfaces/IAgent.sol";
 import {IMoleculaPool} from "./../common/interfaces/IMoleculaPool.sol";
 import {ISupplyManager} from "./../common/interfaces/ISupplyManager.sol";
+import {PriceCheckerClient} from "./../common/PriceChecker/PriceCheckerClient.sol";
 import {WhitelistedExecutor} from "./../coreV2/WhitelistedExecutor.sol";
 
 /**
@@ -49,7 +50,12 @@ struct TokenInfo {
 }
 
 /// @notice MoleculaPoolTreasuryV2
-contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecutor {
+contract MoleculaPoolTreasuryV2 is
+    Ownable2Step,
+    IMoleculaPool,
+    WhitelistedExecutor,
+    PriceCheckerClient
+{
     using SafeERC20 for IERC20;
     using Address for address;
 
@@ -152,6 +158,7 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
      * @param supplyManagerAddress Supply Manager's address.
      * @param whiteList List of whitelisted addresses.
      * @param guardianAddress Guardian address that can pause the contract.
+     * @param priceChecker_ Price checker contract's address.
      */
     constructor(
         address initialOwner,
@@ -159,10 +166,12 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         address poolKeeperAddress,
         address supplyManagerAddress,
         WhiteList[] memory whiteList,
-        address guardianAddress
+        address guardianAddress,
+        address priceChecker_
     )
         Ownable(initialOwner)
         WhitelistedExecutor(whiteList)
+        PriceCheckerClient(priceChecker_)
         notZeroAddress(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
         notZeroAddress(guardianAddress)
@@ -175,6 +184,39 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         SUPPLY_MANAGER = supplyManagerAddress;
 
         guardian = guardianAddress;
+
+        // Validates that the price checker is properly set for each asset.
+        _validatePriceCheckers();
+    }
+
+    /// @inheritdoc PriceCheckerClient
+    function setPriceChecker(address newPriceChecker) public virtual override {
+        super.setPriceChecker(newPriceChecker);
+
+        // Validates that the price checker is properly set for each asset.
+        _validatePriceCheckers();
+    }
+
+    /// @dev Validates that the price checker is properly set for each asset.
+    function _validatePriceCheckers() internal virtual {
+        // Validates that the price checker is properly set for each asset.
+        uint256 len = pool.length;
+        for (uint256 i = 0; i < len; ++i) {
+            address token = pool[i].token;
+            _validatePriceChecker(token);
+        }
+    }
+
+    /// @dev Check each token's price.
+    function _checkPoolPrices() internal virtual {
+        uint256 len = pool.length;
+        for (uint256 i = 0; i < len; ++i) {
+            address token = pool[i].token;
+            // If a price feed is set for the token, check that the token price is within the allowed deviation.
+            // If the price feed is not set but the asset is present, do nothing.
+            // Otherwise, throw an exception.
+            checkPrice(token);
+        }
     }
 
     /**
@@ -279,6 +321,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         if (poolMap[token].tokenType != TokenType.None) {
             revert EDuplicatedToken();
         }
+
+        // Validates that the price checker is properly set and has the specified asset.
+        _validatePriceChecker(token);
 
         // Add the token to the Pool.
         uint8 decimals = IERC20Metadata(token).decimals();
@@ -387,6 +432,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         address from,
         uint256 value
     ) external only(SUPPLY_MANAGER) returns (uint256 formattedValue) {
+        // Check each token's price.
+        _checkPoolPrices();
+
         if (poolMap[token].tokenType == TokenType.None) {
             revert ETokenNotExist();
         }
@@ -407,6 +455,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         address token,
         uint256 value // In mUSD.
     ) external only(SUPPLY_MANAGER) returns (uint256 tokenValue) {
+        // Check each token's price.
+        _checkPoolPrices();
+
         if (poolMap[token].tokenType == TokenType.None) {
             revert ETokenNotExist();
         }
@@ -497,6 +548,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         } else {
             token.forceApprove(agent, 0);
         }
+
+        // Validates that the price checker is properly set and has the specified asset.
+        _validatePriceChecker(address(token));
     }
 
     /// @inheritdoc IMoleculaPool
@@ -567,6 +621,9 @@ contract MoleculaPoolTreasuryV2 is Ownable2Step, IMoleculaPool, WhitelistedExecu
         for (uint256 i = 0; i < agentsLength; ++i) {
             _setAgent(agents[i], true);
         }
+
+        // Check each token's price.
+        _checkPoolPrices();
     }
 
     /// @dev Change the Guardian's address.

@@ -27,7 +27,7 @@ contract AccountantLZ is OApp, OptionsLZ, IAccountant {
     UsdtOFT public immutable USDT_OFT;
 
     /// @dev Address of the Oracle contract for updating the supply data.
-    ISetterOracle public immutable ORACLE;
+    ISetterOracle public oracle;
 
     /// @dev Address of the underlying token contract being managed by Accountant. E.g., mUSD token.
     address public underlyingToken;
@@ -58,6 +58,10 @@ contract AccountantLZ is OApp, OptionsLZ, IAccountant {
     /// @dev Emitted when the underlying token address is set or updated.
     /// @param underlyingTokenAddress Address of the new underlying token contract.
     event SetUnderlyingToken(address indexed underlyingTokenAddress);
+
+    /// @dev Emitted when the Oracle contract address is updated.
+    /// @param oracleAddress Address of the new Oracle contract.
+    event SetOracle(address indexed oracleAddress);
 
     /// @dev Emitted when a redemption request is successfully confirmed and USDT tokens are transferred to the user.
     /// @param user Address of the user who receives the redeemed USDT tokens.
@@ -92,7 +96,7 @@ contract AccountantLZ is OApp, OptionsLZ, IAccountant {
         DST_EID = lzDstEid;
         USDT = IERC20(usdtAddress);
         USDT_OFT = UsdtOFT(usdtOFTAddress);
-        ORACLE = ISetterOracle(oracleAddress);
+        oracle = ISetterOracle(oracleAddress);
         /*
          * To enable contract-controlled transfers, we pre-approve the contract for the maximum allowance
          * in the constructor as USDT (TRC20) transfers always return `false` (breaks `safeTransfer`),
@@ -174,7 +178,7 @@ contract AccountantLZ is OApp, OptionsLZ, IAccountant {
      * @param totalShares Total shares.
      */
     function _setOracleData(uint256 totalValue, uint256 totalShares) internal {
-        ORACLE.setTotalSupply(totalValue, totalShares);
+        oracle.setTotalSupply(totalValue, totalShares);
     }
 
     /**
@@ -236,6 +240,15 @@ contract AccountantLZ is OApp, OptionsLZ, IAccountant {
     ) external onlyOwner checkNotZero(underlyingTokenAddress) {
         underlyingToken = underlyingTokenAddress;
         emit SetUnderlyingToken(underlyingTokenAddress);
+    }
+
+    /**
+     * @dev Sets the Oracle contract address.
+     * @param oracleAddress Oracle contract address.
+     */
+    function setOracle(address oracleAddress) external checkNotZero(oracleAddress) onlyOwner {
+        oracle = ISetterOracle(oracleAddress);
+        emit SetOracle(oracleAddress);
     }
 
     /**

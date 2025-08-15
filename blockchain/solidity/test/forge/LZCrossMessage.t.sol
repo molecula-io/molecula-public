@@ -163,7 +163,8 @@ contract LZCrossMessageTest is TestHelperOz5 {
                 address(this),
                 spEthPredict,
                 whiteList,
-                address(this)
+                address(this),
+                address(0)
             );
             usdtEth.mint(address(mpTreasuryEth), initialPoolBalance);
 

@@ -838,6 +838,7 @@ describe('Test Nitrogen solution', () => {
                     poolOwner.address,
                     [{ target: ethers.ZeroAddress, selector: '0x00000000' }],
                     poolOwner.address,
+                    ethers.ZeroAddress,
                 ),
             ).to.be.rejectedWith('EZeroAddress()');
         });
@@ -1174,6 +1175,7 @@ describe('Test Nitrogen solution', () => {
             supplyManager,
             [],
             guardian,
+            ethers.ZeroAddress,
         );
 
         await moleculaPool.connect(poolOwner).addInWhiteList(newMoleculaPool);
@@ -1209,6 +1211,7 @@ describe('Test Nitrogen solution', () => {
             supplyManager,
             [],
             guardian,
+            ethers.ZeroAddress,
         );
         await expect(supplyManager.setMoleculaPool(newMoleculaPool)).to.be.rejectedWith(
             'EBadOwner()',
@@ -1221,6 +1224,7 @@ describe('Test Nitrogen solution', () => {
             supplyManager,
             [],
             guardian,
+            ethers.ZeroAddress,
         );
         await expect(supplyManager.setMoleculaPool(newMoleculaPool)).to.be.rejectedWith(
             'EBadPoolKeeper()',
@@ -1233,6 +1237,7 @@ describe('Test Nitrogen solution', () => {
             supplyManager,
             [],
             malicious,
+            ethers.ZeroAddress,
         );
         await expect(supplyManager.setMoleculaPool(newMoleculaPool)).to.be.rejectedWith(
             'EBadGuardian()',

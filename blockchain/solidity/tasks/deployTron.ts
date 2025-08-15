@@ -11,6 +11,7 @@ import {
     deploywmUSD,
     deployRebaseTokenOwner,
     deployOFTVault,
+    deployOracle,
 } from '../scripts/tron/deploy';
 import { migrateAccountantLZwithOracle } from '../scripts/tron/migration/migrateAccountantLZwithOracle';
 import {
@@ -49,6 +50,22 @@ tronMajorScope
         } catch (error) {
             handleError(error);
         }
+    });
+
+tronMajorScope
+    .task('deployOracle', 'Deploys TronOracle contract')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsCarbon: ContractsCarbon = await readFromFile(
+            `${environment}/contracts_carbon.json`,
+        );
+
+        contractsCarbon.tron.oracle = await deployOracle(hre, environment);
+        writeToFile(`${environment}/contracts_carbon.json`, contractsCarbon);
     });
 
 tronMajorScope

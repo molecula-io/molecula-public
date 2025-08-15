@@ -60,6 +60,7 @@ export async function deployCore(
         supplyManagerFutureAddress,
         config.WHITE_LIST,
         config.GUARDIAN_ADDRESS,
+        hre.ethers.ZeroAddress,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await moleculaPoolV2.waitForDeployment();

@@ -15,6 +15,9 @@ export async function migrateAccountantLZwithOracle(
     hre: HardhatRuntimeEnvironment,
     environment: EnvironmentType,
 ) {
+    // deploy Oracle
+    const oracle = await deployOracle(hre, environment);
+
     const config = getTronEnvironmentConfig(environment);
 
     const contractsCarbon: ContractsCarbon = await readFromFile(
@@ -22,23 +25,9 @@ export async function migrateAccountantLZwithOracle(
     );
 
     // get initial owner
-    const initialOwner = hre.tronweb.defaultAddress.base58;
-
-    if (!initialOwner) {
-        throw new Error('Invalid private key');
-    }
+    const initialOwner = hre.tronweb.defaultAddress.base58 as string;
 
     console.log('Initial owner:', initialOwner);
-
-    // deploy Oracle
-    const oracle = await deployOracle(
-        hre,
-        config.MUSD_TOKEN_INITIAL_SUPPLY,
-        config.MUSD_TOKEN_INITIAL_SUPPLY,
-        initialOwner,
-        config.ORACLE_AUTHORIZED_UPDATER,
-    );
-    console.log('Oracle deployed:', oracle);
 
     // deploy Accountant LZ
     const accountantLZ = await deployAccountantLZ(hre, {

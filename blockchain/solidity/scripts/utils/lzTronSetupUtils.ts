@@ -65,7 +65,7 @@ export async function setReceiveConfig(
         [configTypeUlnStruct],
         [config.receiveLibrary.ulnConfig],
     );
-    console.log('encodedUlnConfig', encodedUlnConfig);
+
     // Define the SetConfigParam
     const setConfigParam = [
         remoteEid,

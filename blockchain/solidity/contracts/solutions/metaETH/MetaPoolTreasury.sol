@@ -401,10 +401,8 @@ contract MetaPoolTreasury is
     /// @dev Add the token to the Pool.
     /// @param token ERC20 token address.
     function _addToken(address token) internal virtual {
-        // If the price feed is set for the token, then check that the token price is within the allowed deviation.
-        // If the price feed is not set but asset is present, do nothing.
-        // Otherwise, throw an exception.
-        checkPrice(token);
+        // Validates that the price checker is properly set for the asset.
+        _validatePriceChecker(token);
 
         // Ensure that the token is not duplicated.
         if (poolMap[token].isPresent) {

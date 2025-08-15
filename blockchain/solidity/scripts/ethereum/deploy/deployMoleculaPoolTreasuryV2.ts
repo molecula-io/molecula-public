@@ -32,6 +32,7 @@ export async function deployMoleculaPoolTreasuryV2(
         contractsNitrogen.eth.supplyManager,
         config.WHITE_LIST,
         config.GUARDIAN_ADDRESS,
+        hre.ethers.ZeroAddress,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await moleculaPoolTreasuryV2.waitForDeployment();

@@ -208,6 +208,7 @@ export async function deployNitrogenV2Common(token: string) {
         supplyManagerFutureAddress,
         [{ target: USDT, selector: approveSelector }],
         guardian,
+        ethers.ZeroAddress,
     );
 
     // if moleculaPool does not have DAI then transfer them
@@ -354,6 +355,7 @@ export async function deployMoleculaPool() {
         randomAccount.address,
         [{ target: ethMainnetBetaConfig.USDT_ADDRESS, selector: approveSelector }],
         guardian,
+        ethers.ZeroAddress,
     );
     return { moleculaPool, poolOwner, poolKeeper, malicious, USDT, randomAccount, approveSelector };
 }
