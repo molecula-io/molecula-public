@@ -9,6 +9,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ERC1271} from "./../common/ERC1271.sol";
 import {IAgent} from "./../common/interfaces/IAgent.sol";
 import {IMoleculaPool} from "./../common/interfaces/IMoleculaPool.sol";
 import {ISupplyManager} from "./../common/interfaces/ISupplyManager.sol";
@@ -54,7 +55,8 @@ contract MoleculaPoolTreasuryV2 is
     Ownable2Step,
     IMoleculaPool,
     WhitelistedExecutor,
-    PriceCheckerClient
+    PriceCheckerClient,
+    ERC1271
 {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -142,6 +144,11 @@ contract MoleculaPoolTreasuryV2 is
     /// @param auth Boolean flag indicating if an Agent is added.
     event AgentSet(address indexed agent, bool indexed auth);
 
+    /// @dev Emitted when the Guardian's address is changed.
+    /// @param oldGuardian Previous Guardian's address.
+    /// @param newGuardian New Guardian's address.
+    event GuardianChanged(address indexed oldGuardian, address indexed newGuardian);
+
     /// @dev Check that `msg.sender` is the Owner or Guardian.
     modifier onlyAuthForPause() {
         if (msg.sender != owner() && msg.sender != guardian) {
@@ -172,7 +179,7 @@ contract MoleculaPoolTreasuryV2 is
         Ownable(initialOwner)
         WhitelistedExecutor(whiteList)
         PriceCheckerClient(priceChecker_)
-        notZeroAddress(poolKeeperAddress)
+        ERC1271(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
         notZeroAddress(guardianAddress)
     {
@@ -180,6 +187,8 @@ contract MoleculaPoolTreasuryV2 is
         for (uint256 i = 0; i < tokensLength; ++i) {
             _addToken(tokens[i]);
         }
+
+        // slither-disable-next-line missing-zero-check (checked in ERC1271)
         poolKeeper = poolKeeperAddress;
         SUPPLY_MANAGER = supplyManagerAddress;
 
@@ -629,7 +638,9 @@ contract MoleculaPoolTreasuryV2 is
     /// @dev Change the Guardian's address.
     /// @param newGuardian New Guardian's address.
     function changeGuardian(address newGuardian) external onlyOwner notZeroAddress(newGuardian) {
+        address oldGuardian = guardian;
         guardian = newGuardian;
+        emit GuardianChanged(oldGuardian, newGuardian);
     }
 
     /// @dev Set a new value for the `isExecutePaused` flag.

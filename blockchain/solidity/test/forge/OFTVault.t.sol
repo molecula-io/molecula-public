@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {MockToken} from "../../contracts/mock/core/MockToken.sol";
 import {MockOracleV2} from "../../contracts/mock/coreV2/MockOracleV2.sol";
-import {OFTVault} from "../../contracts/coreV2/OFTVault/OFTVault.sol";
+import {CoreV2OFTVault} from "../../contracts/coreV2/OFTVault/CoreV2OFTVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {MessagingFee} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
@@ -11,7 +11,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ValueValidator} from "./../../contracts/common/ValueValidator.sol";
 import {ERC7540Operator} from "../../contracts/coreV2/TokenVault/ERC7540Operator.sol";
 import {IOAppCore} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OAppCore.sol";
-import {IOFTVault} from "../../contracts/coreV2/OFTVault/interfaces/IOFTVault.sol";
+import {ICommonOFTVault} from "../../contracts/coreV2/OFTVault/interfaces/ICommonOFTVault.sol";
 
 // Import options builder and test helper utility functions
 import {OptionsBuilder} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OptionsBuilder.sol";
@@ -22,14 +22,14 @@ import {TestHelperOz5} from "@layerzerolabs/test-devtools-evm-foundry/contracts/
  *      We avoid the LZ stack here to craft malformed payload/EID pairs and assert reverts precisely.
  *      The constructor mirrors the real one so the instance is valid in every other way.
  */
-contract OFTVaultHarness is OFTVault {
+contract OFTVaultHarness is CoreV2OFTVault {
     constructor(
         address endpoint,
         uint32 ethereumEid,
         address initialOwner,
         address issuer,
         address oracleAddress
-    ) OFTVault(endpoint, ethereumEid, initialOwner, issuer, oracleAddress) {}
+    ) CoreV2OFTVault(endpoint, ethereumEid, initialOwner, issuer, oracleAddress) {}
 
     function exposed_process(uint256 srcEid, bytes calldata payload) external {
         _processReceivedMessage(srcEid, payload);
@@ -51,8 +51,8 @@ contract LZOFTVaultTest is TestHelperOz5 {
     uint16 constant ethEid = 1; // Local test harness endpoint ID for the "Ethereum side".
     uint16 constant tronEid = 2; // Local test harness endpoint ID for the "TRON side".
 
-    OFTVault public oftVaultEth;
-    OFTVault public oftVaultTron;
+    CoreV2OFTVault public oftVaultEth;
+    CoreV2OFTVault public oftVaultTron;
 
     // Issuer tokens on each chain mocked, acting as ERC20-like rebase tokens for minting and burning.
     MockToken public issuerEth;
@@ -100,9 +100,9 @@ contract LZOFTVaultTest is TestHelperOz5 {
 
         // Deploy `OFTVaults`. NOTE: `1` below is the Ethereum EID used by the Vaults to identify ETH-origin messages.
         {
-            oftVaultEth = OFTVault(
+            oftVaultEth = CoreV2OFTVault(
                 _deployOApp(
-                    type(OFTVault).creationCode,
+                    type(CoreV2OFTVault).creationCode,
                     abi.encode(
                         address(endpoints[ethEid]), // Local endpoint for Ethereum-side Vault.
                         ethEid, // << Ethereum EID in this test harness >>.
@@ -113,9 +113,9 @@ contract LZOFTVaultTest is TestHelperOz5 {
                 )
             );
 
-            oftVaultTron = OFTVault(
+            oftVaultTron = CoreV2OFTVault(
                 _deployOApp(
-                    type(OFTVault).creationCode,
+                    type(CoreV2OFTVault).creationCode,
                     abi.encode(
                         address(endpoints[tronEid]), // Local endpoint for the TRON-side Vault.
                         ethEid, // << Ethereum EID again (same constant) >>.
@@ -174,6 +174,10 @@ contract LZOFTVaultTest is TestHelperOz5 {
         // Issuer references must match deployment.
         assertEq(address(oftVaultEth.ISSUER()), address(issuerEth));
         assertEq(address(oftVaultTron.ISSUER()), address(issuerTron));
+
+        // The asset (underlying token) for each Vault should match the respective issuer.
+        assertEq(oftVaultEth.asset(), address(issuerEth));
+        assertEq(oftVaultTron.asset(), address(issuerTron));
     }
 
     /**
@@ -326,12 +330,12 @@ contract LZOFTVaultTest is TestHelperOz5 {
 
         // --- Case 1: Looks like the ETH source, but payload too short (2 fields only).
         bytes memory shortPayload = abi.encode(uint256(1), address(0xBEEF)); // `2 * 32B = 64 bytes`.
-        vm.expectRevert(IOFTVault.InvalidMessage.selector);
+        vm.expectRevert(ICommonOFTVault.InvalidMessage.selector);
         h.exposed_process(ethEid, shortPayload);
 
         // --- Case 2: Looks like non-ETH source, but payload too long (4 fields).
         bytes memory longPayload = abi.encode(uint256(1), address(0xBEEF), uint256(2), uint256(3)); // `4 * 32B = 128`.
-        vm.expectRevert(IOFTVault.InvalidMessage.selector);
+        vm.expectRevert(ICommonOFTVault.InvalidMessage.selector);
         h.exposed_process(tronEid, longPayload);
     }
 

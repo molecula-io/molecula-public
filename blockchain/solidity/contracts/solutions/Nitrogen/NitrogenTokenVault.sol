@@ -17,6 +17,7 @@ import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {BaseTokenVault} from "./../../coreV2/TokenVault/BaseTokenVault.sol";
 import {CommonTokenVault} from "./../../coreV2/TokenVault/CommonTokenVault.sol";
 import {IBaseTokenVault} from "./../../coreV2/TokenVault/interfaces/ITokenVault.sol";
+import {ITokenVaultWithImmediateRedeem} from "./../../coreV2/TokenVault/interfaces/ITokenVaultWithImmediateRedeem.sol";
 import {VaultPriceChecker} from "./../../coreV2/TokenVault/VaultPriceChecker.sol";
 import {INitrogenTokenVault} from "./interfaces/INitrogenTokenVault.sol";
 
@@ -25,7 +26,13 @@ import {INitrogenTokenVault} from "./interfaces/INitrogenTokenVault.sol";
 /// RebaseTokenOwner for token supply management and MoleculaPoolTreasury for the underlying asset handling.
 /// @notice Price feed configuration is used to check that the asset price is approximately equal
 /// to the expected price, within the allowed deviation.
-contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, VaultPriceChecker {
+contract NitrogenTokenVault is
+    INitrogenTokenVault,
+    ITokenVaultWithImmediateRedeem,
+    IAgent,
+    CommonTokenVault,
+    VaultPriceChecker
+{
     using SafeERC20 for IERC20;
 
     // ============ State Variables ============
@@ -115,7 +122,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Va
         emit RedeemClaimable(requestIds, assets);
     }
 
-    /// @inheritdoc INitrogenTokenVault
+    /// @inheritdoc ITokenVaultWithImmediateRedeem
     function redeemImmediately(
         uint256 shares,
         address receiver,
@@ -123,7 +130,7 @@ contract NitrogenTokenVault is INitrogenTokenVault, IAgent, CommonTokenVault, Va
     ) external virtual override onlyOperator(owner) returns (uint256 requestId) {
         // Redeem the claimable assets.
         uint256 claimableRedeemShares = convertToShares(_redeemInfo[owner].claimableRedeemAssets);
-        if (0 < claimableRedeemShares) {
+        if (claimableRedeemShares > 0) {
             if (shares <= claimableRedeemShares) {
                 _withdraw(convertToAssets(shares), receiver, owner);
                 return 0;

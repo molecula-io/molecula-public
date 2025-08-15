@@ -51,6 +51,7 @@ export async function deployOFTVault(
                 config.OWNER, // Owner of the vault contract
                 contractsCarbon.tron.rebaseTokenOwner, // Address allowed to mint/burn rebase token
                 contractsCarbon.tron.oracle, // Oracle contract address
+                contractsCarbon.tron.rebaseToken, // Underlying token address (mUSD)
             ],
         },
         issuerAddress, // The deployer's base58 address

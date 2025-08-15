@@ -1,10 +1,17 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.24;
+pragma solidity ^0.8.24;
 
-import {MUSDOFTVault} from "./../../../coreV2/OFTVault/MUSDOFTVault.sol";
+import {IERC20Provider} from "./../../common/rebase/interfaces/IERC20Provider.sol";
+import {CommonOFTVault} from "./CommonOFTVault.sol";
 
-contract TronOFTVault is MUSDOFTVault {
+contract MUSDOFTVault is CommonOFTVault, IERC20Provider {
+    /**
+     * @dev The address of the rebase token used for bridging operations.
+     * This token is used for minting and burning shares during cross-chain operations.
+     */
+    address public immutable REBASE_TOKEN;
+
     /**
      * @dev Initializes the Vault, Oracle, and LayerZero endpoint information.
      * @param endpoint LayerZero endpoint address for cross-chain messaging.
@@ -21,5 +28,17 @@ contract TronOFTVault is MUSDOFTVault {
         address issuer,
         address oracleAddress,
         address underlyingToken
-    ) MUSDOFTVault(endpoint, ethereumEid, initialOwner, issuer, oracleAddress, underlyingToken) {}
+    )
+        CommonOFTVault(endpoint, ethereumEid, initialOwner, issuer, oracleAddress)
+        notZeroAddress(underlyingToken)
+    {
+        REBASE_TOKEN = underlyingToken;
+    }
+
+    /**
+     * @inheritdoc IERC20Provider
+     */
+    function getERC20Token() external view returns (address token) {
+        token = REBASE_TOKEN;
+    }
 }

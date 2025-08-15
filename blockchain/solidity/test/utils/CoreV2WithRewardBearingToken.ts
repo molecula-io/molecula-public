@@ -40,7 +40,6 @@ export async function deployCoreV2RewardBearingTokenWithoutInit() {
         [],
         guardian,
         ethers.ZeroAddress,
-        poolKeeper,
     );
 
     // deploy supply manager

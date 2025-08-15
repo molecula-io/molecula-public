@@ -38,7 +38,7 @@ describe('Meta ETH', () => {
 
         const depositValue = minDepositAssets;
 
-        // Grand USD and approve tokens for stETHVault
+        // Grand stETH and approve tokens for stETHVault
         await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
         await stETH.connect(user0).approve(stETHVault, depositValue);
 
@@ -83,6 +83,45 @@ describe('Meta ETH', () => {
             .connect(user0)
             .withdraw(await stETHVault.claimableRedeemAssets(user0), user0, user0);
         expectEqual(await stETH.balanceOf(user0), redeemAssets);
+    });
+
+    it('Should redeem immediately stETH', async () => {
+        const { user0, rebaseTokenV2, metaPoolTreasury, stETHVault, stETH, minDepositAssets } =
+            await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, stETH, 10n * depositValue - 1n, FAUCET.stETH);
+
+        // Redeem immediately
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        await stETHVault.connect(user0).redeemImmediately(userShares, user0, user0);
+        expect(await stETH.balanceOf(user0)).to.be.greaterThan(depositValue);
+    });
+
+    it('Should redeem immediately ETH', async () => {
+        const { user0, rebaseTokenV2, metaPoolTreasury, nativeTokenVault, minDepositAssets } =
+            await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Deposit ETH
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
+
+        // Generate yield
+        await grantETH(metaPoolTreasury, 10n * depositValue - 1n);
+
+        // Redeem immediately
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        await nativeTokenVault.connect(user0).redeemImmediately(userShares, user0, user0);
     });
 
     it('Test execute', async () => {
@@ -446,7 +485,7 @@ describe('Meta ETH', () => {
 
         const depositValue = minDepositAssets;
 
-        // Grand USD and approve tokens for stETHVault
+        // Grand stETH and approve tokens for stETHVault
         await grantERC20(user0, stETH, 2n * depositValue, FAUCET.stETH);
         await stETH.connect(user0).approve(stETHVault, 2n * depositValue);
 
@@ -479,7 +518,7 @@ describe('Meta ETH', () => {
 
         const depositValue = minDepositAssets;
 
-        // Grand USD and approve tokens for stETHVault
+        // Grand stETH and approve tokens for stETHVault
         await grantERC20(user0, stETH, 2n * depositValue, FAUCET.stETH);
         await stETH.connect(user0).approve(stETHVault, 2n * depositValue);
 

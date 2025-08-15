@@ -7,10 +7,10 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ERC1271} from "./../../common/ERC1271.sol";
 import {Guardian} from "./../../common/pausable/Guardian.sol";
 import {PriceCheckerClient} from "./../../common/PriceChecker/PriceCheckerClient.sol";
 import {ConstantsCoreV2} from "./../../coreV2/Constants.sol";
-import {ERC1271} from "./../../coreV2/ERC1271.sol";
 import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {IMoleculaPoolV2} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
 import {IMoleculaPoolV2WithNativeToken} from "./../../coreV2/interfaces/IMoleculaPoolV2.sol";
@@ -82,7 +82,6 @@ contract MetaPoolTreasury is
      * @param whiteList List of whitelisted addresses.
      * @param guardianAddress Guardian address that can pause the contract.
      * @param priceChecker_ Price checker contract's address.
-     * @param signer_ Initial signer address for the ERC1271 validation.
      */
     constructor(
         address initialOwner,
@@ -90,17 +89,16 @@ contract MetaPoolTreasury is
         address supplyManagerAddress,
         WhiteList[] memory whiteList,
         address guardianAddress,
-        address priceChecker_,
-        address signer_
+        address priceChecker_
     )
         Ownable(initialOwner)
         Guardian(guardianAddress)
         PriceCheckerClient(priceChecker_)
-        ERC1271(signer_)
+        ERC1271(poolKeeperAddress)
         WhitelistedExecutor(whiteList)
-        notZeroAddress(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
     {
+        // slither-disable-next-line missing-zero-check (checked in ERC1271)
         poolKeeper = poolKeeperAddress;
         SUPPLY_MANAGER = supplyManagerAddress;
     }

@@ -3,10 +3,10 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title IOFTVault
- * @notice Interface for the OFTVault cross-chain bridging contract.
+ * @title ICommonOFTVault
+ * @notice Interface for the CommonOFTVault cross-chain bridging contract.
  */
-interface IOFTVault {
+interface ICommonOFTVault {
     // ============ Errors ============
 
     /// @dev Error thrown when the message payload is invalid or malformed.

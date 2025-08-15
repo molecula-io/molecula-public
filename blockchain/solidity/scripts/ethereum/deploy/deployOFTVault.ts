@@ -33,10 +33,10 @@ export async function deployOFTVault(
     const config = getEnvironmentConfig(environment);
 
     // ---------------------------------------------------------------------
-    // Get the contract factory for OFTVault.
+    // Get the contract factory for MUSDOFTVault.
     // This allows us to deploy a new instance with the provided constructor args.
     // ---------------------------------------------------------------------
-    const OFTVault = await hre.ethers.getContractFactory('OFTVault');
+    const mUSDOFTVault = await hre.ethers.getContractFactory('MUSDOFTVault');
 
     // ---------------------------------------------------------------------
     // Deploy OFTVault.
@@ -46,14 +46,16 @@ export async function deployOFTVault(
     //   3) Contract owner address (can differ from deployer wallet)
     //   4) rebaseTokenOwner - address authorized to mint/burn the rebase token
     //   5) supplyManager - address of the Oracle/Supply Manager contract
+    //   6) rebaseToken - address of the rebase token used for bridging operations
     // Deployment uses a fixed gas limit from DEPLOY_GAS_LIMIT config.
     // ---------------------------------------------------------------------
-    const oftVault = await OFTVault.deploy(
+    const oftVault = await mUSDOFTVault.deploy(
         config.LAYER_ZERO_ENDPOINT,
         config.LAYER_ZERO_ETHEREUM_EID,
         config.OWNER, // NOTE: This is not necessarily the deployer wallet
         contractsNitrogen.eth.rebaseTokenOwner,
         contractsNitrogen.eth.supplyManager,
+        contractsNitrogen.eth.rebaseToken,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
 

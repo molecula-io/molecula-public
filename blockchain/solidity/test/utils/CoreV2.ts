@@ -40,7 +40,6 @@ export async function deployCoreV2WithoutInit() {
         [],
         guardian,
         ethers.ZeroAddress,
-        poolKeeper,
     );
 
     // deploy supply manager

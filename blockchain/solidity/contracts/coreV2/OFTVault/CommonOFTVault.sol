@@ -11,20 +11,20 @@ import {ISetterOracle} from "./../../common/interfaces/ISetterOracle.sol";
 import {ValueValidator} from "./../../common/ValueValidator.sol";
 import {IIssuer} from "./../../coreV2/interfaces/IIssuer.sol";
 import {ERC7540Operator} from "./../TokenVault/ERC7540Operator.sol";
-import {IOFTVault} from "./interfaces/IOFTVault.sol";
+import {ICommonOFTVault} from "./interfaces/ICommonOFTVault.sol";
 
 /**
- * @title OFTVault
+ * @title CommonOFTVault
  * @notice Cross-chain Vault for bridging shares (e.g., mUSD) and synchronizing supply data via LayerZero v2.
  * @dev Handles bridging, burning, minting, and synchronizing total supply with an on-chain Oracle. Uses LayerZero OApp v2 messaging.
  */
-contract OFTVault is
+abstract contract CommonOFTVault is
     Ownable2Step,
     OApp,
     ERC7540Operator,
     ReentrancyGuard,
     ValueValidator,
-    IOFTVault
+    ICommonOFTVault
 {
     using OptionsBuilder for bytes;
 
@@ -128,7 +128,7 @@ contract OFTVault is
     }
 
     /**
-     * @inheritdoc IOFTVault
+     * @inheritdoc ICommonOFTVault
      * @notice Initiates a cross-chain bridge operation to transfer shares to another chain.
      * @dev This function:
      *      - Prepares a LayerZero payload, including supply synchronization if on Ethereum.
@@ -160,7 +160,7 @@ contract OFTVault is
         address receiver,
         address owner,
         uint32 dstEid
-    ) external payable nonReentrant onlyOperator(owner) {
+    ) external payable virtual nonReentrant onlyOperator(owner) {
         // 1. Call the public `quote()` function to get the fee, payload, and options.
         (MessagingFee memory fee, bytes memory payload, bytes memory lzOptions) = quote(
             shares,

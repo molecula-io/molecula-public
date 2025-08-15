@@ -35,7 +35,6 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         [],
         config.META_GUARDIAN,
         hre.ethers.ZeroAddress,
-        config.META_POOL_KEEPER,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await metaPoolTreasury.waitForDeployment();

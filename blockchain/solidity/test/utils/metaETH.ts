@@ -58,7 +58,6 @@ export async function deployMetaEthWithoutInit() {
         [{ target: testSeqno, selector: approveSelector }],
         guardian,
         ethers.ZeroAddress,
-        poolKeeper,
     );
 
     // deploy supply manager
