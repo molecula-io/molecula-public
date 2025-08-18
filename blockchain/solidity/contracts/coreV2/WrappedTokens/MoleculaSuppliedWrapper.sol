@@ -10,9 +10,9 @@ import {CandyWrappedRebaseAsset} from "./CandyWrappedRebaseAsset.sol";
 import {VoteToken} from "./VoteToken.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title VoteCandyAsset.
-/// @notice This token can be used as a voting token.
-contract VoteCandyAsset is CandyWrappedRebaseAsset, VoteToken {
+/// @title MoleculaSuppliedWrapper.
+/// @notice Wrapped token can be used as a voting token.
+contract MoleculaSuppliedWrapper is CandyWrappedRebaseAsset, VoteToken {
     /// @dev Constructor for initializing the contract.
     /// @param name Token's name.
     /// @param symbol Token's symbol.

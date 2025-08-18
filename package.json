@@ -182,7 +182,7 @@
         "dpdm": "^3.13.1",
         "husky": "^8.0.1",
         "patch-package": "^6.4.7",
-        "prettier": "^3.2.5",
+        "prettier": "^3.5.3",
         "prettier-plugin-solidity": "^1.4.1",
         "solhint": "^6.0.0",
         "ts-node": "^10.9.2",

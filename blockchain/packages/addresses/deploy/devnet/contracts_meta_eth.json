@@ -1,10 +1,10 @@
 {
     "eth": {
-        "metaPoolTreasury": "0x08b19EC5483D8D5E857dD30BFbF495C305B51288",
-        "supplyManagerV2": "0x41E953A60348Ec3C6c3b8084465bF50Ac021c3c1",
-        "rebaseTokenV2": "0x9f8285c28B0230c49Dd1DF43D19e15bC34b82D69",
-        "stETHVault": "0xc3802c3141058a8Db8e288F7114C2B15c75a9D31",
-        "wETHVault": "0x8b67E8C2bD66a524dC7C465409a1549fB88A1E47",
-        "nativeTokenVault": "0xf099b81D43038593c532123FADB7834632d45310"
+        "metaPoolTreasury": "0x55A67652de2A13d913e5168a167dA86e0A95b79a",
+        "supplyManagerV2": "0xc26c06B4aa3a9000f06C043C8B63100e6aaE8162",
+        "rebaseTokenV2": "0x61402Db057E8B6d17fEC827f459Cee094f75C85d",
+        "stETHVault": "0x3B3A576023E675C1c5929dc5CDa761106BD2e0F7",
+        "wETHVault": "0x96c9a38B960C4057Ccc35128062949a62492E43F",
+        "nativeTokenVault": "0xdA5c8d413F4d02b3832aFC4c97B2c07062ea4e76"
     }
 }

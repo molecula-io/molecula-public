@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.30;
+pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {WrappedRebaseToken} from "../../coreV2/WrappedTokens/WrappedRebaseToken.sol";
+import {WrappedRebaseToken} from "./WrappedRebaseToken.sol";
 
-contract WmetaETH is WrappedRebaseToken {
-    /// @dev Initializes the `RewardBearingToken` contract.
+/// @title RewardBearingWrapper.
+contract RewardBearingWrapper is WrappedRebaseToken {
+    /// @dev Initializes the `RewardBearingWrapper` contract.
     /// @param name_ Token's name.
     /// @param symbol_ Token's symbol.
     /// @param rebaseToken_ Rebase token's address.

@@ -10,9 +10,9 @@ import {EmptyWrappedRebaseAsset} from "./EmptyWrappedRebaseAsset.sol";
 import {VoteToken} from "./VoteToken.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title VoteEmptyAsset.
-/// @notice This token can be used as a voting token.
-contract VoteEmptyAsset is EmptyWrappedRebaseAsset, VoteToken {
+/// @title MoleculaUnsuppliedWrapper.
+/// @notice Wrapped token can be used as a voting token.
+contract MoleculaUnsuppliedWrapper is EmptyWrappedRebaseAsset, VoteToken {
     /// @dev Constructor for initializing the contract.
     /// @param name Token's name.
     /// @param symbol Token's symbol.

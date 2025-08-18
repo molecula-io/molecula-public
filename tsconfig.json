@@ -2,6 +2,7 @@
     "extends": "@molecula-monorepo/tsconfig-shared",
     "include": ["**/*.ts", "**/*.tsx", "**/*.json"],
     "exclude": [
+        "node_modules",
         "backend",
         "backend-nest",
         "blockchain",

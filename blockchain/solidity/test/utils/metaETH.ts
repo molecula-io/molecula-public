@@ -84,8 +84,8 @@ export async function deployMetaEthWithoutInit() {
     );
     expect(await rebaseTokenV2.getAddress()).to.be.equal(rebaseTokenFutureAddress);
 
-    const WrappedRebaseToken = await ethers.getContractFactory('WmetaETH');
-    const wmetaETH = await WrappedRebaseToken.connect(poolOwner).deploy(
+    const RewardBearingWrapper = await ethers.getContractFactory('RewardBearingWrapper');
+    const wmetaETH = await RewardBearingWrapper.connect(poolOwner).deploy(
         'Wrapped metaETH',
         'wmetaETH',
         rebaseTokenV2,

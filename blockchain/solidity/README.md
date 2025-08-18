@@ -4,27 +4,27 @@ A comprehensive codebase for Ethereum and Tron networks including smart contract
 
 ## Table of Contents
 
--   [Prerequisites](#prerequisites)
--   [Quick Start](#quick-start)
--   [Installation](#installation)
--   [Project Structure](#project-structure)
--   [Development Workflow](#development-workflow)
--   [Environment Setup](#environment-setup)
--   [Testing](#testing)
--   [Code Coverage](#code-coverage)
--   [Fireblocks Integration](#fireblocks-integration)
--   [Contracts Deployment](#contracts-deployment)
--   [Security](#security)
--   [Troubleshooting](#troubleshooting)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Project Structure](#project-structure)
+- [Development Workflow](#development-workflow)
+- [Environment Setup](#environment-setup)
+- [Testing](#testing)
+- [Code Coverage](#code-coverage)
+- [Fireblocks Integration](#fireblocks-integration)
+- [Contracts Deployment](#contracts-deployment)
+- [Security](#security)
+- [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
--   **Node.js 20+** - [Download here](https://nodejs.org/)
--   **Yarn** - Package manager (`npm install -g yarn`)
--   **Foundry/Forge** - For testing and development (see installation below)
--   **Git** - Version control
+- **Node.js 20+** - [Download here](https://nodejs.org/)
+- **Yarn** - Package manager (`npm install -g yarn`)
+- **Foundry/Forge** - For testing and development (see installation below)
+- **Git** - Version control
 
 ## Quick Start
 
@@ -92,10 +92,10 @@ blockchain/solidity/
 
 ### Key Directories
 
--   **`contracts/`** - Contains all Solidity smart contracts organized by solution (core, nitrogen, carbon)
--   **`scripts/`** - Deployment scripts for different networks and environments
--   **`configs/`** - Network-specific configurations for Ethereum and Tron networks
--   **`test/`** - Comprehensive test suite for all contracts
+- **`contracts/`** - Contains all Solidity smart contracts organized by solution (core, nitrogen, carbon)
+- **`scripts/`** - Deployment scripts for different networks and environments
+- **`configs/`** - Network-specific configurations for Ethereum and Tron networks
+- **`test/`** - Comprehensive test suite for all contracts
 
 ## Development Workflow
 
@@ -171,11 +171,11 @@ FORK_BLOCK_NUMBER=latest_block_number
 
 The project supports multiple networks:
 
--   **Sepolia** - Ethereum testnet
--   **Holesky** - Ethereum testnet
--   **Ethereum Mainnet** - Production Ethereum
--   **Shasta** - Tron testnet
--   **Tron Mainnet** - Production Tron
+- **Sepolia** - Ethereum testnet
+- **Holesky** - Ethereum testnet
+- **Ethereum Mainnet** - Production Ethereum
+- **Shasta** - Tron testnet
+- **Tron Mainnet** - Production Tron
 
 ## Testing
 
@@ -221,7 +221,6 @@ The project includes Fireblocks integration for secure transaction signing and d
 ### Setup
 
 1. **Install Dependencies**: The Fireblocks packages are already included in the project:
-
     - `@fireblocks/hardhat-fireblocks`: Hardhat plugin for Fireblocks integration
     - `@fireblocks/fireblocks-web3-provider`: Web3 provider for Fireblocks
 
@@ -265,15 +264,15 @@ yarn set:nitrogen:owner:test --network sepolia_fireblocks
 
 ### Security Benefits
 
--   **Secure Key Management**: Private keys are stored securely in Fireblocks vaults
--   **Multi-signature Support**: Leverage Fireblocks' multi-signature capabilities
--   **Policy Enforcement**: Apply custom policies and approval workflows
+- **Secure Key Management**: Private keys are stored securely in Fireblocks vaults
+- **Multi-signature Support**: Leverage Fireblocks' multi-signature capabilities
+- **Policy Enforcement**: Apply custom policies and approval workflows
 
 ### Configuration Options
 
--   `vaultAccountIds`: Array of vault account IDs to use for signing
--   `logRequestsAndResponses`: Enable detailed logging for debugging
--   `logTransactionStatusChanges`: Track transaction status changes
+- `vaultAccountIds`: Array of vault account IDs to use for signing
+- `logRequestsAndResponses`: Enable detailed logging for debugging
+- `logTransactionStatusChanges`: Track transaction status changes
 
 ## Contracts Deployment
 
@@ -291,16 +290,15 @@ Before deploying, ensure you have:
 
 Set `POOL_KEEPER`, `OWNER` and `GUARDIAN_ADDRESS` in the appropriate config files:
 
--   **Ethereum**:
+- **Ethereum**:
+    - [Sepolia config](./configs/ethereum/sepoliaTyped.ts)
+    - [Mainnet Beta config](./configs/ethereum/mainnetBetaTyped.ts)
+    - [Mainnet Production config](./configs/ethereum/mainnetProdTyped.ts)
 
-    -   [Sepolia config](./configs/ethereum/sepoliaTyped.ts)
-    -   [Mainnet Beta config](./configs/ethereum/mainnetBetaTyped.ts)
-    -   [Mainnet Production config](./configs/ethereum/mainnetProdTyped.ts)
-
--   **Tron**:
-    -   [Shasta config](./configs/tron/shastaTyped.ts)
-    -   [Mainnet Beta config](./configs/tron/mainnetBetaTyped.ts)
-    -   [Mainnet Production config](./configs/tron/mainnetProdTyped.ts)
+- **Tron**:
+    - [Shasta config](./configs/tron/shastaTyped.ts)
+    - [Mainnet Beta config](./configs/tron/mainnetBetaTyped.ts)
+    - [Mainnet Production config](./configs/tron/mainnetProdTyped.ts)
 
 #### 2. Deploy Core Contracts
 
@@ -390,7 +388,6 @@ yarn set:carbon:owner:[test|beta|production]
     ```
 
     Parameters:
-
     - `--token`: ERC20 token address
     - `--token-name`: Token name
     - `--min-deposit`: Minimal deposit assets
@@ -457,9 +454,9 @@ yarn verify:nitrogenSepolia
 
 ### Security Tools
 
--   **Slither**: Static analysis tool for Solidity
--   **Aderyn**: Security analysis tool
--   **Solhint**: Solidity linting tool
+- **Slither**: Static analysis tool for Solidity
+- **Aderyn**: Security analysis tool
+- **Solhint**: Solidity linting tool
 
 ### Audit Reports
 

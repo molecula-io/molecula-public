@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.24;
 
-import {VoteCandyAsset} from "./../../../coreV2/WrappedTokens/VoteCandyAsset.sol";
+import {MoleculaSuppliedWrapper} from "./MoleculaSuppliedWrapper.sol";
 
-/// @title wmUSD for TRON.
-contract WmUSDTron is VoteCandyAsset {
+/// @title MoleculaSuppliedWrapperTron.
+contract MoleculaSuppliedWrapperTron is MoleculaSuppliedWrapper {
     /// @dev Constructor for initializing the contract.
     /// @param name Token's name.
     /// @param symbol Token's symbol.
@@ -18,5 +18,5 @@ contract WmUSDTron is VoteCandyAsset {
         address owner,
         address rebaseToken_,
         address yieldDistributor_
-    ) VoteCandyAsset(name, symbol, owner, rebaseToken_, yieldDistributor_) {}
+    ) MoleculaSuppliedWrapper(name, symbol, owner, rebaseToken_, yieldDistributor_) {}
 }

@@ -13,7 +13,7 @@
         "eslint:fix": "echo workspace does not contain any code"
     },
     "dependencies": {
-        "prettier": "^3.2.5",
+        "prettier": "^3.5.3",
         "prettier-plugin-solidity": "^1.4.1"
     },
     "volta": {

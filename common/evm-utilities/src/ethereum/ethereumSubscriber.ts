@@ -115,7 +115,7 @@ export class EthereumSubscriber<
             const depth =
                 counter !== healthCheckInterval
                     ? this.defaultDepth
-                    : lastBlock ?? this.startBlock ?? this.defaultDepth;
+                    : (lastBlock ?? this.startBlock ?? this.defaultDepth);
 
             const events = await this.loadLastEvents(depth);
 

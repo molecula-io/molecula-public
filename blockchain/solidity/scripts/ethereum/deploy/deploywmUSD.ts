@@ -18,7 +18,7 @@ export async function deploywmUSD(
 ) {
     const { config } = await getConfig(hre, environment);
 
-    const WMUSD = await hre.ethers.getContractFactory('WmUSD');
+    const WMUSD = await hre.ethers.getContractFactory('MoleculaSuppliedWrapper');
     console.log('Deploying wmUSD...');
     const constructorArguments: [string, string, AddressLike, AddressLike, AddressLike] = [
         config.WMUSD_TOKEN_NAME,

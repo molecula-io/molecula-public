@@ -119,7 +119,7 @@ export async function deployNitrogenV2CommonWithOldMoleculaPool(token: string) {
         from: poolOwner.address,
         nonce: (await poolOwner.getNonce()) + 1,
     });
-    const WMUSD = await ethers.getContractFactory('WmUSD');
+    const WMUSD = await ethers.getContractFactory('MoleculaSuppliedWrapper');
     const wmusd = await WMUSD.deploy(
         ethMainnetBetaConfig.WMUSD_TOKEN_NAME,
         ethMainnetBetaConfig.WMUSD_TOKEN_SYMBOL,
@@ -275,7 +275,7 @@ export async function deployNitrogenV2Common(token: string) {
         from: poolOwner.address,
         nonce: (await poolOwner.getNonce()) + 1,
     });
-    const WMUSD = await ethers.getContractFactory('WmUSD');
+    const WMUSD = await ethers.getContractFactory('MoleculaSuppliedWrapper');
     const wmusd = await WMUSD.deploy(
         ethMainnetBetaConfig.WMUSD_TOKEN_NAME,
         ethMainnetBetaConfig.WMUSD_TOKEN_SYMBOL,

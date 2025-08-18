@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-syntax, no-await-in-loop */
 
+import { ethers } from 'ethers';
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { type ContractsMetaEth, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
@@ -24,6 +25,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         meta.eth.supplyManagerV2,
         [],
         config.META_GUARDIAN,
+        ethers.ZeroAddress,
     ]);
 
     await verifyContract(hre, 'SupplyManagerV2WithNative', meta.eth.supplyManagerV2, [
@@ -50,7 +52,6 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
             meta.eth.rebaseTokenV2,
             meta.eth.supplyManagerV2,
             config.META_GUARDIAN,
-            hre.ethers.ZeroAddress,
         ]);
     }
 

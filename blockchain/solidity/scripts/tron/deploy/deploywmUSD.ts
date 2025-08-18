@@ -19,7 +19,7 @@ export async function deploywmUSD(
 
     const config = getTronEnvironmentConfig(environment);
 
-    const artifact = await hre.artifacts.readArtifact('WmUSDTron');
+    const artifact = await hre.artifacts.readArtifact('MoleculaSuppliedWrapperTron');
 
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
