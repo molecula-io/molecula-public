@@ -38,7 +38,7 @@ Before you begin, ensure you have the following installed:
 2. **Set up environment:**
 
     ```bash
-    cp .env.test.example .env.test
+    cp .env.example .env.test
     # Edit .env.test with your configuration
     ```
 
@@ -144,7 +144,7 @@ yarn aderyn
 
 Create the following environment files based on your deployment target:
 
-#### For Testnet Development (`.env.test`)
+#### For Testnet Development ([.env.test](.env.test))
 
 ```bash
 # Ethereum Configuration
@@ -157,10 +157,18 @@ TRON_SEED_PHRASE=your_tron_seed_phrase
 
 # Optional: Fork configuration
 JSON_RPC_URL=your_mainnet_rpc_url
-FORK_BLOCK_NUMBER=latest_block_number
 ```
 
-#### For Production (`.env.production`)
+#### For Testnet Development ([.config.env](.config.env))
+
+```bash
+/**
+ * Block number using in fork tests.
+ */
+FORK_BLOCK_NUMBER=your_block_number
+```
+
+#### For Production ([.env.production](.env.production))
 
 ```bash
 # Production environment variables

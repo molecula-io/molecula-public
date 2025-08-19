@@ -181,7 +181,7 @@ tronMajorScope
     });
 
 tronMajorScope
-    .task('deploywmUSD', 'Deploys wmUSD (Candy) on Tron')
+    .task('deploywmUSD', 'Deploys wmUSD (Supplied) on Tron')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('\n TRON Deployment');

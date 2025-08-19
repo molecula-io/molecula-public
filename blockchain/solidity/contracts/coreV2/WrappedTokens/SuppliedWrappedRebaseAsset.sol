@@ -5,12 +5,12 @@ pragma solidity ^0.8.24;
 import {IWrappedRebaseAsset} from "./interfaces/IWrappedRebaseAsset.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title CandyWrappedRebaseAsset
+/// @title SuppliedWrappedRebaseAsset
 /// @notice Wrapper contract has two possible states:
-/// - `candy`: The `rebaseToken` address is set.
-/// - `empty`: The `rebaseToken` address is not set.
-/// @dev This contract is initially in the `candy` state and cannot be `empty`.
-abstract contract CandyWrappedRebaseAsset is WrappedRebaseAsset {
+/// - `supplied`: The `rebaseToken` address is set.
+/// - `unsupplied`: The `rebaseToken` address is not set.
+/// @dev This contract is initially in the `supplied` state and cannot be `unsupplied`.
+abstract contract SuppliedWrappedRebaseAsset is WrappedRebaseAsset {
     // ============ State Variables ============
 
     /// @dev Rebase token's address.

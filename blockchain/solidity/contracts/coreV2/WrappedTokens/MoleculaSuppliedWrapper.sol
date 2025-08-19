@@ -6,13 +6,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {CandyWrappedRebaseAsset} from "./CandyWrappedRebaseAsset.sol";
+import {SuppliedWrappedRebaseAsset} from "./SuppliedWrappedRebaseAsset.sol";
 import {VoteToken} from "./VoteToken.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
 /// @title MoleculaSuppliedWrapper.
 /// @notice Wrapped token can be used as a voting token.
-contract MoleculaSuppliedWrapper is CandyWrappedRebaseAsset, VoteToken {
+contract MoleculaSuppliedWrapper is SuppliedWrappedRebaseAsset, VoteToken {
     /// @dev Constructor for initializing the contract.
     /// @param name Token's name.
     /// @param symbol Token's symbol.
@@ -29,7 +29,7 @@ contract MoleculaSuppliedWrapper is CandyWrappedRebaseAsset, VoteToken {
         ERC20(name, symbol)
         ERC20Permit(name)
         WrappedRebaseAsset(yieldDistributor_)
-        CandyWrappedRebaseAsset(rebaseToken_)
+        SuppliedWrappedRebaseAsset(rebaseToken_)
         Ownable(owner)
         notZeroAddress(rebaseToken_)
     {}

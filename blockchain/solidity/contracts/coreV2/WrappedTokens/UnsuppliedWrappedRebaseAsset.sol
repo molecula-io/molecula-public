@@ -3,36 +3,40 @@
 pragma solidity ^0.8.24;
 
 import {IIssuer} from "./../interfaces/IIssuer.sol";
-import {IEmptyWrappedRebaseAsset} from "./interfaces/IEmptyWrappedRebaseAsset.sol";
+import {IUnsuppliedWrappedRebaseAsset} from "./interfaces/IUnsuppliedWrappedRebaseAsset.sol";
 import {IWrappedRebaseAsset} from "./interfaces/IWrappedRebaseAsset.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title EmptyWrappedRebaseAsset
+/// @title UnsuppliedWrappedRebaseAsset
 /// @notice Wrapper contract has two possible states:
-/// - `candy`: The `rebaseToken` address is set.
-/// - `empty`: The `rebaseToken` address is not set.
-/// @dev This contract is initially in the `empty` state and can switch to `candy`.
-abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, WrappedRebaseAsset {
+/// - `supplied`: The `rebaseToken` address is set.
+/// - `unsupplied`: The `rebaseToken` address is not set.
+/// @dev This contract is initially in the `unsupplied` state and can switch to `supplied`.
+abstract contract UnsuppliedWrappedRebaseAsset is
+    IUnsuppliedWrappedRebaseAsset,
+    IIssuer,
+    WrappedRebaseAsset
+{
     // ============ State Variables ============
 
     /// @dev Rebase token's address.
     address internal _rebaseToken;
 
-    /// @inheritdoc IEmptyWrappedRebaseAsset
+    /// @inheritdoc IUnsuppliedWrappedRebaseAsset
     address public bridger;
 
     // ============ Modifiers ============
 
-    /// @dev Ensures that the contract is in the `empty` state — the address of the rebase token is not set.
-    modifier ensureEmpty() {
+    /// @dev Ensures that the contract is in the `unsupplied` state — the address of the rebase token is not set.
+    modifier ensureUnsupplied() {
         if (_rebaseToken != address(0)) {
-            revert EContractIsAlreadyCandy();
+            revert EContractIsAlreadySupplied();
         }
         _;
     }
 
-    /// @dev Ensures that the contract is in the `candy` state — the `rebaseToken` address is set.
-    modifier ensureCandy() {
+    /// @dev Ensures that the contract is in the `supplied` state — the `rebaseToken` address is set.
+    modifier ensureSupplied() {
         if (_rebaseToken == address(0)) {
             revert EContractIsEmpty();
         }
@@ -42,7 +46,7 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     // ============ Constructor ============
 
     /// @dev Constructor for initializing the contract.
-    /// @param bridger_ Address authorized to mint and burn tokens during the empty state. Maybe be zero address.
+    /// @param bridger_ Address authorized to mint and burn tokens during the `unsupplied` state. Maybe be zero address.
     constructor(address bridger_) notZeroAddress(bridger_) {
         bridger = bridger_;
     }
@@ -50,12 +54,12 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     // ============ Anybody's Functions ============
 
     /// @inheritdoc IWrappedRebaseAsset
-    function wrap(uint256 rebaseAssets) public virtual override ensureCandy {
+    function wrap(uint256 rebaseAssets) public virtual override ensureSupplied {
         super.wrap(rebaseAssets);
     }
 
     /// @inheritdoc IWrappedRebaseAsset
-    function unwrap(uint256 wrappedRebaseAssets) public virtual override ensureCandy {
+    function unwrap(uint256 wrappedRebaseAssets) public virtual override ensureSupplied {
         super.unwrap(wrappedRebaseAssets);
     }
 
@@ -65,7 +69,7 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     function distributeYield(
         address beneficiary,
         uint256 shares
-    ) public virtual override ensureCandy {
+    ) public virtual override ensureSupplied {
         super.distributeYield(beneficiary, shares);
     }
 
@@ -75,7 +79,7 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     function mint(
         address user,
         uint256 wrappedRebaseAssets
-    ) external virtual override ensureEmpty only(bridger) {
+    ) external virtual override ensureUnsupplied only(bridger) {
         _mint(user, wrappedRebaseAssets);
     }
 
@@ -83,30 +87,30 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     function burn(
         address user,
         uint256 wrappedRebaseAssets
-    ) external virtual override ensureEmpty only(bridger) {
+    ) external virtual override ensureUnsupplied only(bridger) {
         _burn(user, wrappedRebaseAssets);
     }
 
-    /// @inheritdoc IEmptyWrappedRebaseAsset
-    function turnToCandy(
+    /// @inheritdoc IUnsuppliedWrappedRebaseAsset
+    function turnToSupplied(
         address rebaseToken_
-    ) external virtual override ensureEmpty only(bridger) notZeroAddress(rebaseToken_) {
+    ) external virtual override ensureUnsupplied only(bridger) notZeroAddress(rebaseToken_) {
         // Remove the bridger
         _setBridger(address(0));
 
         // Set the address of rebase token
         _rebaseToken = rebaseToken_;
 
-        // Emit an event to log the turn to candy operation.
-        emit TurnedToCandy(rebaseToken_);
+        // Emit an event to log the turn to supplied operation.
+        emit TurnedToSupplied(rebaseToken_);
     }
 
     // ============ Owner Functions ============
 
-    /// @inheritdoc IEmptyWrappedRebaseAsset
+    /// @inheritdoc IUnsuppliedWrappedRebaseAsset
     function setBridger(
         address bridger_
-    ) external virtual override ensureEmpty onlyOwner notZeroAddress(bridger_) {
+    ) external virtual override ensureUnsupplied onlyOwner notZeroAddress(bridger_) {
         _setBridger(bridger_);
     }
 
@@ -115,12 +119,12 @@ abstract contract EmptyWrappedRebaseAsset is IEmptyWrappedRebaseAsset, IIssuer, 
     /// @inheritdoc IWrappedRebaseAsset
     function convertToRebaseAssets(
         uint256 wrappedRebaseAssets
-    ) public view virtual override ensureCandy returns (uint256 rebaseAssets) {
+    ) public view virtual override ensureSupplied returns (uint256 rebaseAssets) {
         return super.convertToRebaseAssets(wrappedRebaseAssets);
     }
 
     /// @inheritdoc IWrappedRebaseAsset
-    function currentYield() public view virtual override ensureCandy returns (uint256) {
+    function currentYield() public view virtual override ensureSupplied returns (uint256) {
         return super.currentYield();
     }
 
