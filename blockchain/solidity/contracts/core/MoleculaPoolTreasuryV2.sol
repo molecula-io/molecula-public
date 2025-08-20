@@ -9,7 +9,6 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {ERC1271} from "./../common/ERC1271.sol";
 import {IAgent} from "./../common/interfaces/IAgent.sol";
 import {IMoleculaPool} from "./../common/interfaces/IMoleculaPool.sol";
 import {ISupplyManager} from "./../common/interfaces/ISupplyManager.sol";
@@ -55,8 +54,7 @@ contract MoleculaPoolTreasuryV2 is
     Ownable2Step,
     IMoleculaPool,
     WhitelistedExecutor,
-    PriceCheckerClient,
-    ERC1271
+    PriceCheckerClient
 {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -179,7 +177,6 @@ contract MoleculaPoolTreasuryV2 is
         Ownable(initialOwner)
         WhitelistedExecutor(whiteList)
         PriceCheckerClient(priceChecker_)
-        ERC1271(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
         notZeroAddress(guardianAddress)
     {
