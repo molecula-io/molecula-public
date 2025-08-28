@@ -4,7 +4,7 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-toolbox/network-help
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../../configs/ethereum';
+import { ethMainnetBetaConfig } from '../../../configs';
 import { deployNitrogenWithUSDT, getRidOf } from '../../utils/NitrogenCommon';
 import { findTransferEvent } from '../../utils/event';
 import { grantERC20 } from '../../utils/grant';

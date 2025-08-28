@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { type AddressLike } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum';
+import { ethMainnetBetaConfig } from '../../configs';
 
 import { type StakedUSDe, StakedUSDe__factory, type USDe, USDe__factory } from '../../typechain';
 import type { MUSDE } from '../../typechain-types';

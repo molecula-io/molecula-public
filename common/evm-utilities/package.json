@@ -16,6 +16,7 @@
         "@ethereumjs/util": "^9.1.0",
         "@molecula-monorepo/common.logs": "*",
         "@molecula-monorepo/common.utilities": "*",
+        "dotenv": "^16.4.7",
         "ethers": "^6.15.0",
         "p-queue": "6.6.2",
         "siwe": "^2.3.2"

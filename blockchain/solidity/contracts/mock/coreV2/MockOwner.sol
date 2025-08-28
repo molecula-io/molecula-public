@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";

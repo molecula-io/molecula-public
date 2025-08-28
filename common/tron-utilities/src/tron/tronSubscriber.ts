@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+
 import type { GetEventResultOptions, Contract as TronContract } from 'tronweb';
 
 import { BlockKeeper } from '@molecula-monorepo/common.evm-utilities/src/helpers';
@@ -8,7 +10,15 @@ import type { TronEventCallback, TronEventsLoadOptions, InternalTronEvent } from
 
 import { MAX_PART_SIZE, tronEventsLoad } from './tronEventsLoader';
 
-const loadNewEventsInterval = 3_000;
+// Configure dotenv and get the env variables
+dotenv.config();
+const { TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER } = process.env;
+
+const subscriptionIntervalMultiplier = TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER
+    ? Number(TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER)
+    : 1;
+
+const loadNewEventsInterval = 3_000 * subscriptionIntervalMultiplier;
 
 export class TronSubscriber {
     // Properties

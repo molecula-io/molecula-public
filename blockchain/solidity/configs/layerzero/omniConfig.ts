@@ -4,9 +4,8 @@ import {
     EnvironmentType,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { ethMainnetBetaConfig, sepoliaConfig } from '../ethereum';
-import { tronMainnetBetaConfig } from '../tron/mainnetBetaTyped';
-import { shastaConfig } from '../tron/shastaTyped';
+import { ethMainnetBetaConfig, sepoliaConfig } from '../mUSD/ethereum';
+import { tronMainnetBetaConfig, shastaConfig } from '../mUSD/tron';
 
 import type { ExecutorConfig, UlnConfig, GasLimitsConfig } from './types';
 

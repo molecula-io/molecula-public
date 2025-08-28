@@ -10,10 +10,18 @@ See [Quick Start](README.md#quick-start) and [Installation](README.md#installati
 
 ## Deployment
 
-To deploy the metaETH protocol, use the following commands:
+To deploy the metaETH protocol, use the following command:
 
 ```bash
-yarn deploy:metaEth:test
+yarn metaEth:deploy:test
 ```
 
 > **Note:** For production deployment, configure your environment variables in `.env.production`
+
+## Verification
+
+To verify the contracts, use the following command:
+
+```bash
+yarn metaEth:verify:sepolia
+```

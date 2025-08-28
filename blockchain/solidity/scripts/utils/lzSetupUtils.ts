@@ -1,9 +1,12 @@
 import { AbiCoder } from 'ethers';
 import { type TronWeb, type Contract as TronContract } from 'tronweb';
 
-import { ethMainnetBetaConfig, sepoliaConfig } from '../../configs/ethereum';
-import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
-import { shastaConfig } from '../../configs/tron/shastaTyped';
+import {
+    ethMainnetBetaConfig,
+    sepoliaConfig,
+    tronMainnetBetaConfig,
+    shastaConfig,
+} from '../../configs';
 
 import type { ILayerZeroEndpointV2 } from '../../typechain-types/@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2';
 

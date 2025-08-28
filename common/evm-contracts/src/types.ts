@@ -25,7 +25,10 @@ export type {
     ICurveStableSwapNG,
     UsdtOFT,
     TokenVault,
+    CommonTokenVault,
     NativeTokenVault,
+    NitrogenTokenVault,
+    ShareToken,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 const contractsNames = [
@@ -60,7 +63,10 @@ const contractsNames = [
     'ReceiveULN',
     'SendULN',
     'TokenVault',
+    'CommonTokenVault',
     'NativeTokenVault',
+    'NitrogenTokenVault',
+    'ShareToken',
 ] as const;
 
 export type ContractNameType = (typeof contractsNames)[number];

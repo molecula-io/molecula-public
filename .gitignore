@@ -72,6 +72,8 @@ ui-tests/transactionDepositTronDev.native.json
 ui-tests/transactionDepositTronDev.small.json
 ui-tests/transactionDepositTronDev.swap.json
 ui-tests/transactionWithdrawTronDev.native.json
+ui-tests/transactionDepositTronAlpha.native.json
+ui-tests/temp-wallet.json
 
 # Env
 .env.local

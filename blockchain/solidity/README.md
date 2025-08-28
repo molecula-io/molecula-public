@@ -260,14 +260,14 @@ To run scripts using Fireblocks, use the `sepolia_fireblocks` network:
 
 ```bash
 # Deploy core contracts using Fireblocks
-yarn deploy:core:test --network sepolia_fireblocks
+yarn core:deploy:test --network sepolia_fireblocks
 
 # Deploy nitrogen contracts using Fireblocks
-yarn deploy:nitrogen:test --network sepolia_fireblocks
+yarn nitrogen:deploy:test --network sepolia_fireblocks
 
 # Set owners using Fireblocks
-yarn set:core:owner:test --network sepolia_fireblocks
-yarn set:nitrogen:owner:test --network sepolia_fireblocks
+yarn core:set:owner:test --network sepolia_fireblocks
+yarn nitrogen:set:owner:test --network sepolia_fireblocks
 ```
 
 ### Security Benefits
@@ -299,45 +299,45 @@ Before deploying, ensure you have:
 Set `POOL_KEEPER`, `OWNER` and `GUARDIAN_ADDRESS` in the appropriate config files:
 
 - **Ethereum**:
-    - [Sepolia config](./configs/ethereum/sepoliaTyped.ts)
-    - [Mainnet Beta config](./configs/ethereum/mainnetBetaTyped.ts)
-    - [Mainnet Production config](./configs/ethereum/mainnetProdTyped.ts)
+    - [Sepolia config](configs/mUSD/ethereum/sepolia.ts)
+    - [Mainnet Beta config](configs/mUSD/ethereum/mainnetBeta.ts)
+    - [Mainnet Production config](configs/mUSD/ethereum/mainnetProd.ts)
 
 - **Tron**:
-    - [Shasta config](./configs/tron/shastaTyped.ts)
-    - [Mainnet Beta config](./configs/tron/mainnetBetaTyped.ts)
-    - [Mainnet Production config](./configs/tron/mainnetProdTyped.ts)
+    - [Shasta config](configs/mUSD/tron/shasta.ts)
+    - [Mainnet Beta config](configs/mUSD/tron/mainnetBeta.ts)
+    - [Mainnet Production config](configs/mUSD/tron/mainnetProd.ts)
 
 #### 2. Deploy Core Contracts
 
 ```bash
 # Test environment
-yarn deploy:core:test
+yarn core:deploy:test
 
 # Beta environment
-yarn deploy:core:beta
+yarn core:deploy:beta
 
 # Production environment
-yarn deploy:core:production
+yarn core:deploy:production
 ```
 
 Use `--nomusde` flag to skip mUSDe contract deployment:
 
 ```bash
-yarn deploy:core:test --nomusde
+yarn core:deploy:test --nomusde
 ```
 
 #### 3. Deploy Nitrogen Contracts
 
 ```bash
 # Test environment
-yarn deploy:nitrogen:test
+yarn nitrogen:deploy:test
 
 # Beta environment
-yarn deploy:nitrogen:beta
+yarn nitrogen:deploy:beta
 
 # Production environment
-yarn deploy:nitrogen:production
+yarn nitrogen:deploy:production
 ```
 
 #### 4. Deploy Carbon Contracts
@@ -346,26 +346,26 @@ yarn deploy:nitrogen:production
 
 ```bash
 # Test environment
-yarn deploy:carbon:test
+yarn carbon:deploy:test
 
 # Beta environment
-yarn deploy:carbon:beta
+yarn carbon:deploy:beta
 
 # Production environment
-yarn deploy:carbon:production
+yarn carbon:deploy:production
 ```
 
 #### 5. Set Contract Owners
 
 ```bash
 # Set core owner
-yarn set:core:owner:[test|beta|production]
+yarn core:set:owner:[test|beta|production]
 
 # Set nitrogen owner
-yarn set:nitrogen:owner:[test|beta|production]
+yarn nitrogen:set:owner:[test|beta|production]
 
 # Set carbon owner
-yarn set:carbon:owner:[test|beta|production]
+yarn carbon:set:owner:[test|beta|production]
 ```
 
 ### Specialized Deployments
@@ -375,7 +375,7 @@ yarn set:carbon:owner:[test|beta|production]
 1. Deploy RebaseTokenOwner:
 
     ```bash
-    yarn deploy:rebaseTokenOwner:test
+    yarn nitrogen:deploy:tokenOwner:test
     ```
 
 2. Set up the system:
@@ -388,7 +388,7 @@ yarn set:carbon:owner:[test|beta|production]
 1. Deploy NitrogenTokenVault with parameters:
 
     ```bash
-    yarn deploy:nitrogenTokenVault:test \
+    yarn nitrogen:deploy:vault:test \
       --token-name <TOKEN_NAME> \
       --token <TOKEN_ADDRESS> \
       --min-deposit <MIN_DEPOSIT> \
@@ -419,13 +419,13 @@ yarn set:carbon:owner:[test|beta|production]
 #### Deploy wmUSD Contracts
 
 ```bash
-yarn deploy:wmUSD:[test|beta|production] --yield-dist <YIELD_DISTRIBUTOR>
+yarn nitrogen:deploy:wmUSD:[test|beta|production] --yield-dist <YIELD_DISTRIBUTOR>
 ```
 
 #### Deploy lmUSD Contract
 
 ```bash
-yarn deploy:lmUSD:test
+yarn nitrogen:deploy:lmUSD:test
 ```
 
 ### Verification
@@ -433,20 +433,23 @@ yarn deploy:lmUSD:test
 After deployment, verify contracts on Etherscan:
 
 ```bash
+# Verify Nitrogen on Sepolia
+yarn nitrogen:verify:sepolia
+
 # Verify Carbon on Sepolia
-yarn verify:carbonSepolia
+yarn carbon:verify:sepolia
 
 # Verify mrETH on Sepolia
-yarn verify:mrEthSepolia
+yarn mrEth:verify:sepolia
 
 # Verify mrETH on Holesky
-yarn verify:mrEthHolesky
+yarn mrEth:verify:holesky
+
+# Verify mrETH on Hoodi
+yarn mrEth:verify:hoodi
 
 # Verify MetaEth on Sepolia
-yarn verify:metaEthSepolia
-
-# Verify Nitrogen on Sepolia
-yarn verify:nitrogenSepolia
+yarn metaEth:verify:sepolia
 ```
 
 ## Security

@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { network, ethers } from 'hardhat';
 
-import { APPROVER_SIGNATURE_AND_EXPIRY, APPROVER_SALT } from '../../../configs/ethereum';
+import { APPROVER_SIGNATURE_AND_EXPIRY, APPROVER_SALT } from '../../../configs';
 import { expectEqual } from '../../utils/math';
 import { deployMrETh } from '../../utils/mrETH';
 import { createValidatorKeys } from '../../utils/sign';

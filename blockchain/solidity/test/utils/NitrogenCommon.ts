@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { keccak256, type Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum';
+import { ethMainnetBetaConfig } from '../../configs';
 
 import type { IERC20, MoleculaPoolTreasuryV2 } from '../../typechain-types';
 

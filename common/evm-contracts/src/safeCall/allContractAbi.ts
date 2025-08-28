@@ -23,6 +23,9 @@ import {
     IMoleculaPoolV2__factory,
     TokenVault__factory,
     NativeTokenVault__factory,
+    NitrogenTokenVault__factory,
+    CommonTokenVault__factory,
+    ShareToken__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -73,7 +76,10 @@ const EvmAllContractsAbi: Record<ContractNameType, readonly JsonFragment[]> = {
     ReceiveULN: ReceiveULN__factory.abi,
     SendULN: SendULN__factory.abi,
     TokenVault: TokenVault__factory.abi,
+    CommonTokenVault: CommonTokenVault__factory.abi,
     NativeTokenVault: NativeTokenVault__factory.abi,
+    NitrogenTokenVault: NitrogenTokenVault__factory.abi,
+    ShareToken: ShareToken__factory.abi,
 } as const;
 
 export const allContractAbi: JsonFragment[][] = Object.values(

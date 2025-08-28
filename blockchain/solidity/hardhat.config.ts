@@ -10,8 +10,7 @@ import '@fireblocks/hardhat-fireblocks';
 import './extensions/hardhat-tronweb';
 
 import './tasks';
-import { tronMainnetProdConfig } from './configs/tron/mainnetProdTyped';
-import { shastaConfig } from './configs/tron/shastaTyped';
+import { shastaConfig, tronMainnetProdConfig } from './configs';
 
 dotenv.config({ path: '.env.test' });
 dotenv.config({ path: '.config.env' });

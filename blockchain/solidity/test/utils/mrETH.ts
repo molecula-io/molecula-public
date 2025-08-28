@@ -9,7 +9,7 @@ import {
     APPROVER_SALT,
     NATIVE_TOKEN,
     ETH_VIRTUAL_OFFSET,
-} from '../../configs/ethereum';
+} from '../../configs';
 
 import { FAUCET, grantERC20 } from './grant';
 

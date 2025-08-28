@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+
 import type { BaseContract, EventLog, Log as EthLog, ContractEventPayload } from 'ethers';
 
 import type {
@@ -13,8 +15,16 @@ import type {
 
 import { BlockKeeper } from '../helpers';
 
+// Configure dotenv and get the env variables
+dotenv.config();
+const { EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER } = process.env;
+
+const subscriptionIntervalMultiplier = EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER
+    ? Number(EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER)
+    : 1;
+
 // Ethereum produce 4 blocks in a minute (once in a 15 seconds)
-const loadNewEventsInterval = 15_000;
+const loadNewEventsInterval = 15_000 * subscriptionIntervalMultiplier;
 
 /**
  * Each 20th subscription request use enlarged depth to avoid events missing

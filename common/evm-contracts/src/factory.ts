@@ -22,6 +22,10 @@ import {
     SupplyManagerV2__factory,
     TokenVault__factory,
     NativeTokenVault__factory,
+    type NitrogenTokenVault,
+    NitrogenTokenVault__factory,
+    CommonTokenVault__factory,
+    ShareToken__factory,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import {
@@ -74,7 +78,9 @@ import type {
     SupplyManagerV2,
     SendULN,
     TokenVault,
+    CommonTokenVault,
     NativeTokenVault,
+    ShareToken,
 } from './types';
 
 export const EvmContractSafeFactory = {
@@ -369,10 +375,37 @@ export const EvmContractSafeFactory = {
             rpcProvider,
         );
     },
+    CommonTokenVault: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<CommonTokenVault>(
+            {
+                factory: CommonTokenVault__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
     NativeTokenVault: (address: string, rpcProvider: ProviderOrRunner) => {
         return new EvmContractSafe<NativeTokenVault>(
             {
                 factory: NativeTokenVault__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    NitrogenTokenVault: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<NitrogenTokenVault>(
+            {
+                factory: NitrogenTokenVault__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+    ShareToken: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<ShareToken>(
+            {
+                factory: ShareToken__factory,
                 address,
             },
             rpcProvider,

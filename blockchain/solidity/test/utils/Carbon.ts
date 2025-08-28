@@ -2,8 +2,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../configs/ethereum';
-import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
+import { ethMainnetBetaConfig, tronMainnetBetaConfig } from '../../configs';
 
 import { generateRandomWallet } from './Common';
 import { deployNitrogenWithUSDT } from './NitrogenCommon';

@@ -5,7 +5,7 @@ import { expect } from 'chai';
 
 import { ethers } from 'hardhat';
 
-import { NATIVE_TOKEN } from '../../../configs/ethereum';
+import { NATIVE_TOKEN } from '../../../configs';
 import { findRequestRedeemEventV2 } from '../../utils/event';
 import { FAUCET, grantERC20, grantETH } from '../../utils/grant';
 import { expectEqual } from '../../utils/math';
@@ -107,6 +107,86 @@ describe('Meta ETH', () => {
         expect(await stETH.balanceOf(user0)).to.be.greaterThan(depositValue);
     });
 
+    it('Should redeem immediately stETH', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            minDepositAssets,
+            operator,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, stETH, 10n * depositValue - 1n, FAUCET.stETH);
+
+        await stETHVault.connect(user0).setOperator(operator, true);
+
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const tx = await stETHVault.connect(user0).requestRedeem(userShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+
+        // Redeem immediately
+        const partUserShares = userShares / 3n;
+        await stETHVault.connect(operator).redeemImmediately(partUserShares, user0, user0);
+        expect(await stETH.balanceOf(user0)).to.be.greaterThan(0);
+    });
+
+    it('Should redeem immediately stETH 2', async () => {
+        const {
+            user0,
+            user1,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            minDepositAssets,
+            operator,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, stETH, 10n * depositValue - 1n, FAUCET.stETH);
+
+        await stETHVault.connect(user0).setOperator(operator, true);
+
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const partUserShares = userShares / 3n;
+        const tx = await stETHVault.connect(user0).requestRedeem(partUserShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+
+        // Redeem immediately
+        const sharesToRedeem =
+            (await rebaseTokenV2.sharesOf(user0)) +
+            (await stETHVault.convertToShares(await stETHVault.claimableRedeemAssets(user0)));
+        await stETHVault.connect(operator).redeemImmediately(sharesToRedeem, user1, user0);
+        expect(await stETH.balanceOf(user1)).to.be.greaterThan(depositValue);
+
+        await expect(
+            stETHVault.connect(user0).redeemImmediately(sharesToRedeem, operator, operator),
+        ).to.be.rejectedWith('EInvalidOperator(');
+    });
+
     it('Should redeem immediately ETH', async () => {
         const { user0, rebaseTokenV2, metaPoolTreasury, nativeTokenVault, minDepositAssets } =
             await loadFixture(deployMetaEth);
@@ -122,6 +202,87 @@ describe('Meta ETH', () => {
         // Redeem immediately
         const userShares = await rebaseTokenV2.sharesOf(user0);
         await nativeTokenVault.connect(user0).redeemImmediately(userShares, user0, user0);
+    });
+
+    it('Should redeem immediately ETH', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            nativeTokenVault,
+            minDepositAssets,
+            operator,
+            testSeqno,
+        } = await loadFixture(deployMetaEth);
+        const { provider } = ethers;
+
+        const depositValue = minDepositAssets;
+
+        // Deposit stETH
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
+
+        // Generate yield
+        await grantETH(metaPoolTreasury, 10n * depositValue - 1n);
+
+        await nativeTokenVault.connect(user0).setOperator(operator, true);
+
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const tx = await nativeTokenVault.connect(user0).requestRedeem(userShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        await metaPoolTreasury.fulfillRedeemRequestsForNativeToken([redeemEvent.operationId]);
+
+        // Redeem immediately
+        const partUserShares = userShares / 3n;
+        await nativeTokenVault
+            .connect(operator)
+            .redeemImmediately(partUserShares, testSeqno, user0);
+        expect(await provider.getBalance(testSeqno)).to.be.greaterThan(0);
+    });
+
+    it('Should redeem immediately ETH 2', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            nativeTokenVault,
+            minDepositAssets,
+            operator,
+            testSeqno,
+        } = await loadFixture(deployMetaEth);
+        const { provider } = ethers;
+
+        const depositValue = minDepositAssets;
+
+        // Deposit stETH
+        await nativeTokenVault.connect(user0).deposit(depositValue, user0, { value: depositValue });
+
+        // Generate yield
+        await grantETH(metaPoolTreasury, 10n * depositValue - 1n);
+
+        await nativeTokenVault.connect(user0).setOperator(operator, true);
+
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const partUserShares = userShares / 3n;
+        const tx = await nativeTokenVault
+            .connect(user0)
+            .requestRedeem(partUserShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+        await metaPoolTreasury.fulfillRedeemRequestsForNativeToken([redeemEvent.operationId]);
+
+        // Redeem immediately
+        const sharesToRedeem =
+            (await rebaseTokenV2.sharesOf(user0)) +
+            (await nativeTokenVault.convertToShares(
+                await nativeTokenVault.claimableRedeemAssets(user0),
+            ));
+        await nativeTokenVault
+            .connect(operator)
+            .redeemImmediately(sharesToRedeem, testSeqno, user0);
+        expect(await provider.getBalance(testSeqno)).to.be.greaterThan(depositValue);
+
+        await expect(
+            nativeTokenVault.connect(user0).redeemImmediately(sharesToRedeem, operator, operator),
+        ).to.be.rejectedWith('EInvalidOperator(');
     });
 
     it('Test execute', async () => {
@@ -184,6 +345,13 @@ describe('Meta ETH', () => {
             .execute(execEncodedBalanceOf, ValueMode.USE_MESSAGE_VALUE, { value: 1 });
         // Check that testSeqno.receive function was called
         expect(await testSeqno.seqno()).to.be.equal(prevCounter + 10n);
+
+        await grantETH(metaPoolTreasury, 1);
+        await expect(
+            metaPoolTreasury
+                .connect(poolKeeper)
+                .execute(execEncodedBalanceOf, ValueMode.USE_BOTH_VALUES, { value: 0 }),
+        ).be.be.rejectedWith('EWrongMsgValue(');
     });
 
     it('Test approve execute', async () => {
@@ -600,6 +768,13 @@ describe('Meta ETH', () => {
             await user0.signMessage(message),
         );
         expect(result).to.be.equal('0x1626ba7e');
+
+        await expect(metaPoolTreasury.connect(user0).setSigner(user0)).to.be.rejectedWith(
+            'OwnableUnauthorizedAccount(',
+        );
+        await expect(metaPoolTreasury.setSigner(ethers.ZeroAddress)).to.be.rejectedWith(
+            'EZeroAddress(',
+        );
     });
 
     it('Check wmetaETH', async () => {

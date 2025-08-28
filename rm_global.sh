@@ -17,10 +17,10 @@ rm_global() {
 
   # Use find to locate and optionally remove directories
   if [[ "$TEST_MODE" == "true" ]]; then
-    echo "Test mode: Found the following directories matching '$pattern':"
-    find . -type d -name "$pattern"
+    echo "Test mode: Found the following directories matching '$pattern' and ignore .turbo directories:"
+    find . -type d -name "$pattern" -a  ! -regex '.*\/\.turbo\/.*'
   else
-    echo "Removing directories matching '$pattern'..."
-    find . -type d -name "$pattern" -exec rm -rf {} +
+    echo "Removing directories matching '$pattern' and ignore .turbo directories:"
+    find . -type d -name "$pattern" -a  ! -regex '.*\/\.turbo\/.*' -exec rm -rf {} +
   fi
 }

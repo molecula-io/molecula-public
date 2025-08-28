@@ -5,6 +5,8 @@ import type {
     IMoleculaPoolV2,
     MoleculaPoolTreasury,
     MoleculaPoolTreasuryV2,
+    NitrogenTokenVault,
+    ShareToken,
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import type {
@@ -33,6 +35,7 @@ import type {
     ReceiveULN,
     SendULN,
     TokenVault,
+    CommonTokenVault,
     NativeTokenVault,
 } from '../types';
 
@@ -100,6 +103,9 @@ export type AllEvmContracts =
     | UsdtOFT
     | Aragon
     | TokenVault
-    | NativeTokenVault;
+    | CommonTokenVault
+    | NativeTokenVault
+    | NitrogenTokenVault
+    | ShareToken;
 
 export type ProviderOrRunner = Provider | ContractRunner;

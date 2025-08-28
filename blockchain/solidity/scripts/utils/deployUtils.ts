@@ -17,11 +17,10 @@ import {
     ethMrEthMainnetProdConfig,
     sepoliaConfig,
     sepoliaMrEthConfig,
-} from '../../configs/ethereum';
-
-import { tronMainnetBetaConfig } from '../../configs/tron/mainnetBetaTyped';
-import { tronMainnetProdConfig } from '../../configs/tron/mainnetProdTyped';
-import { shastaConfig } from '../../configs/tron/shastaTyped';
+    tronMainnetBetaConfig,
+    tronMainnetProdConfig,
+    shastaConfig,
+} from '../../configs';
 import type { IERC20 } from '../../typechain-types';
 
 export function verifyEnvironment(network: string, environment: string) {

@@ -3,7 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { ethMainnetBetaConfig } from '../../../configs/ethereum';
+import { ethMainnetBetaConfig } from '../../../configs';
 
 import { INITIAL_SUPPLY } from '../../utils/Carbon';
 import { getEthena, grantStakedUSDE, grantUSDe } from '../../utils/Common';
