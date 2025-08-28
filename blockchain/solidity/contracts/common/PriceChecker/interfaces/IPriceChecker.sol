@@ -11,26 +11,22 @@ interface IPriceChecker {
     /// @dev Configuration struct for price checkers.
     /// @param asset Address of the asset being checked.
     /// @param priceFeed Address of the price feed contract.
-    /// @param isPriceFeedEIP4626 `True` if the price feed follows the EIP-4626 standard.
     /// @param priceDeviationBps Maximum allowed price deviation in basis points (`1/10_000`).
     /// @param stalenessThreshold Staleness threshold in seconds.
     struct Checkers {
         address asset;
         address priceFeed;
-        bool isPriceFeedEIP4626;
         uint16 priceDeviationBps;
         uint32 stalenessThreshold;
     }
 
     /// @dev Information about the price checker configuration for a specific asset.
     /// @param priceFeed Address of the price feed contract used for price checks.
-    /// @param isPriceFeedEIP4626 `True` if the price feed follows the EIP-4626 standard.
     /// @param priceDeviationBps Maximum allowed price deviation in basis points (`1/10_000`).
     /// @param stalenessThreshold Staleness threshold in seconds.
     /// @param isPresent Boolean flag indicating if the configuration is present.
     struct CheckerInfo {
         address priceFeed;
-        bool isPriceFeedEIP4626;
         uint16 priceDeviationBps;
         uint32 stalenessThreshold;
         bool isPresent;
@@ -41,14 +37,12 @@ interface IPriceChecker {
     /// @dev Emitted when the price feed is configured.
     /// @param asset Asset's address.
     /// @param feed Price feed's address.
-    /// @param is4626 `True` if it is an EIP-4626 asset feed.
     /// @param bps Price deviation value in basis points (e.g., 500 = 5%).
     /// @param stalenessThreshold Staleness threshold in seconds.
     event PriceFeedConfigured(
         address indexed asset,
         address indexed feed,
-        bool indexed is4626,
-        uint16 bps,
+        uint16 indexed bps,
         uint32 stalenessThreshold
     );
 
@@ -84,9 +78,6 @@ interface IPriceChecker {
     /// @dev Error: Price not set.
     error EPriceNotSet();
 
-    /// @dev Error: Not an EIP-4626 asset.
-    error ENotEIP4626Asset();
-
     /// @dev Error: Too low or high staleness threshold.
     error EBadStalenessThreshold();
 
@@ -120,13 +111,11 @@ interface IPriceChecker {
     /// @dev Set both the price feed and allowed deviation in one call (`onlyOwner`).
     /// @param asset Asset's address.
     /// @param feed Price feed's address.
-    /// @param is4626 `True` if it is an EIP-4626 asset feed.
     /// @param bps Allowed price deviation in basis points.
     /// @param stalenessThreshold Staleness threshold in seconds.
     function setPriceFeed(
         address asset,
         address feed,
-        bool is4626,
         uint16 bps,
         uint32 stalenessThreshold
     ) external;
@@ -148,8 +137,8 @@ interface IPriceChecker {
     // ============ View Functions ============
 
     /// @dev Check if the current asset price is within allowed deviation from the expected price.
-    /// @param asset Asset's address.
-    function checkPrice(address asset) external view;
+    /// @param tokenVault Address of the token Vault associated with the asset whose price needs to be checked.
+    function checkPrice(address tokenVault) external view;
 
     /// @dev Verifies that a price checker configuration exists for the specified asset.
     /// @param asset Address of the asset to verify.

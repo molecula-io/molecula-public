@@ -2,19 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
-import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
-/// @dev Check whether the token has the `convertToAssets` function.
-/// @param token Token address.
-/// @return has Boolean indicating whether the token has the `convertToAssets` function.
-function _hasConvertToAssets(address token) view returns (bool) {
-    // slither-disable-next-line low-level-calls
-    (bool success, bytes memory data) = token.staticcall(
-        abi.encodeWithSelector(IERC4626.convertToAssets.selector, uint256(1))
-    );
-    return success && data.length == 32;
-}
 
 /// @dev Gets the decimals of an asset token, defaulting to `18` if the query fails.
 /// @param asset Address of the asset token to query.

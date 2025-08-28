@@ -3,7 +3,11 @@
 import { keccak256 } from 'ethers';
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+import {
+    chainLinkFeeds,
+    type EnvironmentType,
+    evmStaticTokenAddresses,
+} from '@molecula-monorepo/blockchain.addresses';
 
 import { DEPLOY_GAS_LIMIT, ETH_VIRTUAL_OFFSET, NATIVE_TOKEN } from '../../configs';
 
@@ -14,7 +18,46 @@ import { getMetaEthConfig } from './utils';
  * Deploys all necessary contracts and initializes them with the correct configuration.
  */
 export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment: EnvironmentType) {
-    const { config, account } = await getMetaEthConfig(hre, environment);
+    const { config, account, chainId } = await getMetaEthConfig(hre, environment);
+
+    // print wallet balances
+    console.log('Wallet address: ', account.address);
+    console.log(
+        'ETH balance: ',
+        hre.ethers.formatEther(await hre.ethers.provider.getBalance(account.address)),
+    );
+
+    console.log('Deploying priceChecker...');
+    // STETH / ETH
+    const stETHFeed = chainLinkFeeds.eth.stETH[chainId];
+    const PriceChecker = await hre.ethers.getContractFactory('PriceChecker');
+    const priceChecker = await PriceChecker.deploy(
+        [
+            {
+                asset: evmStaticTokenAddresses.stETH[chainId],
+                priceFeed: stETHFeed.address,
+                priceDeviationBps: 50, // 0.5%
+                stalenessThreshold: stETHFeed.heartbeat,
+            },
+            {
+                asset: evmStaticTokenAddresses.wETH[chainId],
+                priceFeed: hre.ethers.ZeroAddress,
+                priceDeviationBps: 0,
+                stalenessThreshold: 0,
+            },
+            {
+                asset: NATIVE_TOKEN,
+                priceFeed: hre.ethers.ZeroAddress,
+                priceDeviationBps: 0,
+                stalenessThreshold: 0,
+            },
+        ],
+        // Set the owner of the PriceChecker to META_OWNER
+        config.META_OWNER,
+        config.META_TOKEN_DECIMALS,
+    );
+    await priceChecker.waitForDeployment();
+    console.log('PriceChecker address:', await priceChecker.getAddress());
 
     // Calculate future contract addresses for proper initialization
     const transactionCount = await account.getNonce();
@@ -35,7 +78,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         supplyManagerFutureAddress,
         [],
         config.META_GUARDIAN,
-        hre.ethers.ZeroAddress,
+        await priceChecker.getAddress(),
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await metaPoolTreasury.waitForDeployment();
@@ -98,6 +141,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
     await wETHVault.waitForDeployment();
     console.log('wETHVault address:', await wETHVault.getAddress());
 
+    // TODO add weETH, rsETH and ezETH
     console.log('Deploying NativeTokenVault...');
     const NativeTokenVault = await hre.ethers.getContractFactory('MetaNativeTokenVault');
     const nativeTokenVault = await NativeTokenVault.deploy(
@@ -151,7 +195,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         await stETHVault.getAddress(),
         await nativeTokenVault.getAddress(),
     ]) {
-        console.log(`Change owner for ${addr}`);
+        console.log(`Changing owner for ${addr}`);
         const ownable2Step = await hre.ethers.getContractAt('Ownable2Step', addr);
         const tx = await ownable2Step.transferOwnership(config.META_OWNER);
         await tx.wait();

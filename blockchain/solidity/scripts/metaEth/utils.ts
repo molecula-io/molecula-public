@@ -2,7 +2,7 @@
 
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+import { EnvironmentType, EVMChainIDs } from '@molecula-monorepo/blockchain.addresses';
 
 import {
     metaEthMainnetBetaConfig,
@@ -23,9 +23,22 @@ export function getMetaEthEnvironmentConfig(network: EnvironmentType) {
     }
 }
 
+export function getChainId(network: EnvironmentType) {
+    switch (network) {
+        case EnvironmentType['mainnet/beta']:
+            return EVMChainIDs.Mainnet;
+        case EnvironmentType['mainnet/prod']:
+            return EVMChainIDs.Mainnet;
+        case EnvironmentType.devnet:
+            return EVMChainIDs.Sepolia;
+        default:
+            throw new Error('Unsupported network type!');
+    }
+}
+
 export async function getMetaEthConfig(hre: HardhatRuntimeEnvironment, network: EnvironmentType) {
     const config = getMetaEthEnvironmentConfig(network);
     const account = (await hre.ethers.getSigners())[0]!;
-
-    return { config, account };
+    const chainId = getChainId(network);
+    return { config, account, chainId };
 }

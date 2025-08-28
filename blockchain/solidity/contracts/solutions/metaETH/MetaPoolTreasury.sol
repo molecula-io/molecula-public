@@ -348,15 +348,15 @@ contract MetaPoolTreasury is
             // Get the token address.
             address token = _pool[i];
 
+            // Get the Vault associated with the token.
+            address tokenVault = _getTokenVault(token);
+
             if (doCheckPrice) {
                 // If a price feed is set for the token, then check that the token price is within the allowed deviation.
                 // If the price feed is not set but asset is present, do nothing.
                 // Otherwise, throw an exception.
-                checkPrice(token);
+                checkPrice(tokenVault);
             }
-
-            // Get the Vault associated with the token.
-            IBaseTokenVault tokenVault = IBaseTokenVault(_getTokenVault(token));
 
             // Get the token balance.
             uint256 assets = token == ConstantsCoreV2.NATIVE_TOKEN
@@ -364,10 +364,12 @@ contract MetaPoolTreasury is
                 : IERC20(token).balanceOf(address(this));
 
             // Increase the total available asset balance.
-            totalMoleculaAssets += tokenVault.convertAssetsToMoleculaAssets(assets);
+            totalMoleculaAssets += IBaseTokenVault(tokenVault).convertAssetsToMoleculaAssets(
+                assets
+            );
 
             // Increase the total asset balance to redeem.
-            totalRedeem += tokenVault.convertAssetsToMoleculaAssets(
+            totalRedeem += IBaseTokenVault(tokenVault).convertAssetsToMoleculaAssets(
                 poolMap[token].requestedRedeemAssets
             );
         }

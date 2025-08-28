@@ -11,9 +11,11 @@ export type MetaEthNetworkConfig = {
     META_POOL_KEEPER: EVMAddress;
     META_GUARDIAN: EVMAddress;
     META_APY: number;
+
     META_TOKEN_NAME: string;
     META_TOKEN_SYMBOL: string;
     META_TOKEN_DECIMALS: number;
+
     META_MIN_DEPOSIT_ETH: bigint;
     META_MIN_REDEEM_SHARES: bigint;
 };

@@ -4,6 +4,8 @@ import { expect } from 'chai';
 import { keccak256, type Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
+import { chainLinkFeeds, EVMChainIDs } from '@molecula-monorepo/blockchain.addresses';
+
 import { ethMainnetBetaConfig } from '../../configs';
 
 import type { IERC20, MoleculaPoolTreasuryV2 } from '../../typechain-types';
@@ -452,6 +454,28 @@ export async function deployNitrogenWithTokenVault() {
         nitrogen.guardian,
     );
 
+    const PriceChecker = await ethers.getContractFactory('PriceChecker');
+    const usdcFeed = chainLinkFeeds.usd.usdc[EVMChainIDs.Mainnet];
+    const susdeFeed = chainLinkFeeds.usd.sUSDe[EVMChainIDs.Mainnet];
+    const priceChecker = await PriceChecker.connect(nitrogen.poolOwner).deploy(
+        [
+            {
+                asset: USDC,
+                priceFeed: usdcFeed.address,
+                priceDeviationBps: 50, // 0.5 %
+                stalenessThreshold: usdcFeed.heartbeat,
+            },
+            {
+                asset: sUSDe,
+                priceFeed: susdeFeed.address,
+                priceDeviationBps: 50, // 0.5 %
+                stalenessThreshold: susdeFeed.heartbeat,
+            },
+        ],
+        nitrogen.poolOwner,
+        18,
+    );
+
     // deploy TokenVault
     const TokenVault = await ethers.getContractFactory('NitrogenTokenVault');
     const usdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
@@ -461,7 +485,7 @@ export async function deployNitrogenWithTokenVault() {
         nitrogen.supplyManager,
         rebaseTokenOwner,
         nitrogen.guardian,
-        ethers.ZeroAddress,
+        priceChecker,
     );
     const susdeVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
         nitrogen.poolOwner,
@@ -470,7 +494,7 @@ export async function deployNitrogenWithTokenVault() {
         nitrogen.supplyManager,
         rebaseTokenOwner,
         nitrogen.guardian,
-        ethers.ZeroAddress,
+        priceChecker,
     );
 
     // init usdcVault
@@ -505,6 +529,7 @@ export async function deployNitrogenWithTokenVault() {
 
     return {
         ...nitrogen,
+        priceChecker,
         usdcVault,
         susdeVault,
         rebaseTokenOwner,

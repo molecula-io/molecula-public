@@ -2,8 +2,7 @@
 
 import { scope } from 'hardhat/config';
 
-import { deployMetaEth } from '../../scripts/metaEth/deployMetaEth';
-import { getEnvironment, writeToFile } from '../../scripts/utils/deployUtils';
+import { deployMetaEth, getEnvironment, writeToFile } from '../../scripts';
 
 const metaEthScope = scope('metaEth', 'Scope for metaEth solution');
 

@@ -7,7 +7,7 @@ import {PriceCheckerClient} from "./../../common/PriceChecker/PriceCheckerClient
 abstract contract VaultPriceChecker is PriceCheckerClient {
     /// @dev This function delegates the price check to the price checker contract if one is set.
     modifier validatePrice() {
-        checkPrice(asset());
+        checkPrice(address(this));
         _;
     }
 

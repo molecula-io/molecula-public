@@ -1,5 +1,4 @@
 /* eslint-disable camelcase, max-lines, no-await-in-loop, no-restricted-syntax, no-bitwise, no-plusplus */
-import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 
@@ -710,41 +709,6 @@ describe('Meta ETH', () => {
         await expect(metaPoolTreasury.addToken(stETH)).to.be.rejectedWith(
             'EnumerableMapNonexistentKey(',
         );
-    });
-
-    it('Check price checker in meta pool', async () => {
-        const { stETH, wETH, metaPoolTreasury, poolOwner } = await loadFixture(deployMetaEth);
-
-        // STETH / ETH
-        const stETHFeed = '0x86392dC19c0b719886221c78AB11eb8Cf5c52812';
-        const PriceChecker = await ethers.getContractFactory('PriceChecker');
-        const priceChecker = await PriceChecker.connect(poolOwner).deploy(
-            [
-                {
-                    asset: stETH,
-                    priceFeed: stETHFeed,
-                    isPriceFeedEIP4626: false,
-                    priceDeviationBps: 0,
-                    stalenessThreshold: days(3),
-                },
-                {
-                    asset: wETH,
-                    priceFeed: ethers.ZeroAddress,
-                    isPriceFeedEIP4626: false,
-                    priceDeviationBps: 0,
-                    stalenessThreshold: 0,
-                },
-                {
-                    asset: NATIVE_TOKEN,
-                    priceFeed: ethers.ZeroAddress,
-                    isPriceFeedEIP4626: false,
-                    priceDeviationBps: 0,
-                    stalenessThreshold: 0,
-                },
-            ],
-            poolOwner,
-        );
-        await metaPoolTreasury.setPriceChecker(priceChecker);
     });
 
     it('Check ERC-1271', async () => {

@@ -44,13 +44,13 @@ abstract contract PriceCheckerClient is Ownable {
     // ============ View Functions ============
 
     /// @dev This function delegates the price check to the price checker contract if one is set.
-    /// @param asset Address of the asset to check the price for.
-    function checkPrice(address asset) public view virtual {
+    /// @param tokenVault Address of the token Vault associated with the asset whose price needs to be checked.
+    function checkPrice(address tokenVault) public view virtual {
         if (priceChecker != address(0)) {
             // If a price feed is set for the token, then check that the token price is within the allowed deviation.
             // If the price feed is not set but the asset is present, do nothing.
             // Otherwise, throw an exception.
-            IPriceChecker(priceChecker).checkPrice(asset);
+            IPriceChecker(priceChecker).checkPrice(tokenVault);
         }
     }
 
