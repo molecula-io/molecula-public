@@ -57,6 +57,18 @@ export const staticPoolCurrenciesMetaETHMainnet = {
         token: evmStaticTokenAddresses.wETH[EVMChainIDs.Mainnet],
         n: 0,
     },
+    weETH: {
+        token: evmStaticTokenAddresses.weETH[EVMChainIDs.Mainnet],
+        n: 0,
+    },
+    ezETH: {
+        token: evmStaticTokenAddresses.ezETH[EVMChainIDs.Mainnet],
+        n: 0,
+    },
+    rsETH: {
+        token: evmStaticTokenAddresses.rsETH[EVMChainIDs.Mainnet],
+        n: 0,
+    },
 } satisfies { [token in ThirdPartyPoolCurrency]?: PoolData };
 
 /**

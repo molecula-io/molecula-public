@@ -7,6 +7,8 @@ import {
     chainLinkFeeds,
     EVMChainIDs,
     evmStaticTokenAddresses,
+    renzoContractAddresses,
+    rsETHAddresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import { ETH_VIRTUAL_OFFSET, NATIVE_TOKEN } from '../../configs';
@@ -23,7 +25,6 @@ export async function deployMetaEthWithoutInit() {
     const operator = signers.at(11)!;
     const yieldDistributor = signers.at(12)!;
     const poolKeeper = await generateRandomWallet();
-    const virtualOffset = ETH_VIRTUAL_OFFSET;
 
     const TestSeqnoFactory = await ethers.getContractFactory('TestSeqno');
     const testSeqno = await TestSeqnoFactory.connect(poolOwner).deploy();
@@ -47,18 +48,17 @@ export async function deployMetaEthWithoutInit() {
         evmStaticTokenAddresses.stETH[EVMChainIDs.Mainnet],
     );
 
-    // TODO add to molecula pool
     const weETH = await ethers.getContractAt(
         'IERC20Metadata',
-        '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        evmStaticTokenAddresses.weETH[EVMChainIDs.Mainnet],
     );
     const rsETH = await ethers.getContractAt(
         'IERC20Metadata',
-        '0xA1290d69c65A6Fe4DF752f95823fae25cB99e5A7',
+        evmStaticTokenAddresses.rsETH[EVMChainIDs.Mainnet],
     );
     const ezETH = await ethers.getContractAt(
         'IERC20Metadata',
-        '0x7A493Be5c2ce014cD049Bf178a1ac0Db1B434744',
+        evmStaticTokenAddresses.ezETH[EVMChainIDs.Mainnet],
     );
 
     const approveSelector = stETH.interface.getFunction('approve').selector;
@@ -82,7 +82,7 @@ export async function deployMetaEthWithoutInit() {
         metaPoolTreasury,
         4000,
         rebaseTokenFutureAddress,
-        virtualOffset,
+        ETH_VIRTUAL_OFFSET,
     );
     expect(await supplyManagerV2.getAddress()).to.be.equal(supplyManagerFutureAddress);
 
@@ -115,31 +115,37 @@ export async function deployMetaEthWithoutInit() {
         supplyManagerV2,
         guardian,
     );
-
-    // TODO another token vault
     const wETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
     );
-    const weETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
+
+    const WeETHTokenVault = await ethers.getContractFactory('WeETHTokenVault');
+    const weETHVault = await WeETHTokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
     );
-    const rsETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
+
+    const RsETHTokenVault = await ethers.getContractFactory('RsETHTokenVault');
+    const rsETHVault = await RsETHTokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
+        rsETHAddresses.LRTOracle,
     );
-    const ezETHVault = await MetaERC20TokenVault.connect(poolOwner).deploy(
+
+    const EzETHTokenVault = await ethers.getContractFactory('EzETHTokenVault');
+    const ezETHVault = await EzETHTokenVault.connect(poolOwner).deploy(
         poolOwner,
         rebaseTokenV2,
         supplyManagerV2,
         guardian,
+        renzoContractAddresses.restakeManager,
     );
 
     const NativeTokenVault = await ethers.getContractFactory('MetaNativeTokenVault');
@@ -238,24 +244,42 @@ export async function deployMetaEth() {
     // Init TokenVaults
     await metaEth.wETHVault.init(metaEth.wETH, minDepositAssets, minRedeemShares);
     await metaEth.stETHVault.init(metaEth.stETH, minDepositAssets, minRedeemShares);
-    // TODO
-    // await metaEth.weETHVault.init(metaEth.weETH, minDepositAssets, minRedeemShares);
-    // await metaEth.rsETHVault.init(metaEth.rsETH, minDepositAssets, minRedeemShares);
-    // await metaEth.ezETHVault.init(metaEth.ezETH, minDepositAssets, minRedeemShares);
+
+    await metaEth.weETHVault.init(metaEth.weETH, minDepositAssets, minRedeemShares);
+    await metaEth.rsETHVault.init(metaEth.rsETH, minDepositAssets, minRedeemShares);
+    await metaEth.ezETHVault.init(metaEth.ezETH, minDepositAssets, minRedeemShares);
     await metaEth.nativeTokenVault.init(NATIVE_TOKEN, minDepositAssets, minRedeemShares);
 
     // Add tokenVault into moleculaRebaseToken's whitelist
-    const codeHash = keccak256((await metaEth.wETHVault.getDeployedCode())!);
-    await metaEth.rebaseTokenV2.setCodeHash(codeHash, true);
+    await metaEth.rebaseTokenV2.setCodeHash(
+        keccak256((await metaEth.wETHVault.getDeployedCode())!),
+        true,
+    );
     await metaEth.rebaseTokenV2.addTokenVault(metaEth.wETHVault);
     await metaEth.rebaseTokenV2.addTokenVault(metaEth.stETHVault);
-    // TODO
-    // await metaEth.rebaseTokenV2.addTokenVault(metaEth.weETHVault);
-    // await metaEth.rebaseTokenV2.addTokenVault(metaEth.rsETHVault);
-    // await metaEth.rebaseTokenV2.addTokenVault(metaEth.ezETHVault);
 
-    const codeHash2 = keccak256((await metaEth.nativeTokenVault.getDeployedCode())!);
-    await metaEth.rebaseTokenV2.setCodeHash(codeHash2, true);
+    await metaEth.rebaseTokenV2.setCodeHash(
+        keccak256((await metaEth.weETHVault.getDeployedCode())!),
+        true,
+    );
+    await metaEth.rebaseTokenV2.addTokenVault(metaEth.weETHVault);
+
+    await metaEth.rebaseTokenV2.setCodeHash(
+        keccak256((await metaEth.rsETHVault.getDeployedCode())!),
+        true,
+    );
+    await metaEth.rebaseTokenV2.addTokenVault(metaEth.rsETHVault);
+
+    await metaEth.rebaseTokenV2.setCodeHash(
+        keccak256((await metaEth.ezETHVault.getDeployedCode())!),
+        true,
+    );
+    await metaEth.rebaseTokenV2.addTokenVault(metaEth.ezETHVault);
+
+    await metaEth.rebaseTokenV2.setCodeHash(
+        keccak256((await metaEth.nativeTokenVault.getDeployedCode())!),
+        true,
+    );
     await metaEth.rebaseTokenV2.addTokenVault(metaEth.nativeTokenVault);
 
     for (const tokenVault of [

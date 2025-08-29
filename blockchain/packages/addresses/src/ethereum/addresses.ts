@@ -99,6 +99,18 @@ export const evmStaticTokenAddresses = {
         [EVMChainIDs.Mainnet]: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         [EVMChainIDs.Sepolia]: '0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c',
     },
+    weETH: {
+        [EVMChainIDs.Mainnet]: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        [EVMChainIDs.Sepolia]: undefined,
+    },
+    rsETH: {
+        [EVMChainIDs.Mainnet]: '0xA1290d69c65A6Fe4DF752f95823fae25cB99e5A7',
+        [EVMChainIDs.Sepolia]: undefined,
+    },
+    ezETH: {
+        [EVMChainIDs.Mainnet]: '0xbf5495Efe5DB9ce00f80364C8B423567e58d2110',
+        [EVMChainIDs.Sepolia]: undefined,
+    },
 } as const;
 
 /**
@@ -221,4 +233,20 @@ export const evmMoleculaContractAddresses = {
         },
         [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.wETHVault as EVMAddress,
     },
+} as const;
+
+/**
+ * Renzo protocol.
+ * See https://docs.renzoprotocol.com/docs/contracts/ethereum-mainnet
+ */
+export const renzoContractAddresses = {
+    restakeManager: '0x74a09653A083691711cF8215a6ab074BB4e99ef5' as EVMAddress,
+} as const;
+
+/**
+ * LRT-rsETH. Kelp DAO.
+ * See https://github.com/Kelp-DAO/LRT-rsETH/blob/main/README.md
+ */
+export const rsETHAddresses = {
+    LRTOracle: '0x349A73444b1a310BAe67ef67973022020d70020d' as EVMAddress,
 } as const;

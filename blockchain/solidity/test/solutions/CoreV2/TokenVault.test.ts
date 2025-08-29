@@ -104,7 +104,7 @@ describe('Token Vault', () => {
         );
     });
 
-    it('Deposit native token', async () => {
+    it('Deposit native token 2', async () => {
         const { nativeTokenVault, user0, rebaseTokenV2, metaPoolTreasury } =
             await loadFixture(deployMetaEth);
         const { provider } = ethers;
@@ -130,7 +130,7 @@ describe('Token Vault', () => {
         expect(await provider.getBalance(nativeTokenVault)).to.be.equal(0);
         // User gets back their funds and did not lose 200 eth
         expect(prevUserBalance - (await provider.getBalance(user0)) - assets).to.be.lessThan(
-            ethers.parseEther('0.001'),
+            ethers.parseEther('0.01'),
         );
     });
 

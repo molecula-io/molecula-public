@@ -20,7 +20,7 @@ describe('Meta ETH', () => {
     it('Check deploy', async () => {
         const { metaPoolTreasury } = await loadFixture(deployMetaEth);
         const pool = await metaPoolTreasury.getTokenPool();
-        expect(pool.length).to.be.equal(3);
+        expect(pool.length).to.be.equal(6);
     });
 
     it('Should deposit and redeem', async () => {
