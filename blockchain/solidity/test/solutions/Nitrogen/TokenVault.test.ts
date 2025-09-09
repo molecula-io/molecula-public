@@ -711,4 +711,28 @@ describe('Test TokenVault', () => {
         await expect(usdcVault.convertToAssets(shares)).to.be.rejectedWith('ETokenNotExist()');
         await expect(susdeVault.convertToShares(shares)).to.be.rejectedWith('ETokenNotExist()');
     });
+
+    it('Test erc4626', async () => {
+        const { sparkUsdcVault, sparkUSDC, user0, rebaseToken } = await loadFixture(
+            deployNitrogenWithTokenVault,
+        );
+
+        const depositValue = 100n * 10n ** 18n - 1n;
+
+        // Check conversion between the Molecula asset and sparkUSDC
+        const moleculaAssets = await sparkUsdcVault.convertAssetsToMoleculaAssets(depositValue);
+        expect(moleculaAssets).to.be.greaterThan(depositValue);
+        expect(moleculaAssets).to.be.lessThan(2n * depositValue);
+
+        // Grand sparkUSDC and approve tokens for sparkUSDC
+        await grantERC20(user0, sparkUSDC, depositValue, FAUCET.sparkUSDC);
+        await sparkUSDC.connect(user0).approve(sparkUsdcVault, depositValue);
+
+        // Deposit sparkUSDC
+        await sparkUsdcVault
+            .connect(user0)
+            ['deposit(uint256,address,address)'](depositValue, user0, user0);
+        const rebaseTokenBalance = await rebaseToken.balanceOf(user0);
+        expectEqual(moleculaAssets, rebaseTokenBalance, 18, 5);
+    });
 });

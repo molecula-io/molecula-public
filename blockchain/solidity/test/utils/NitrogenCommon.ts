@@ -14,6 +14,9 @@ import { generateRandomWallet } from './Common';
 import { findRequestRedeemEvent } from './event';
 import { grantERC20 } from './grant';
 
+// https://etherscan.io/token/0xbc65ad17c5c0a2a4d159fa5a503f4992c7b545fe
+const SPARK_USDC = '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE';
+
 export async function deployNitrogenV2CommonWithOldMoleculaPool(token: string) {
     // Contracts are deployed using the first signer/account by default
     const signers = await ethers.getSigners();
@@ -50,7 +53,7 @@ export async function deployNitrogenV2CommonWithOldMoleculaPool(token: string) {
     const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasury');
     const moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
         poolOwner.address,
-        ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token),
+        [SPARK_USDC, ...ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token)],
         poolKeeper,
         supplyManagerFutureAddress,
         [],
@@ -205,7 +208,7 @@ export async function deployNitrogenV2Common(token: string) {
     const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
     const moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
         poolOwner.address,
-        ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token),
+        [SPARK_USDC, ...ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token)],
         poolKeeper,
         supplyManagerFutureAddress,
         [{ target: USDT, selector: approveSelector }],
@@ -445,6 +448,7 @@ export async function deployNitrogenWithTokenVault() {
     const USDC = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.USDC_ADDRESS);
     const sUSDe = await ethers.getContractAt('IERC4626', ethMainnetBetaConfig.SUSDE_ADDRESS);
     const USDe = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.USDE_ADDRESS);
+    const sparkUSDC = await ethers.getContractAt('IERC4626', SPARK_USDC);
 
     // deploy RebaseTokenOwner
     const RebaseTokenOwner = await ethers.getContractFactory('RebaseTokenOwner');
@@ -471,6 +475,12 @@ export async function deployNitrogenWithTokenVault() {
                 priceDeviationBps: 50, // 0.5 %
                 stalenessThreshold: susdeFeed.heartbeat,
             },
+            {
+                asset: SPARK_USDC,
+                priceFeed: ethers.ZeroAddress,
+                priceDeviationBps: 0,
+                stalenessThreshold: 0,
+            },
         ],
         nitrogen.poolOwner,
         18,
@@ -496,6 +506,15 @@ export async function deployNitrogenWithTokenVault() {
         nitrogen.guardian,
         priceChecker,
     );
+    const sparkUsdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
+        nitrogen.poolOwner,
+        // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
+        nitrogen.rebaseToken,
+        nitrogen.supplyManager,
+        rebaseTokenOwner,
+        nitrogen.guardian,
+        priceChecker,
+    );
 
     // init usdcVault
     await usdcVault.init(
@@ -508,16 +527,23 @@ export async function deployNitrogenWithTokenVault() {
         10n ** 6n, // minDepositValue
         10n ** 18n, // minRedeemShares
     );
+    await sparkUsdcVault.init(
+        SPARK_USDC, // asset
+        10n ** 6n, // minDepositValue
+        10n ** 18n, // minRedeemShares
+    );
 
     // Add usdcVault to supplyManager
     await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(usdcVault, true);
     await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(susdeVault, true);
+    await nitrogen.supplyManager.connect(nitrogen.poolOwner).setAgent(sparkUsdcVault, true);
 
     // Add usdcVault to RebaseTokenOwner
     const codeHash = keccak256((await usdcVault.getDeployedCode())!);
     await rebaseTokenOwner.setCodeHash(codeHash, true);
     await rebaseTokenOwner.addTokenVault(usdcVault.getAddress());
     await rebaseTokenOwner.addTokenVault(susdeVault.getAddress());
+    await rebaseTokenOwner.addTokenVault(sparkUsdcVault.getAddress());
 
     // Set rebaseTokenOwner as owner of rebaseToken
     await nitrogen.rebaseToken
@@ -526,6 +552,7 @@ export async function deployNitrogenWithTokenVault() {
 
     await susdeVault.unpauseAll();
     await usdcVault.unpauseAll();
+    await sparkUsdcVault.unpauseAll();
 
     return {
         ...nitrogen,
@@ -538,6 +565,8 @@ export async function deployNitrogenWithTokenVault() {
         user2,
         operator,
         USDe,
+        sparkUsdcVault,
+        sparkUSDC,
     };
 }
 

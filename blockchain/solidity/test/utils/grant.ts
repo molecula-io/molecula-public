@@ -20,6 +20,7 @@ export const FAUCET = {
     weETH: '0xEd0C6079229E2d407672a117c22b62064f4a4312',
     rsETH: '0x22162DbBa43fE0477cdC5234E248264eC7C6EA7c',
     ezETH: '0x22162DbBa43fE0477cdC5234E248264eC7C6EA7c',
+    sparkUSDC: '0x73b59d25F472c8302f74651593b209b01eAa971a',
 };
 
 export async function grantETH(wallet: AddressLike, amount: BigNumberish = ethers.parseEther('2')) {
@@ -40,7 +41,7 @@ export async function grantERC20(
     amount: BigNumberish,
     faucet: string = FAUCET.USDT,
 ) {
-    // await grantETH(faucet);
+    await grantETH(faucet);
     // Prepare an impersonated signer to work as a faucet in the test
     const faucetSigner = await ethers.getImpersonatedSigner(faucet);
     // transfer ERC20 token

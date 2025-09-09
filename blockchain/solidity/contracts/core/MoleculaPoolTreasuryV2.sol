@@ -18,7 +18,7 @@ import {WhitelistedExecutor} from "./../coreV2/WhitelistedExecutor.sol";
 /**
  * @dev Token parameters.
  * @param token Token address.
- * @param n Normalization to 18 decimals: equal to the `18 - poolToken.decimals` value.
+ * @param n Normalization to 18 decimals.
  * @param isERC4626 Boolean indicating whether the token is of the ERC-4626 type.
  */
 struct TokenParams {
@@ -37,7 +37,7 @@ enum TokenType {
  * @dev Token information.
  * @param tokenType Token type.
  * @param isBlocked Boolean flag indicating whether the token is blocked.
- * @param n Normalization to 18 decimals: equal to the `18 - poolToken.decimals` value.
+ * @param n Normalization to 18 decimals.
  * @param arrayIndex Index in `TokenParams[] pool`.
  * @param valueToRedeem Value to redeem in the token amount.
  */
@@ -227,7 +227,7 @@ contract MoleculaPoolTreasuryV2 is
 
     /**
      * @dev Normalizes the value.
-     * @param n Normalization to 18 decimals: equal to the `18 - poolToken.decimals` value.
+     * @param n Normalization to 18 decimals.
      * @param value Value to normalize.
      * @return result Normalized value.
      */
@@ -249,7 +249,7 @@ contract MoleculaPoolTreasuryV2 is
     /// @dev Convert the token value (sUSDe, USDe, etc) to mUSDe.
     /// @param value Token value.
     /// @param token Token address.
-    /// @param n Normalization to 18 decimals: equal to the `18 - poolToken.decimals` value.
+    /// @param n Normalization to 18 decimals.
     /// @param isERC4626 Boolean indicating whether the token is of the ERC-4626 type.
     /// @return mUSDAmount mUSD amount.
     function _tokenAmountTomUSD(
@@ -332,7 +332,16 @@ contract MoleculaPoolTreasuryV2 is
         _validatePriceChecker(token);
 
         // Add the token to the Pool.
-        uint8 decimals = IERC20Metadata(token).decimals();
+        uint8 decimals;
+        if (isERC4626) {
+            // For ERC4626 Vault tokens, use the underlying asset’s decimals.
+            // We normalize the underlying asset amount (not the Vault token amount)
+            // to mUSD when calculating the total pool supply.
+            address underlyingAsset = IERC4626(token).asset();
+            decimals = IERC20Metadata(underlyingAsset).decimals();
+        } else {
+            decimals = IERC20Metadata(token).decimals();
+        }
         int8 n = 18 - int8(decimals);
         pool.push(TokenParams(token, n, isERC4626));
         poolMap[token] = TokenInfo({
