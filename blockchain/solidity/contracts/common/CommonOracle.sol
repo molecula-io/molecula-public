@@ -10,7 +10,7 @@ import {ISetterOracle, IOracle} from "./interfaces/ISetterOracle.sol";
 import {ValueValidator} from "./ValueValidator.sol";
 
 /**
- * @title CommonOracle
+ * @title CommonOracle.
  * @notice Abstract contract that manages the Pool and share supply,
  *         as well as a registry of authorized Updater addresses.
  * @dev Provides the authorization logic for updaters using `{EnumerableSet}`,

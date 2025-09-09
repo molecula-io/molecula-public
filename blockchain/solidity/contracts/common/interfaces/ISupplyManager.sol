@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Molecula <info@molecula.fi>
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.28;
-/// @title Supply Manager's Interface
+/// @title Supply Manager's Interface.
 /// @notice Defines the functions and events required for pool data management.
 interface ISupplyManager {
     /**

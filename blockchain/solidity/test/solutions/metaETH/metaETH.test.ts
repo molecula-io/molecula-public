@@ -153,6 +153,7 @@ describe('Meta ETH', () => {
             minDepositAssets,
             operator,
         } = await loadFixture(deployMetaEth);
+        await stETHVault.setMinRedeemShares(1);
 
         const depositValue = minDepositAssets;
 
@@ -249,6 +250,7 @@ describe('Meta ETH', () => {
             testSeqno,
         } = await loadFixture(deployMetaEth);
         const { provider } = ethers;
+        await nativeTokenVault.setMinRedeemShares(1);
 
         const depositValue = minDepositAssets;
 
@@ -768,5 +770,122 @@ describe('Meta ETH', () => {
         await wmetaETH.connect(user0).unwrap(await wmetaETH.balanceOf(user0));
         expect(await wmetaETH.balanceOf(user0)).to.be.equal(0);
         expectEqual(await rebaseTokenV2.balanceOf(user0), rebaseAssets);
+    });
+
+    it('Should redeem weETH', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            minDepositAssets,
+            weETH,
+            weETHVault,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, weETH, 10n * depositValue - 1n, FAUCET.weETH);
+
+        // requestRedeem
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const tx = await weETHVault.connect(user0).requestRedeem(userShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+
+        // fulfillRedeemRequests
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+        const redeemAssets = await weETHVault.claimableRedeemAssets(user0);
+
+        // redeem
+        expect(await weETH.balanceOf(user0)).to.be.equal(0);
+        await weETHVault.connect(user0).withdraw(redeemAssets, user0, user0);
+        expectEqual(await weETH.balanceOf(user0), redeemAssets);
+    });
+
+    it('Should redeem rsETH', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            minDepositAssets,
+            rsETH,
+            rsETHVault,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, rsETH, 10n * depositValue - 1n, FAUCET.rsETH);
+
+        // requestRedeem
+        const userShares = await rebaseTokenV2.sharesOf(user0);
+        const tx = await rsETHVault.connect(user0).requestRedeem(userShares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+
+        // fulfillRedeemRequests
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+        const redeemAssets = await rsETHVault.claimableRedeemAssets(user0);
+
+        // redeem
+        expect(await rsETH.balanceOf(user0)).to.be.equal(0);
+        await rsETHVault.connect(user0).withdraw(redeemAssets, user0, user0);
+        expectEqual(await rsETH.balanceOf(user0), redeemAssets);
+    });
+
+    it('Should redeem ezETH', async () => {
+        const {
+            user0,
+            rebaseTokenV2,
+            metaPoolTreasury,
+            stETHVault,
+            stETH,
+            minDepositAssets,
+            ezETH,
+            ezETHVault,
+        } = await loadFixture(deployMetaEth);
+
+        const depositValue = minDepositAssets;
+
+        // Grand stETH and approve tokens for stETHVault
+        await grantERC20(user0, stETH, depositValue, FAUCET.stETH);
+        await stETH.connect(user0).approve(stETHVault, depositValue);
+
+        // Deposit stETH
+        await stETHVault.connect(user0).requestDeposit(depositValue, user0, user0);
+
+        // Generate yield
+        await grantERC20(metaPoolTreasury, ezETH, 10n * depositValue - 1n, FAUCET.ezETH);
+
+        // requestRedeem
+        const useezhares = await rebaseTokenV2.sharesOf(user0);
+        const tx = await ezETHVault.connect(user0).requestRedeem(useezhares, user0, user0);
+        const redeemEvent = await findRequestRedeemEventV2(tx);
+
+        // fulfillRedeemRequests
+        await metaPoolTreasury.fulfillRedeemRequests([redeemEvent.operationId]);
+        const redeemAssets = await ezETHVault.claimableRedeemAssets(user0);
+
+        // redeem
+        expect(await ezETH.balanceOf(user0)).to.be.equal(0);
+        await ezETHVault.connect(user0).withdraw(redeemAssets, user0, user0);
+        expectEqual(await ezETH.balanceOf(user0), redeemAssets);
     });
 });

@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 import {WadRayMath} from "./WadRayMath.sol";
 
 /**
- * @title MathUtils library
+ * @title MathUtils library.
  * @author AAVE
  * @notice Provides functions to perform linear and compounded interest calculations.
  */

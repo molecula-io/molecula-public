@@ -8,7 +8,7 @@ import {_getDecimalsOr18} from "./../../common/Utils.sol";
 import {BaseTokenVault} from "./BaseTokenVault.sol";
 import {TokenVault} from "./TokenVault.sol";
 
-/// @title ERC20TokenVault
+/// @title ERC20TokenVault.
 /// @notice Underlying asset is an ERC-20 token, not its extensions like ERC-4626.
 abstract contract ERC20TokenVault is TokenVault {
     /// @dev Power of 10 used to convert between assets and Molecula Tokens.

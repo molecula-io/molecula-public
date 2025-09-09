@@ -3,7 +3,7 @@
 pragma solidity ^0.8.28;
 
 /**
- * @title IERC20Basic
+ * @title IERC20Basic.
  * @dev This interface is same as IERC20 but `transfer`, `transferFrom` and `approve` functions don't return anything.
  */
 interface IERC20Basic {

@@ -63,7 +63,7 @@ export type EvmContractSafeCall<Contract extends PickFunctions<Contract>, Respon
     Method extends keyof Contract,
 >(
     method: Method,
-    ...args: PostfixOverrides<Parameters<Contract[Method]>, 'nonpayable'>
+    ...args: PostfixOverrides<Parameters<Contract[Method]>, 'payable'>
 ) => Promise<Response>;
 
 export type EvmContractGasCall<Contract extends PickFunctions<Contract>, Response> = <
@@ -71,7 +71,7 @@ export type EvmContractGasCall<Contract extends PickFunctions<Contract>, Respons
 >(
     multiplier: number,
     method: Method,
-    ...args: PostfixOverrides<Parameters<Contract[Method]>, 'nonpayable'>
+    ...args: PostfixOverrides<Parameters<Contract[Method]>, 'payable'>
 ) => Promise<Response>;
 
 export type AllEvmContracts =

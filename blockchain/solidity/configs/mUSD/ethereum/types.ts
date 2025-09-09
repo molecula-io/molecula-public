@@ -20,6 +20,7 @@ export type EthereumNetworkConfig = {
     LAYER_ZERO_ETHEREUM_EID: number;
     LAYER_ZERO_ARBITRUM_EID: number;
     LAYER_ZERO_CELO_EID: number;
+    LAYER_ZERO_SOLANA_EID: number;
     LAYER_ZERO_TRON_MAINNET_OAPP_MOCK: string;
 
     // USDT_OFT address

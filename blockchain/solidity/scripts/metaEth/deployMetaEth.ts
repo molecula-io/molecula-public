@@ -1,25 +1,35 @@
 /* eslint-disable no-restricted-syntax, no-await-in-loop */
 
+import { type HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { keccak256 } from 'ethers';
 import { type HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import {
-    chainLinkFeeds,
-    type EnvironmentType,
-    evmStaticTokenAddresses,
+    type EVMChainIDs,
+    renzoContractAddresses,
+    rsETHAddresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
-import { DEPLOY_GAS_LIMIT, ETH_VIRTUAL_OFFSET, NATIVE_TOKEN } from '../../configs';
+import {
+    DEPLOY_GAS_LIMIT,
+    ETH_VIRTUAL_OFFSET,
+    type MetaEthNetworkConfig,
+    NATIVE_TOKEN,
+} from '../../configs';
 
-import { getMetaEthConfig } from './utils';
+import { getFeeds } from './utils';
 
 /**
- * Main deployment function for the mrETH system.
+ * Main deployment function for the metaETH system.
  * Deploys all necessary contracts and initializes them with the correct configuration.
  */
-export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment: EnvironmentType) {
-    const { config, account, chainId } = await getMetaEthConfig(hre, environment);
-
+export async function deployAndInitMetaEth(
+    hre: HardhatRuntimeEnvironment,
+    config: MetaEthNetworkConfig,
+    account: HardhatEthersSigner,
+    chainId: EVMChainIDs,
+    withPoolTokens: boolean,
+) {
     // print wallet balances
     console.log('Wallet address: ', account.address);
     console.log(
@@ -28,33 +38,14 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
     );
 
     console.log('Deploying priceChecker...');
-    // STETH / ETH
-    const stETHFeed = chainLinkFeeds.eth.stETH[chainId];
     const PriceChecker = await hre.ethers.getContractFactory('PriceChecker');
+
+    const feeds = getFeeds(hre, config, chainId, withPoolTokens);
     const priceChecker = await PriceChecker.deploy(
-        [
-            {
-                asset: evmStaticTokenAddresses.stETH[chainId],
-                priceFeed: stETHFeed.address,
-                priceDeviationBps: 50, // 0.5%
-                stalenessThreshold: stETHFeed.heartbeat,
-            },
-            {
-                asset: evmStaticTokenAddresses.wETH[chainId],
-                priceFeed: hre.ethers.ZeroAddress,
-                priceDeviationBps: 0,
-                stalenessThreshold: 0,
-            },
-            {
-                asset: NATIVE_TOKEN,
-                priceFeed: hre.ethers.ZeroAddress,
-                priceDeviationBps: 0,
-                stalenessThreshold: 0,
-            },
-        ],
-        // Set the owner of the PriceChecker to META_OWNER
-        config.META_OWNER,
-        config.META_TOKEN_DECIMALS,
+        feeds,
+        config.OWNER,
+        config.META_ETH_TOKEN_DECIMALS,
+        { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await priceChecker.waitForDeployment();
     console.log('PriceChecker address:', await priceChecker.getAddress());
@@ -73,11 +64,11 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
     console.log('Deploying MetaPoolTreasury...');
     const MetaPoolTreasury = await hre.ethers.getContractFactory('MetaPoolTreasury');
     const metaPoolTreasury = await MetaPoolTreasury.deploy(
-        config.META_OWNER,
-        config.META_POOL_KEEPER,
+        config.OWNER,
+        config.POOL_KEEPER,
         supplyManagerFutureAddress,
         [],
-        config.META_GUARDIAN,
+        config.GUARDIAN,
         await priceChecker.getAddress(),
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
@@ -87,10 +78,10 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
     console.log('Deploying SupplyManagerV2...');
     const SupplyManagerV2 = await hre.ethers.getContractFactory('SupplyManagerV2WithNative');
     const supplyManagerV2 = await SupplyManagerV2.deploy(
-        config.META_OWNER,
-        config.META_POOL_KEEPER,
+        config.OWNER,
+        config.YIELD_DISTRIBUTOR,
         metaPoolTreasury,
-        config.META_APY,
+        config.APY,
         rebaseTokenFutureAddress,
         ETH_VIRTUAL_OFFSET,
         { gasLimit: DEPLOY_GAS_LIMIT },
@@ -106,9 +97,9 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
     const rebaseTokenV2 = await RebaseTokenV2.deploy(
         supplyManagerV2,
         account.address,
-        config.META_TOKEN_NAME,
-        config.META_TOKEN_SYMBOL,
-        config.META_TOKEN_DECIMALS,
+        config.META_ETH_TOKEN_NAME,
+        config.META_ETH_TOKEN_SYMBOL,
+        config.META_ETH_TOKEN_DECIMALS,
         supplyManagerV2,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
@@ -124,7 +115,7 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         account.address,
         rebaseTokenV2,
         supplyManagerV2,
-        config.META_GUARDIAN,
+        config.GUARDIAN,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await stETHVault.waitForDeployment();
@@ -135,46 +126,100 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         account.address,
         rebaseTokenV2,
         supplyManagerV2,
-        config.META_GUARDIAN,
+        config.GUARDIAN,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await wETHVault.waitForDeployment();
     console.log('wETHVault address:', await wETHVault.getAddress());
 
-    // TODO add weETH, rsETH and ezETH
+    let weETHVault;
+    let rsETHVault;
+    let ezETHVault;
+    if (withPoolTokens) {
+        console.log('Deploying weETHVault...');
+        const WeETHTokenVault = await hre.ethers.getContractFactory('WeETHTokenVault');
+        weETHVault = await WeETHTokenVault.deploy(
+            account.address,
+            rebaseTokenV2,
+            supplyManagerV2,
+            config.GUARDIAN,
+            { gasLimit: DEPLOY_GAS_LIMIT },
+        );
+        await weETHVault.waitForDeployment();
+        console.log('weETHVault address:', await wETHVault.getAddress());
+
+        console.log('Deploying rsETHVault...');
+        const RsETHTokenVault = await hre.ethers.getContractFactory('RsETHTokenVault');
+        rsETHVault = await RsETHTokenVault.deploy(
+            account.address,
+            rebaseTokenV2,
+            supplyManagerV2,
+            config.GUARDIAN,
+            rsETHAddresses.LRTOracle,
+            { gasLimit: DEPLOY_GAS_LIMIT },
+        );
+        await rsETHVault.waitForDeployment();
+        console.log('rsETHVault address:', await rsETHVault.getAddress());
+
+        console.log('Deploying ezETHVault...');
+        const EzETHTokenVault = await hre.ethers.getContractFactory('EzETHTokenVault');
+        ezETHVault = await EzETHTokenVault.deploy(
+            account.address,
+            rebaseTokenV2,
+            supplyManagerV2,
+            config.GUARDIAN,
+            renzoContractAddresses.restakeManager,
+            { gasLimit: DEPLOY_GAS_LIMIT },
+        );
+        await ezETHVault.waitForDeployment();
+        console.log('ezETHVault address:', await ezETHVault.getAddress());
+    }
+
     console.log('Deploying NativeTokenVault...');
     const NativeTokenVault = await hre.ethers.getContractFactory('MetaNativeTokenVault');
     const nativeTokenVault = await NativeTokenVault.deploy(
         account.address,
         rebaseTokenV2,
         supplyManagerV2,
-        config.META_GUARDIAN,
+        config.GUARDIAN,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await nativeTokenVault.waitForDeployment();
     console.log('NativeTokenVault address:', await nativeTokenVault.getAddress());
 
     console.log('Adding code hashes into rebaseTokenV2...');
-    for (const codeHash of [
+    const codeHashes = [
         keccak256((await wETHVault.getDeployedCode())!),
         keccak256((await nativeTokenVault.getDeployedCode())!),
-    ]) {
+    ];
+    if (withPoolTokens) {
+        codeHashes.push(
+            keccak256((await weETHVault!.getDeployedCode())!),
+            keccak256((await rsETHVault!.getDeployedCode())!),
+            keccak256((await ezETHVault!.getDeployedCode())!),
+        );
+    }
+    for (const codeHash of codeHashes) {
         const tx = await rebaseTokenV2.setCodeHash(codeHash, true);
         await tx.wait();
     }
     console.log('Code hashes are added');
 
-    for (const { vault, token } of [
-        { vault: stETHVault, token: config.STETH_ADDRESS },
-        { vault: wETHVault, token: config.WETH_ADDRESS },
-        { vault: nativeTokenVault, token: NATIVE_TOKEN },
-    ]) {
-        console.log(`Initializing vault: ${await vault.getAddress()} ...`);
-        let tx = await vault.init(
-            token,
-            config.META_MIN_DEPOSIT_ETH,
-            config.META_MIN_REDEEM_SHARES,
+    const initData = [
+        { vault: stETHVault, token: config.stETH, minDeposit: config.MIN_DEPOSIT_ETH },
+        { vault: wETHVault, token: config.wETH, minDeposit: config.MIN_DEPOSIT_ETH },
+        { vault: nativeTokenVault, token: NATIVE_TOKEN, minDeposit: config.MIN_DEPOSIT_ETH },
+    ];
+    if (withPoolTokens) {
+        initData.push(
+            { vault: weETHVault!, token: config.weETH, minDeposit: config.MIN_DEPOSIT_weETH },
+            { vault: rsETHVault!, token: config.rsETH, minDeposit: config.MIN_DEPOSIT_rsETH },
+            { vault: ezETHVault!, token: config.ezETH, minDeposit: config.MIN_DEPOSIT_ezETH },
         );
+    }
+    for (const { vault, token, minDeposit } of initData) {
+        console.log(`Initializing vault: ${await vault.getAddress()} ...`);
+        let tx = await vault.init(token, minDeposit, config.MIN_REDEEM_SHARES);
         await tx.wait();
 
         console.log('   Adding vault into rebaseTokenV2...');
@@ -189,15 +234,23 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         console.log('Vault is set');
     }
 
-    for (const addr of [
+    const ownableContracts = [
         await rebaseTokenV2.getAddress(),
         await wETHVault.getAddress(),
         await stETHVault.getAddress(),
         await nativeTokenVault.getAddress(),
-    ]) {
+    ];
+    if (withPoolTokens) {
+        ownableContracts.push(
+            await weETHVault!.getAddress(),
+            await rsETHVault!.getAddress(),
+            await ezETHVault!.getAddress(),
+        );
+    }
+    for (const addr of ownableContracts) {
         console.log(`Changing owner for ${addr}`);
         const ownable2Step = await hre.ethers.getContractAt('Ownable2Step', addr);
-        const tx = await ownable2Step.transferOwnership(config.META_OWNER);
+        const tx = await ownable2Step.transferOwnership(config.OWNER);
         await tx.wait();
         // Note: META_OWNER must call `acceptOwnership` function
     }
@@ -209,5 +262,9 @@ export async function deployMetaEth(hre: HardhatRuntimeEnvironment, environment:
         stETHVault: await stETHVault.getAddress(),
         wETHVault: await wETHVault.getAddress(),
         nativeTokenVault: await nativeTokenVault.getAddress(),
+        weETHVault: weETHVault === undefined ? '' : await weETHVault!.getAddress(),
+        rsETHVault: rsETHVault === undefined ? '' : await rsETHVault!.getAddress(),
+        ezETHVault: ezETHVault === undefined ? '' : await ezETHVault!.getAddress(),
+        priceChecker: await priceChecker.getAddress(),
     };
 }

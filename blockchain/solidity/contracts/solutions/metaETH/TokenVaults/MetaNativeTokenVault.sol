@@ -12,7 +12,7 @@ import {ITokenVaultWithImmediateRedeem} from "./../../../coreV2/TokenVault/inter
 import {NativeTokenVault} from "./../../../coreV2/TokenVault/NativeTokenVault.sol";
 import {IMetaPoolTreasury} from "../interfaces/IMetaPoolTreasury.sol";
 
-/// @title metaETHNativeTokenVault
+/// @title metaETHNativeTokenVault.
 /// @notice Vault contract for managing native ETH deposits and withdrawals in the metaETH system.
 /// @dev Extends `NativeTokenVault` to implement the metaETH-specific functionality for native ETH handling.
 contract MetaNativeTokenVault is ITokenVaultWithImmediateRedeem, NativeTokenVault {

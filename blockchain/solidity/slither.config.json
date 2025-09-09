@@ -1,5 +1,5 @@
 {
-    "filter_paths": "lib|@openzeppelin|@layerzerolabs|hardhat|contracts/test|contracts/mock|solidity-bytes-utils|UsdtOFT.sol|RebaseTokenCommon.sol|MoleculaPoolTreasury.sol|SupplyManager.sol|AccountantAgent.sol",
+    "filter_paths": "lib|@openzeppelin|@layerzerolabs|hardhat|contracts/test|contracts/mock|solidity-bytes-utils|UsdtOFT.sol|RebaseTokenCommon.sol|MoleculaPoolTreasury.sol|SupplyManager.sol|AccountantAgent.sol|MoleculaPoolTreasuryV2.sol",
     "detectors_to_exclude": [
         "calls-loop",
         "naming-convention",

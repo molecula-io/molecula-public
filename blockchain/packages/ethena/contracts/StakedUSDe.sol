@@ -11,7 +11,7 @@ import "./SingleAdminAccessControl.sol";
 import "./interfaces/IStakedUSDe.sol";
 
 /**
- * @title StakedUSDe
+ * @title StakedUSDe.
  * @notice StakedUSDe contract allows users to:
  * - Stake USDe tokens. 
  * - Earn a portion of:

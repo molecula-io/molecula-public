@@ -10,7 +10,7 @@ import {IRebaseERC20} from "../interfaces/IRebaseERC20.sol";
 import {ZeroValueChecker} from "../ZeroValueChecker.sol";
 
 /**
- * @title RebaseERC20
+ * @title RebaseERC20.
  * @dev Contract for implementing the RebaseERC20 functionality.
  * The contract leverages:
  * - The Ethereum's ERC20 standard.

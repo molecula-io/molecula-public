@@ -7,7 +7,7 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {ValueValidator} from "../common/ValueValidator.sol";
 
 /**
- * @title ERC1271
+ * @title ERC1271.
  * @notice This contract implements the ERC-1271 standard for contract-based signatures validation.
  * @dev Implementation of the ERC1271 standard for smart contract based signatures validation.
  *      Allows smart contracts to verify signatures based on arbitrary conditions and data.

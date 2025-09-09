@@ -11,7 +11,7 @@ import {ValueValidator} from "./../../common/ValueValidator.sol";
 import {IShare} from "../Tokens/interfaces/IShare.sol";
 import {IWrappedRebaseAsset} from "./interfaces/IWrappedRebaseAsset.sol";
 
-/// @title WrappedRebaseAsset
+/// @title WrappedRebaseAsset.
 abstract contract WrappedRebaseAsset is
     IWrappedRebaseAsset,
     ERC20,

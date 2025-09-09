@@ -9,7 +9,7 @@ import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
 import {DataTypes} from "../libraries/DataTypes.sol";
 
 /**
- * @title IAaveV3Pool
+ * @title IAaveV3Pool.
  * @author Aave
  * @notice Defines the basic interface for an Aave v3 Pool.
  */

@@ -5,7 +5,7 @@ pragma solidity ^0.8.24;
 import {IWrappedRebaseAsset} from "./interfaces/IWrappedRebaseAsset.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title SuppliedWrappedRebaseAsset
+/// @title SuppliedWrappedRebaseAsset.
 /// @notice Wrapper contract has two possible states:
 /// - `supplied`: The `rebaseToken` address is set.
 /// - `unsupplied`: The `rebaseToken` address is not set.

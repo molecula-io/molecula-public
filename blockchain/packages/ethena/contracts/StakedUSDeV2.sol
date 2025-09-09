@@ -8,7 +8,7 @@ import "./interfaces/IStakedUSDeCooldown.sol";
 import "./USDeSilo.sol";
 
 /**
- * @title StakedUSDeV2
+ * @title StakedUSDeV2.
  * @notice StakedUSDeV2 contract allows users to:
  * - Stake USDe tokens.
  * - Earn a portion of:

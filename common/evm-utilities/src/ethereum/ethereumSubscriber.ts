@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-
 import type { BaseContract, EventLog, Log as EthLog, ContractEventPayload } from 'ethers';
 
 import type {
@@ -14,17 +12,6 @@ import type {
 } from '@molecula-monorepo/solidity/typechain-types/common';
 
 import { BlockKeeper } from '../helpers';
-
-// Configure dotenv and get the env variables
-dotenv.config();
-const { EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER } = process.env;
-
-const subscriptionIntervalMultiplier = EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER
-    ? Number(EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER)
-    : 1;
-
-// Ethereum produce 4 blocks in a minute (once in a 15 seconds)
-const loadNewEventsInterval = 15_000 * subscriptionIntervalMultiplier;
 
 /**
  * Each 20th subscription request use enlarged depth to avoid events missing
@@ -77,13 +64,27 @@ export class EthereumSubscriber<
      */
     private newEventsInterval: NodeJS.Timeout | undefined;
 
+    /**
+     * Load new events interval.
+     */
+    private loadNewEventsInterval: number = 15_000;
+
     // Constructor
 
-    public constructor(contract: B, event: T) {
+    public constructor(
+        contract: B,
+        event: T,
+        options: { subscriptionIntervalMultiplier?: number } = {},
+    ) {
         this.log = new Log(`Ethereum Subscriber`);
 
         this.contract = contract;
         this.event = event;
+
+        const { subscriptionIntervalMultiplier = 1 } = options;
+
+        // Ethereum produce 4 blocks in a minute (once in a 15 seconds)
+        this.loadNewEventsInterval = 15_000 * subscriptionIntervalMultiplier;
     }
 
     // Public methods
@@ -137,7 +138,7 @@ export class EthereumSubscriber<
             if (counter === 20) {
                 counter = 0;
             }
-        }, loadNewEventsInterval);
+        }, this.loadNewEventsInterval);
     };
 
     /**

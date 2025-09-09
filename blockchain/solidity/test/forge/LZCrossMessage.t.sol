@@ -30,7 +30,7 @@ import {OperationStatus} from "../../contracts/common/rebase/structures/Operatio
 import {SupplyManager} from "../../contracts/core/SupplyManager.sol";
 import {IWhitelistedExecutor} from "../../contracts/coreV2/interfaces/IWhitelistedExecutor.sol";
 
-/// @title LZCrossMessageTest
+/// @title LZCrossMessageTest.
 /// @notice This contract tests the cross-chain messaging flows between an AgentLZ
 /// and a MockAccountantLZ. It wires up mock endpoints, configures OFT contracts on both chains,
 /// deploys the Agent and Accountant contracts, and then simulates a deposit request flow.

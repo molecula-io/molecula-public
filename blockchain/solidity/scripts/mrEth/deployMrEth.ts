@@ -1,4 +1,4 @@
-import { type HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
@@ -22,7 +22,7 @@ async function deployMrEthCoreV2(
     owner: string,
     config: mrEthNetworkConfig,
     contractsMrEth: {
-        depositManager: string;
+        depositManagerPool: string;
         rewardBearingTokenFutureAddress: string;
     },
 ) {
@@ -31,7 +31,7 @@ async function deployMrEthCoreV2(
     const supplyManagerV2 = await SupplyManagerV2.deploy(
         owner,
         owner,
-        contractsMrEth.depositManager,
+        contractsMrEth.depositManagerPool,
         config.APY_FORMATTER,
         contractsMrEth.rewardBearingTokenFutureAddress,
         ETH_VIRTUAL_OFFSET,
@@ -75,6 +75,7 @@ async function deployMrEthCoreV2(
         await rewardBearingToken.getAddress(),
         await supplyManagerV2.getAddress(),
         owner,
+        owner,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
     await wEthVault.waitForDeployment();
@@ -90,9 +91,16 @@ async function deployMrEthCoreV2(
     console.log(`WETH token vault deployed successfully at ${await wEthVault.getAddress()}`);
 
     // Deploy and initialize stETH token vault
-    const stEthVault = await TokenVault.deploy(owner, rewardBearingToken, supplyManagerV2, owner, {
-        gasLimit: DEPLOY_GAS_LIMIT,
-    });
+    const stEthVault = await TokenVault.deploy(
+        owner,
+        rewardBearingToken,
+        supplyManagerV2,
+        owner,
+        owner,
+        {
+            gasLimit: DEPLOY_GAS_LIMIT,
+        },
+    );
     await stEthVault.waitForDeployment();
 
     // Initialize stETH vault with minimum deposit and redeem thresholds
@@ -111,6 +119,7 @@ async function deployMrEthCoreV2(
         owner,
         rewardBearingToken,
         supplyManagerV2,
+        owner,
         owner,
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
@@ -190,6 +199,10 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
     const compoundBufferLib = await CompoundBufferLib.deploy({ gasLimit: DEPLOY_GAS_LIMIT });
     await compoundBufferLib.waitForDeployment();
 
+    const DepositManagerLib = await hre.ethers.getContractFactory('DepositManagerLib');
+    const depositManagerLib = await DepositManagerLib.deploy({ gasLimit: DEPLOY_GAS_LIMIT });
+    await depositManagerLib.waitForDeployment();
+
     console.log(
         `CompoundBufferLib deployed successfully at ${await compoundBufferLib.getAddress()}`,
     );
@@ -223,89 +236,128 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
     await moleculaBuffer.waitForDeployment();
     console.log(`MoleculaBuffer deployed successfully at ${await moleculaBuffer.getAddress()}`);
 
+    const DepositManagerRestaker = await hre.ethers.getContractFactory('DepositManagerRestaker');
+    const depositManagerRestaker = await DepositManagerRestaker.deploy({
+        gasLimit: DEPLOY_GAS_LIMIT,
+    });
+    await depositManagerRestaker.waitForDeployment();
+
+    console.log(
+        `DepositManagerRestaker deployed successfully at ${await depositManagerRestaker.getAddress()}`,
+    );
+
     // Calculate future contract addresses for proper initialization
     const transactionCount = await account.getNonce();
 
     const supplyManagerFutureAddress = hre.ethers.getCreateAddress({
         from: account.address,
-        nonce: transactionCount + 4,
+        nonce: transactionCount + 5,
     });
 
     const rewardBearingTokenFutureAddress = hre.ethers.getCreateAddress({
         from: account.address,
-        nonce: transactionCount + 5,
+        nonce: transactionCount + 6,
     });
 
-    // Get DepositManager contract factory for selected chain
-    const DepositManager =
+    // Get DepositManagerPool contract factory for selected chain
+    const DepositManagerPool =
         hre.network.name === 'sepolia'
-            ? await hre.ethers.getContractFactory('MockSepoliaDepositManager')
-            : await hre.ethers.getContractFactory('DepositManager');
+            ? await hre.ethers.getContractFactory('MockSepoliaDepositManagerPool')
+            : await hre.ethers.getContractFactory('DepositManagerPool');
 
-    // Deploy and initialize DepositManager
-    const depositManager = await DepositManager.deploy(
-        account.address,
-        account.address,
+    // Deploy and initialize DepositManagerPool
+    const depositManagerPool = await DepositManagerPool.deploy(
         account.address,
         supplyManagerFutureAddress,
         config.WETH_ADDRESS,
         config.STRATEGY_FACTORY,
         config.DELEGATION_MANAGER,
         config.REWARDS_COORDINATOR,
-        await delegatorImplementation.getAddress(),
+        await depositManagerRestaker.getAddress(),
         { gasLimit: DEPLOY_GAS_LIMIT },
     );
-    await depositManager.waitForDeployment();
+    await depositManagerPool.waitForDeployment();
 
-    console.log(`DepositManager deployed successfully at ${await depositManager.getAddress()}`);
+    console.log(
+        `DepositManagerPool deployed successfully at ${await depositManagerPool.getAddress()}`,
+    );
+
+    // Grant AUTHORIZED_STAKER_ROLE for setup
+    let tx = await depositManagerPool.grantRole(
+        await depositManagerPool.AUTHORIZED_STAKER_ROLE(),
+        account.address,
+    );
+    await tx.wait();
 
     // Initialize DepositManager with Aave pool configuration
-    let tx = await depositManager.initialize(await moleculaBuffer.getAddress(), 0, [
-        {
-            pool: aavePool,
-            newPoolData: {
-                poolToken: config.AWETH_ADDRESS,
-                poolLib: await aaveBufferLib.getAddress(),
-                poolPortion: 10_000n, // 100% allocation
-                poolId: 0,
+    tx = await depositManagerPool.initialize(
+        await delegatorImplementation.getAddress(),
+        await moleculaBuffer.getAddress(),
+        await depositManagerLib.getAddress(),
+        500n,
+        [
+            {
+                pool: aavePool,
+                newPoolData: {
+                    poolToken: config.AWETH_ADDRESS,
+                    poolLib: await aaveBufferLib.getAddress(),
+                    poolPortion: 10_000n, // 100% allocation
+                    poolId: 0,
+                },
+                auth: true,
             },
-            auth: true,
-        },
-    ]);
-    await tx.wait();
-
-    // Configure operators and strategies
-    tx = await depositManager.addOperator(
-        config.EIGENLAYER_OPERATOR,
-        '0x0000000000000000000000000000000000000000000000000000000000000001',
-        APPROVER_SIGNATURE_AND_EXPIRY,
-        APPROVER_SALT,
-        [config.EIGENLAYER_OPERATOR],
-        [10_000n], // 100% allocation
-        { gasLimit: DEPLOY_GAS_LIMIT },
+        ],
     );
     await tx.wait();
+
+    const encodeInterface = depositManagerRestaker.interface;
+
+    let txEncoded;
+
+    if (hre.network.name !== 'sepolia') {
+        // Configure default operator
+        txEncoded = await account.sendTransaction({
+            to: await depositManagerPool.getAddress(),
+            data: await encodeInterface.encodeFunctionData('addOperator', [
+                config.EIGENLAYER_OPERATOR,
+                '0x0000000000000000000000000000000000000000000000000000000000000001',
+                APPROVER_SIGNATURE_AND_EXPIRY,
+                APPROVER_SALT,
+                [config.EIGENLAYER_OPERATOR],
+                [10_000n], // 100% allocation
+            ]),
+            gasLimit: DEPLOY_GAS_LIMIT,
+        });
+        await txEncoded.wait();
+    }
 
     // Add stETH strategy
-    tx = await depositManager.addStrategies(
-        [config.STETH_ADDRESS],
-        [config.STRATEGY_BASE_STETH],
-        [hre.ethers.ZeroAddress],
-    );
-    await tx.wait();
+    txEncoded = await account.sendTransaction({
+        to: await depositManagerPool.getAddress(),
+        data: encodeInterface.encodeFunctionData('addStrategies', [
+            [
+                {
+                    token: config.STETH_ADDRESS,
+                    newStrategy: config.STRATEGY_BASE_STETH,
+                    strategyLib: hre.ethers.ZeroAddress,
+                },
+            ],
+        ]),
+    });
+    await txEncoded.wait();
 
     console.log('DepositManager initialized successfully');
 
     // Deploy core V2 contracts
     const coreV2 = await deployMrEthCoreV2(hre, await account.getAddress(), config, {
-        depositManager: await depositManager.getAddress(),
+        depositManagerPool: await depositManagerPool.getAddress(),
         rewardBearingTokenFutureAddress,
     });
 
     console.log('Core V2 contracts deployed successfully');
 
     // Verify that DepositManager's SupplyManagerV2 address matches the deployed one
-    if ((await depositManager.SUPPLY_MANAGER()) !== coreV2.supplyManagerV2) {
+    if ((await depositManagerPool.SUPPLY_MANAGER()) !== coreV2.supplyManagerV2) {
         console.error(
             "DepositManager's SupplyManagerV2 address does not match deployed SupplyManagerV2: ",
             supplyManagerFutureAddress,
@@ -313,16 +365,31 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
         process.exit(1);
     }
 
+    // Set min and max fee percentages
+    tx = await depositManagerPool.setMinFeePercentage(500n);
+    await tx.wait();
+    tx = await depositManagerPool.setMaxFeePercentage(1000n);
+    await tx.wait();
+
+    // Grant GUARDIAN_ROLE for guardian
+    tx = await depositManagerPool.grantRole(
+        await depositManagerPool.GUARDIAN_ROLE(),
+        account.address,
+    );
+    await tx.wait();
+
     // Log deployment information
     console.log('Deployment Block #', await hre.ethers.provider.getBlockNumber());
-    console.log('DepositManager address: ', await depositManager.getAddress());
+    console.log('DepositManager address: ', await depositManagerPool.getAddress());
     console.log('SupplyManager address: ', coreV2.supplyManagerV2);
     console.log('MrETH token address: ', coreV2.mrETH);
 
     // Return all deployed contract addresses
     const eth = {
         ...coreV2,
-        depositManager: await depositManager.getAddress(),
+        depositManagerPool: await depositManagerPool.getAddress(),
+        depositManagerRestaker: await depositManagerRestaker.getAddress(),
+        depositManagerLib: await depositManagerLib.getAddress(),
         delegatorImplementation: await delegatorImplementation.getAddress(),
         moleculaBuffer: await moleculaBuffer.getAddress(),
     };

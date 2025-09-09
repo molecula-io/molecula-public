@@ -6,7 +6,13 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import { OAPP_GAS_LIMITS_BY_ENV } from '../../../../configs/layerzero/omniConfig';
-import { readFromFile } from '../../../utils/deployUtils';
+
+import {
+    formatGasLimitMsgType,
+    GAS_LIMIT_BASE,
+    GAS_LIMIT_UNIT,
+    readFromFile,
+} from '../../../utils';
 
 export async function setAccountantLZGasLimits(
     hre: HardhatRuntimeEnvironment,
@@ -27,6 +33,19 @@ export async function setAccountantLZGasLimits(
             console.log(
                 `Skipped ${name} (msgType: 0x${msgType.toString(16)}) — both base and unit are 0`,
             );
+            continue;
+        }
+
+        const currentBaseGas = await accountantLZ
+            .gasLimit(formatGasLimitMsgType(msgType, GAS_LIMIT_BASE))
+            .call();
+        const currentUnitGas = await accountantLZ
+            .gasLimit(formatGasLimitMsgType(msgType, GAS_LIMIT_UNIT))
+            .call();
+
+        if (currentBaseGas === BigInt(baseGas) && currentUnitGas === BigInt(unitGas)) {
+            console.log(`Skipped for (msgType: 0x${msgType.toString(16)})`);
+            console.log(`   → base: ${baseGas.toString()}, unit: ${unitGas.toString()}`);
             continue;
         }
 

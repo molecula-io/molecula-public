@@ -5,6 +5,11 @@ export type InternalTronEvent<EventName, Result> = {
     block: number;
 
     /**
+     * Event index
+     */
+    index: number;
+
+    /**
      * Block timestamp
      */
     timestamp: number;

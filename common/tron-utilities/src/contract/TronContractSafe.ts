@@ -70,12 +70,17 @@ export class TronContractSafe<Contract extends AllTronContracts> {
     protected contract: TronContract;
 
     /**
+     * Subscription interval multiplier
+     */
+    private subscriptionIntervalMultiplier: number;
+
+    /**
      * A error decoder.
      */
     private errorDecoder: ErrorDecoder;
 
     public constructor(params: TronContractParams) {
-        const { contractAddress, client, abi, apiUrl } = params;
+        const { contractAddress, client, abi, apiUrl, subscriptionIntervalMultiplier = 1 } = params;
 
         this.client = client;
 
@@ -84,6 +89,8 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         this.apiUrl = apiUrl;
 
         this.contract = this.client.contract(abi, contractAddress);
+
+        this.subscriptionIntervalMultiplier = subscriptionIntervalMultiplier;
 
         this.errorDecoder = ErrorDecoder.create([abi as JsonFragment[]]);
     }
@@ -214,7 +221,7 @@ export class TronContractSafe<Contract extends AllTronContracts> {
                 () =>
                     this.contract[method](...args).send({
                         callValue: value,
-                        feeLimit: 150000000n, // Default is 150 TRX, but some transactions require more
+                        feeLimit: 300000000n, // Increased to 300 TRX for LayerZero cross-chain operations
                     }),
                 { priority: Priority.High },
             );
@@ -239,7 +246,9 @@ export class TronContractSafe<Contract extends AllTronContracts> {
      */
     public createSubscriber: TronSafeSubscriber<Contract> = async (filterName, callback) => {
         const eventName = filterName as string;
-        const subscriber = new TronSubscriber(this.contract, eventName);
+        const subscriber = new TronSubscriber(this.contract, eventName, {
+            subscriptionIntervalMultiplier: this.subscriptionIntervalMultiplier,
+        });
         try {
             await subscriber.start(callback);
 
@@ -262,7 +271,9 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         const eventName = filterName as string;
         const sinceTimestamp = filterOptions?.timestamp;
 
-        const subscriber = new TronSubscriber(this.contract, eventName);
+        const subscriber = new TronSubscriber(this.contract, eventName, {
+            subscriptionIntervalMultiplier: this.subscriptionIntervalMultiplier,
+        });
 
         return subscriber.loadLastEvents({
             orderBy: 'block_timestamp,desc',

@@ -6,7 +6,7 @@ import {PausableContract} from "./../../common/pausable/PausableContract.sol";
 import {IIssuer} from "./../../coreV2/interfaces/IIssuer.sol";
 
 /**
- * @title PausableIIssuer
+ * @title PausableIIssuer.
  * @dev Abstract contract that implements the pause functionality for the mint and burn operations.
  */
 abstract contract PausableIIssuer is PausableContract {

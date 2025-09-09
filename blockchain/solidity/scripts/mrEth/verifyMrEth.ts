@@ -38,22 +38,29 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         config.WETH_ADDRESS,
     ]);
 
-    await verifyContract(hre, 'DepositManager', contractToVerify.depositManager, [
-        account.address,
-        account.address,
+    await verifyContract(hre, 'DepositManagerLib', contractToVerify.depositManagerLib, []);
+
+    await verifyContract(hre, 'DepositManagerPool', contractToVerify.depositManagerPool, [
         account.address,
         contractToVerify.supplyManagerV2,
         config.WETH_ADDRESS,
         config.STRATEGY_FACTORY,
         config.DELEGATION_MANAGER,
         config.REWARDS_COORDINATOR,
-        contractToVerify.delegatorImplementation,
+        contractToVerify.depositManagerRestaker,
     ]);
+
+    await verifyContract(
+        hre,
+        'DepositManagerRestaker',
+        contractToVerify.depositManagerRestaker,
+        [],
+    );
 
     await verifyContract(hre, 'SupplyManagerV2WithNative', contractToVerify.supplyManagerV2, [
         account.address,
         account.address,
-        contractToVerify.depositManager,
+        contractToVerify.depositManagerPool,
         config.APY_FORMATTER,
         contractToVerify.mrETH,
         ETH_VIRTUAL_OFFSET,

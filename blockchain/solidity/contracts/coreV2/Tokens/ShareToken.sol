@@ -11,7 +11,7 @@ import {IShare} from "./interfaces/IShare.sol";
 import {IVaultContainer} from "./interfaces/IVaultContainer.sol";
 import {VaultContainer} from "./VaultContainer.sol";
 
-/// @title ShareToken
+/// @title ShareToken.
 /// @notice Abstract contract that extends VaultContainer to manage token vaults with supply management capabilities.
 ///         The contract contains common code for Rebase and Reward Bearing tokens.
 /// @dev Provides authorization control and supply management integration for token vaults

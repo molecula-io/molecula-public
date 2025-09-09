@@ -11,7 +11,7 @@ import {IShare} from "./interfaces/IShare.sol";
 import {Permit} from "./Permit.sol";
 import {ShareToken} from "./ShareToken.sol";
 
-/// @title RewardBearingToken Contract
+/// @title RewardBearingToken Contract.
 /// @notice A token contract that represents shares in an underlying asset pool with reward-bearing capabilities
 /// @dev Implements ERC20 standard with additional functionality for reward distribution and ownership management
 // Next line in order to suspend warning: RewardBearingToken should inherit from contracts/common/interfaces/IRebaseERC20.sol

@@ -17,6 +17,9 @@ export const FAUCET = {
     USDe: '0xf89d7b9c864f589bbF53a82105107622B35EaA40',
     sUSDe: '0x52Aa899454998Be5b000Ad077a46Bbe360F4e497',
     stETH: '0x176F3DAb24a159341c0509bB36B833E7fdd0a132',
+    weETH: '0xEd0C6079229E2d407672a117c22b62064f4a4312',
+    rsETH: '0x22162DbBa43fE0477cdC5234E248264eC7C6EA7c',
+    ezETH: '0x22162DbBa43fE0477cdC5234E248264eC7C6EA7c',
 };
 
 export async function grantETH(wallet: AddressLike, amount: BigNumberish = ethers.parseEther('2')) {
@@ -37,11 +40,15 @@ export async function grantERC20(
     amount: BigNumberish,
     faucet: string = FAUCET.USDT,
 ) {
-    await grantETH(faucet);
+    // await grantETH(faucet);
     // Prepare an impersonated signer to work as a faucet in the test
     const faucetSigner = await ethers.getImpersonatedSigner(faucet);
     // transfer ERC20 token
     const balance0 = await token.connect(faucetSigner).balanceOf(wallet);
+    const bigIntAmount = BigInt(amount);
+    if ((await token.balanceOf(faucetSigner)) < bigIntAmount) {
+        throw new Error('Not enough balance');
+    }
     await token.connect(faucetSigner).transfer(wallet, amount);
     const balance = await token.balanceOf(wallet);
 

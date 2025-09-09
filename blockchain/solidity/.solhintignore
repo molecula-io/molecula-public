@@ -1,31 +1,31 @@
 # This file is used to ignore specific files or directories from being checked by solhint
 
 # UsdtOft OApp contracts
-./contracts/solutions/Carbon/common/UsdtOFT.sol
-./contracts/solutions/Carbon/common/interfaces/IUsdtOFT.sol
+contracts/solutions/Carbon/common/UsdtOFT.sol
+contracts/solutions/Carbon/common/interfaces/IUsdtOFT.sol
 
 # mrETH external contracts contracts
-./contracts/solutions/mrETH/external
+contracts/solutions/mrETH/external
 
 # Hardhat and Forge service directories, npm packages included in node_modules
-./lib
-./test
-./node_modules
+lib
+test
+node_modules
 
 # Test contracts
-./contracts/test/UsdtTron.sol
-./contracts/test/UsdtEthereum.sol
+contracts/test/UsdtTron.sol
+contracts/test/UsdtEthereum.sol
 
 # Ignore verified contracts
-./contracts/common/ZeroValueChecker.sol
-./contracts/common/interfaces/IAgent.sol
-./contracts/common/interfaces/IERC20Basic.sol
-./contracts/common/interfaces/IRebaseERC20.sol
-./contracts/common/interfaces/IRebaseTokenEvents.sol
-./contracts/common/interfaces/ISupplyManager.sol
-./contracts/common/rebase/
-./contracts/core/MoleculaPoolTreasury.sol
-./contracts/core/SupplyManager.sol
-./contracts/core/extensions/mUSDe.sol
-./contracts/solutions/Carbon/tron/TronOracle.sol
-./contracts/solutions/Nitrogen/AccountantAgent.sol
+contracts/common/ZeroValueChecker.sol
+contracts/common/interfaces/IAgent.sol
+contracts/common/interfaces/IERC20Basic.sol
+contracts/common/interfaces/IRebaseERC20.sol
+contracts/common/interfaces/IRebaseTokenEvents.sol
+contracts/common/interfaces/ISupplyManager.sol
+contracts/common/rebase/
+contracts/core/MoleculaPoolTreasury.sol
+contracts/core/SupplyManager.sol
+contracts/core/extensions/mUSDe.sol
+contracts/solutions/Carbon/tron/TronOracle.sol
+contracts/solutions/Nitrogen/AccountantAgent.sol

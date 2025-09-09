@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./interfaces/IUSDeDefinitions.sol";
 
 /**
- * @title USDe
+ * @title USDe.
  * @notice USDe Genesis Story: Arthur Hayes' $Nakadollar in "Dust on Crust" 08/03/2023
  */
 contract USDe is Ownable2Step, ERC20Burnable, ERC20Permit, IUSDeDefinitions {

@@ -16,7 +16,7 @@ contract MockSepoliaDelegator is Delegator {
         bytes calldata,
         bytes calldata,
         bytes32
-    ) external payable override only(depositManager) {
+    ) external payable override only(depositManagerPool) {
         revert EUnsupported();
     }
 
@@ -27,7 +27,7 @@ contract MockSepoliaDelegator is Delegator {
         uint40[] calldata,
         bytes[] calldata,
         bytes32[][] calldata
-    ) external view override only(depositManager) {
+    ) external view override only(depositManagerPool) {
         revert EUnsupported();
     }
 
@@ -35,7 +35,7 @@ contract MockSepoliaDelegator is Delegator {
      * @dev Sets the `totalPendingNativeSupply` value for testing purposes.
      * @param value New value to assign to `totalPendingNativeSupply`.
      */
-    function setTotalPendingNativeSupply(uint256 value) external only(depositManager) {
+    function setTotalPendingNativeSupply(uint256 value) external only(depositManagerPool) {
         totalPendingNativeSupply = value;
     }
 }

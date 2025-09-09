@@ -6,7 +6,7 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title IPoolAddressesProvider
+ * @title IPoolAddressesProvider.
  * @author Aave
  * @notice Defines the basic interface for a Pool Addresses Provider.
  */

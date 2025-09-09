@@ -11,6 +11,7 @@ import {
     deployMoleculaPoolTreasuryV2WithDerivedParams,
     deployNitrogen,
     deployOFTVault,
+    migrateAgentLZ,
 } from '../../scripts/mUSD/ethereum';
 import { deployNitrogenTokenVault } from '../../scripts/mUSD/ethereum/deploy/deployNitrogenTokenVault';
 import { deployRebaseTokenOwner } from '../../scripts/mUSD/ethereum/deploy/deployRebaseTokenOwner';
@@ -295,4 +296,35 @@ ethereumMajorScope
                 oftVault: oftVaultAddress,
             },
         });
+    });
+
+ethereumMajorScope
+    .task('migrateAccountantAgentLZ', 'Migrates AgentLZ on Ethereum')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n Ethereum Deployment');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        try {
+            const contractsCore = await readFromFile(`${environment}/contracts_core.json`);
+            const contractsCarbon = await readFromFile(`${environment}/contracts_carbon.json`);
+
+            // Execute deployment
+            const agentLZ = await migrateAgentLZ(hre, environment, {
+                supplyManagerAddress: contractsCore.eth.supplyManager,
+            });
+
+            writeToFile(`${environment}/contracts_carbon.json`, {
+                eth: {
+                    ...contractsCarbon.eth,
+                    agentLZ,
+                },
+                tron: contractsCarbon.tron,
+            });
+            console.log('Deployment and file write completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
     });

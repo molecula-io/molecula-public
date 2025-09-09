@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.24;
 
-/// @title IWrappedRebaseToken
+/// @title IWrappedRebaseToken.
 interface IWrappedRebaseToken {
     /// @dev Convert rebase assets to shares.
     /// @param rebaseAssets Rebase assets.

@@ -48,7 +48,7 @@ export const hoodiMrEthConfig: mrEthNetworkConfig = {
     MRETH_TOKEN_MIN_DEPOSIT: 1_000_000n,
 
     /** mrETH token minimum redeem on Ethereum Hoodi. */
-    MRETH_TOKEN_MIN_REDEEM: 10n ** 18n,
+    MRETH_TOKEN_MIN_REDEEM: 10n ** 15n,
 
     /** Molecula Buffer name on Ethereum Hoodi. */
     MOLECULA_BUFFER_NAME: 'Molecula Buffer Token test v0.1',

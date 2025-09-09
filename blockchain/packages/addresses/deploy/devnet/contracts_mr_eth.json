@@ -1,13 +1,15 @@
 {
     "eth": {
-        "supplyManagerV2": "0xD129b262B6f0a97c258dbfe07ca9f64b6B9A1198",
-        "mrETH": "0x9C69A92D15baB4582F31b43E0294D39c36ced99e",
-        "wEthVault": "0xE4DedB13Fa3afe065980157dd036899E24C473Dd",
-        "ethVault": "0x69143bf0939d3f679ba1DAd497CBA7fb9C6651B3",
-        "stEthVault": "0x35067A34FE903057A0d429c8522cA1545f17Dd65",
-        "depositManager": "0x430Cb31DC674908b3a749Cc40100723d5B28A9A7",
-        "delegatorImplementation": "0x13104671661a62666F59E4d37EAE3BD1C122E004",
-        "moleculaBuffer": ""
+        "supplyManagerV2": "0x5B9e571c99659fBA84C3A43AC2726936D8a58292",
+        "mrETH": "0x56814D8Cc8b331FD3b915b915aEa6D8a39e30ab0",
+        "wEthVault": "0x9A5eCF1Ef9F25CD206Ae6761595c73601aC6561c",
+        "ethVault": "0xa638536c00eb5DC571478557366ccf0D6c8D3F46",
+        "stEthVault": "0x9091fcD5D888E3193C4cC79bB21Bce653Ad5A516",
+        "depositManagerPool": "0x6abBC2bd40F791AAb40ca6A226Ae6d911028B5ED",
+        "depositManagerRestaker": "0x8440f0AbEEA8D473760091D0F19A021ca81f7c83",
+        "depositManagerLib": "0x0f15a8c36e552db4afAB3AddD5565506591cfd22",
+        "delegatorImplementation": "0xEacCA28f7Fb8B8348432De62C18002007153917a",
+        "moleculaBuffer": "0xe57db2f15190A14c950a9A8Ca551B05e69C18CBE"
     },
     "holesky": {
         "supplyManagerV2": "0xDB3bbBe531aeD6FABaE34a234751BC87B75a729A",
@@ -15,7 +17,9 @@
         "wEthVault": "0x047aa63A7B861c13b6D278328A463bfB1accDe35",
         "ethVault": "0xa1e43221E418299C8519b70Eb9eDBF8F35651FDD",
         "stEthVault": "0xc39f843DBd512eBB0F74f65D56FfB8c3274C57E5",
-        "depositManager": "0x06cAf67D1ACAe5A7125eD31D2Dce985f9D1A52Be",
+        "depositManagerPool": "0x06cAf67D1ACAe5A7125eD31D2Dce985f9D1A52Be",
+        "depositManagerRestaker": "",
+        "depositManagerLib": "",
         "delegatorImplementation": "0x7B9A91CE89B5a198501be538B4AB605AE8aff76D",
         "moleculaBuffer": ""
     },
@@ -25,7 +29,9 @@
         "wEthVault": "0xBa7F33400dAE2621AAf900Ec38d2f0D389809b59",
         "ethVault": "0xa906f4088A45730c7b1223a5f8B7A18973169F0E",
         "stEthVault": "0xd69640D043A1aB8D6CaD4e43733c2bA67D64069F",
-        "depositManager": "0x8032982e9cf3dEd51afe621A6Fcbe23D8aAbaBDd",
+        "depositManagerPool": "0x8032982e9cf3dEd51afe621A6Fcbe23D8aAbaBDd",
+        "depositManagerRestaker": "",
+        "depositManagerLib": "",
         "delegatorImplementation": "0x162aF3cCa3E593d677fEAE51721353bE3873bCB2",
         "moleculaBuffer": "0x576da78902436F4964e5d6Dc8AF933Ba2ce04E06"
     }

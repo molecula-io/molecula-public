@@ -10,7 +10,7 @@ import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 import {RebaseERC20} from "./RebaseERC20.sol";
 
 /**
- * @title RebaseERC20Permit
+ * @title RebaseERC20Permit.
  * @dev Contract for implementing the RebaseERC20 functionality with the EIP-2612 standard's `Permit` function.
  */
 contract RebaseERC20Permit is RebaseERC20, IERC20Permit, EIP712, Nonces {

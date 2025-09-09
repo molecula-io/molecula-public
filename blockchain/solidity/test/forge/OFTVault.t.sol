@@ -37,7 +37,7 @@ contract OFTVaultHarness is CoreV2OFTVault {
 }
 
 /**
- * @title LZOFTVaultTest
+ * @title LZOFTVaultTest.
  * @notice Integration-like tests for OFTVault across two mock chains using LayerZero test helpers.
  * @dev Key behaviors asserted:
  *      - From Ethereum source (`_LOCAL_EID_V2 == _ETHEREUM_EID`), payload includes supply sync `(pool, shares) => 128 bytes`.

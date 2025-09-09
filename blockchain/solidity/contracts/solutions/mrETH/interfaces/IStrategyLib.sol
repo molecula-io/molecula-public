@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-/// @title Strategy Library Interface
+/// @title Strategy Library Interface.
 /// @notice Defines the functions for converting token balances into ETH.
 interface IStrategyLib {
     /**

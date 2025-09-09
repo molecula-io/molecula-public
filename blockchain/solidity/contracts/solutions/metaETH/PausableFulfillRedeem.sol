@@ -6,7 +6,7 @@ import {PausableContract} from "./../../common/pausable/PausableContract.sol";
 import {IMetaPoolTreasury} from "./../../solutions/metaETH/interfaces/IMetaPoolTreasury.sol";
 
 /**
- * @title PausableFulfillRedeemRequests
+ * @title PausableFulfillRedeemRequests.
  * @dev Abstract contract that implements the pause functionality for the `fulfillRedeemRequests` operation.
  */
 abstract contract PausableFulfillRedeemRequests is PausableContract {

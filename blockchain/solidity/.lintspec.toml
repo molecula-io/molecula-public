@@ -5,6 +5,13 @@ exclude = [
     './contracts/solutions/Carbon/common/UsdtOFT.sol',
     './contracts/solutions/Carbon/common/interfaces/IUsdtOFT.sol',
     './contracts/solutions/mrETH/external',
+    './contracts/common/mUSDLock.sol',
+    './contracts/core/MoleculaPoolTreasury.sol',
+    './contracts/core/SupplyManager.sol',
+    './contracts/core/MoleculaPoolTreasuryV2.sol',
+    './contracts/executor/interfaces/ILayerZeroReceiveUlnView.sol',
+    './contracts/executor/interfaces/ILayerZeroReceiveUlnView.sol',
+    './contracts/common/rebase/structures/OperationStatus.sol',
     './contracts/test',
     './lib',
     './test/',
@@ -25,8 +32,8 @@ param = "required"
 
 [enum]
 notice = "ignored"
-dev = "ignored"
-param = "ignored"
+dev = "required"
+param = "required"
 
 [error]
 notice = "ignored"

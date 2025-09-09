@@ -130,7 +130,7 @@ contract MockLZMessageDecoder {
 
     /**
      * @notice Encodes a request deposit message.
-     * @param requestId The request ID.
+     * @param requestId Request ID.
      * @param value The deposit value.
      * @return message The full encoded message.
      */
@@ -143,7 +143,7 @@ contract MockLZMessageDecoder {
 
     /**
      * @notice Encodes a confirm deposit message.
-     * @param requestId The request ID.
+     * @param requestId Request ID.
      * @param shares The number of shares.
      * @return message The full encoded message.
      */
@@ -156,7 +156,7 @@ contract MockLZMessageDecoder {
 
     /**
      * @notice Encodes a confirm deposit message with oracle update.
-     * @param requestId The request ID.
+     * @param requestId Request ID.
      * @param shares The number of shares.
      * @param totalValue The total value.
      * @param totalShares The total shares.
@@ -179,7 +179,7 @@ contract MockLZMessageDecoder {
 
     /**
      * @notice Encodes a request redeem message.
-     * @param requestId The request ID.
+     * @param requestId Request ID.
      * @param shares The number of shares.
      * @return message The full encoded message.
      */

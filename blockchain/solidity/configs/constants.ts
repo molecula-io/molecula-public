@@ -26,3 +26,9 @@ export const NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
  * It's about 300 USD.
  */
 export const ETH_VIRTUAL_OFFSET = 10n ** 17n;
+
+/**
+ * Basis points factor, where 100% = 10,000.
+ * Used as a denominator in percentage calculations.
+ */
+export const PERCENTAGE_FACTOR = 10_000n;

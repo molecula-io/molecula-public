@@ -4,6 +4,7 @@ import {
     evmStaticTokenAddresses,
     staticPoolCurrenciesRetailTestnet,
     staticPoolCurrenciesMetaETHTestnet,
+    evmStaticOFTAddresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -40,11 +41,14 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     /** CELO TESTNET EID. */
     LAYER_ZERO_CELO_EID: 40125,
 
+    /** SOLANA EID. */
+    LAYER_ZERO_SOLANA_EID: 40168,
+
     /** Shashta test layerzero contract. */
     LAYER_ZERO_TRON_MAINNET_OAPP_MOCK: '0x7ac3dfc5ebee8fae7282553ffc6c36f373952614',
 
     /** USDT_OFT address. */
-    USDT_OFT: '0x101760Fd9486AcC415f6f8c52f78f1cC1318A41a',
+    USDT_OFT: evmStaticOFTAddresses.USDT[EVMChainIDs.Sepolia],
 
     /** USDT token address on Ethereum Sepolia. */
     USDT_ADDRESS: evmStaticTokenAddresses.USDT[EVMChainIDs.Sepolia],

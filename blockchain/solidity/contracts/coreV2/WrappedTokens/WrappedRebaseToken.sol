@@ -10,7 +10,7 @@ import {Permit} from "./../Tokens/Permit.sol";
 import {RebaseERC20V2} from "./../Tokens/RebaseERC20V2.sol";
 import {IWrappedRebaseToken} from "./interfaces/IWrappedRebaseToken.sol";
 
-/// @title WrappedRebaseToken
+/// @title WrappedRebaseToken.
 abstract contract WrappedRebaseToken is IWrappedRebaseToken, ERC20, Permit, ValueValidator {
     using SafeERC20 for IERC20;
 

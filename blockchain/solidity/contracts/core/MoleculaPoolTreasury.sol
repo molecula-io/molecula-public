@@ -48,7 +48,8 @@ struct TokenInfo {
     uint256 valueToRedeem;
 }
 
-/// @notice MoleculaPoolTreasury
+/// @title MoleculaPoolTreasury.
+/// @notice deprecated in favor of MoleculaPoolTreasuryV2.
 contract MoleculaPoolTreasury is Ownable, IMoleculaPool, ZeroValueChecker {
     using SafeERC20 for IERC20;
     using Address for address;

@@ -5,7 +5,7 @@ pragma solidity 0.8.24;
 import {CommonOracle} from "../../../common/CommonOracle.sol";
 
 /**
- * @title TronOracle
+ * @title TronOracle.
  * @notice Exact Oracle implementation for managing the Pool and share supply, with controlled
  *         access via the Owner, Updater, and Accountant roles.
  * @dev Inherits from `CommonOracle`.

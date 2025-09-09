@@ -191,3 +191,160 @@ multichainSetupScope
             });
         }
     });
+
+/**
+ * Task: migrateAccountantAgentLZMultichain
+ * Description: Migrates AccountantLZ and AgentLZ (Ethereum and Tron) across multiple networks.
+ * Params:
+ *   - environment: the deployment environment (e.g., devnet or mainnet)
+ */
+multichainSetupScope
+    .task(
+        'migrateAccountantAgentLZMultichain',
+        'Migrates AccountantLZ and AgentLZ (Ethereum and Tron)',
+    )
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log(`\n Environment: ${taskArgs.environment}`);
+
+        const deployEnvFlag = getEnvironment(hre, taskArgs.environment);
+
+        const networks: string[] =
+            taskArgs.environment === 'devnet' ? ['sepolia', 'shasta'] : ['ethereum', 'tron'];
+        console.log('Networks:', networks);
+
+        // Deploy AccountantLZ and AgentLZ on Ethereum and Tron
+        for (const network of networks) {
+            console.log(`\n🚀 Migrating AccountantLZ / AgentLZ to ${network}...`);
+
+            const taskName =
+                network === 'sepolia' ? 'ethereum' : network === 'shasta' ? 'tron' : network;
+
+            console.log(
+                `Running: npx hardhat ${taskName}Scope deployCarbon --network ${network} --environment ${deployEnvFlag}`,
+            );
+
+            await new Promise((resolve, reject) => {
+                const child = spawn(
+                    'npx',
+                    [
+                        'hardhat',
+                        `${taskName}Scope`,
+                        `migrateAccountantAgentLZ`,
+                        '--network',
+                        network,
+                        '--environment',
+                        deployEnvFlag,
+                    ],
+                    {
+                        stdio: 'inherit',
+                    },
+                );
+
+                child.on('close', code => {
+                    if (code !== 0) {
+                        reject(new Error(`Deployment failed on ${network} with exit code ${code}`));
+                    } else {
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        console.log(`\n🚀 Deploying AccountantLZ / AgentLZ completed successfully.`);
+
+        // Setup LayerZero configuration for AccountantLZ / AgentLZ
+        console.log(`\n⏳ Setting up LayerZero configuration for AccountantLZ / AgentLZ...`);
+        await new Promise((resolve, reject) => {
+            const child = spawn(
+                'npx',
+                [
+                    'hardhat',
+                    'multichainSetupScope',
+                    'setupCarbonDVN',
+                    '--environment',
+                    taskArgs.environment,
+                ],
+                {
+                    stdio: 'inherit',
+                },
+            );
+
+            child.on('close', code => {
+                if (code !== 0) {
+                    reject(
+                        new Error(`LayerZero configuration setup failed with exit code ${code}`),
+                    );
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+        console.log(
+            `\n✅ LayerZero configuration for AccountantLZ / AgentLZ setup completed successfully.`,
+        );
+
+        // Setup gas limits for AccountantLZ / AgentLZ
+        console.log(`\n⏳ Setting up gas limits for AccountantLZ / AgentLZ...`);
+        await new Promise((resolve, reject) => {
+            const child = spawn(
+                'npx',
+                [
+                    'hardhat',
+                    'multichainSetupScope',
+                    'setupCarbonGasLimits',
+                    '--environment',
+                    taskArgs.environment,
+                ],
+                {
+                    stdio: 'inherit',
+                },
+            );
+
+            child.on('close', code => {
+                if (code !== 0) {
+                    reject(new Error(`Gas limits setup failed with exit code ${code}`));
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+        console.log(`\n✅ Gas limits for AccountantLZ / AgentLZ setup completed successfully.`);
+
+        // Setup owner for AccountantLZ / AgentLZ
+        console.log(`\n⏳ Setting up owner for AccountantLZ / AgentLZ...`);
+        await new Promise((resolve, reject) => {
+            const child = spawn(
+                'npx',
+                [
+                    'hardhat',
+                    'multichainSetupScope',
+                    'setCarbonOwner',
+                    '--environment',
+                    taskArgs.environment,
+                ],
+                {
+                    stdio: 'inherit',
+                },
+            );
+
+            child.on('close', code => {
+                if (code !== 0) {
+                    reject(new Error(`Owner setup failed with exit code ${code}`));
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+        console.log(`\n✅ Owner for AccountantLZ / AgentLZ setup completed successfully.`);
+
+        console.log(
+            '\n⚠️ Please, setup SupplyManager to work with the deployed AgentLZ separately.',
+        );
+        console.log(
+            '\n⚠️ Please, setup RebaseToken to work with the deployed AccountantLZ separately.',
+        );
+        console.log(
+            '\n⚠️ Please, setup Oracle to make the deployed AccountantLZ authorized to update it separately.',
+        );
+    });

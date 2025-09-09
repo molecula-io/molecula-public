@@ -395,7 +395,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     /// @param numerator Conversion ratio numerator.
     /// @param denominator Conversion ratio denominator.
     /// @return result Converted amount:
-    ///                - If the denominator equals `0`, returns the amount.
+    ///                - If the denominator equals 0, returns the amount.
     ///                - Otherwise, returns the result of (amount * numerator) / denominator.
     function _convert(
         uint256 amount,
@@ -422,7 +422,7 @@ contract SupplyManagerV2 is ISupplyManagerV2, Ownable2Step, IOracleV2, ValueVali
     /// @return tokenVault Address of the `TokenVault` associated with these requests.
     /// @return sumAssets Total sum of assets to be redeemed across all valid requests.
     /// @notice All requests must be from the same `TokenVault` and in the `Pending` state.
-    /// @notice Requests in the `Claimable` state are skipped and marked with `0`.
+    /// @notice Requests in the `Claimable` state are skipped and marked with 0.
     /// @notice Reverts if no valid pending requests are found or if requests are from different Vaults.
     // solhint-disable-next-line gas-calldata-parameters
     function _fulfillRedeemRequests(

@@ -8,7 +8,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ISetterOracle, IOracle} from "../../common/interfaces/ISetterOracle.sol";
 
 /**
- * @title TronOracle
+ * @title TronOracle.
  * @dev Contract for managing shares and pool information, implementing the IOracle interface.
  */
 contract MockTronOracle is Ownable, ISetterOracle {

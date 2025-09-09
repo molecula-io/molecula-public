@@ -8,7 +8,7 @@ import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 
 /**
- * @title Permit
+ * @title Permit.
  * @dev Based on @openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol
  */
 abstract contract Permit is IERC20Permit, EIP712, Nonces {

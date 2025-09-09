@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
-/// @title IPriceChecker
+/// @title IPriceChecker.
 /// @notice Interface for checking asset prices against expected values and managing price feed configurations.
 /// @dev Provides the functionality to set up price feeds, configure deviation thresholds, and validate asset prices.
 interface IPriceChecker {

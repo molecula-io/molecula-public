@@ -4,18 +4,25 @@ import type { EVMAddress } from '@molecula-monorepo/common.evm-utilities';
  * Configuration parameters for metaEth.
  */
 export type MetaEthNetworkConfig = {
-    WETH_ADDRESS: EVMAddress;
-    STETH_ADDRESS: EVMAddress;
+    wETH: EVMAddress;
+    stETH: EVMAddress;
+    weETH: EVMAddress;
+    rsETH: EVMAddress;
+    ezETH: EVMAddress;
 
-    META_OWNER: EVMAddress;
-    META_POOL_KEEPER: EVMAddress;
-    META_GUARDIAN: EVMAddress;
-    META_APY: number;
+    OWNER: EVMAddress;
+    POOL_KEEPER: EVMAddress;
+    GUARDIAN: EVMAddress;
+    YIELD_DISTRIBUTOR: EVMAddress;
+    APY: number;
 
-    META_TOKEN_NAME: string;
-    META_TOKEN_SYMBOL: string;
-    META_TOKEN_DECIMALS: number;
+    META_ETH_TOKEN_NAME: string;
+    META_ETH_TOKEN_SYMBOL: string;
+    META_ETH_TOKEN_DECIMALS: number;
 
-    META_MIN_DEPOSIT_ETH: bigint;
-    META_MIN_REDEEM_SHARES: bigint;
+    MIN_DEPOSIT_ETH: bigint;
+    MIN_DEPOSIT_weETH: bigint;
+    MIN_DEPOSIT_ezETH: bigint;
+    MIN_DEPOSIT_rsETH: bigint;
+    MIN_REDEEM_SHARES: bigint;
 };

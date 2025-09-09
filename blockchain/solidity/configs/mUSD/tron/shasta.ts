@@ -1,4 +1,9 @@
-import { tronAuthorizedAddresses, TronChainIDs } from '@molecula-monorepo/blockchain.addresses';
+import {
+    tronAuthorizedAddresses,
+    TronChainIDs,
+    tronStaticOFTAddresses,
+    tronStaticTokenAddresses,
+} from '@molecula-monorepo/blockchain.addresses';
 
 import type { TronNetworkConfig } from './types';
 
@@ -35,9 +40,12 @@ export const shastaConfig: TronNetworkConfig = {
     /** CELO TESTNET EID. */
     LAYER_ZERO_CELO_EID: 40125,
 
+    /** SOLANA EID. */
+    LAYER_ZERO_SOLANA_EID: 40168,
+
     // System contracts
-    USDT_ADDRESS: 'TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs',
-    USDT_OFT: 'TKSnyHmNMFhU2vWp2zBDZE48b1gd54GBcs',
+    USDT_ADDRESS: tronStaticTokenAddresses.USDT[TronChainIDs.Shasta],
+    USDT_OFT: tronStaticOFTAddresses.USDT[TronChainIDs.Shasta],
 
     // Authorized wallets
     OWNER: 'TNSphg4KJNTvhNzZZsvAXDpUESC11HT4T3',

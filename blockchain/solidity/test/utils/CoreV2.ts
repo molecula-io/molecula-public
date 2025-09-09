@@ -145,3 +145,18 @@ export async function deployCoreV2() {
 
     return coreV2;
 }
+
+export async function deployCoreV2WithRedeemController() {
+    const coreV2 = await deployCoreV2();
+
+    // Deploy Redeem Controller
+    const RedeemController = await ethers.getContractFactory('RedeemController');
+    const redeemController = await RedeemController.connect(coreV2.user0).deploy(
+        coreV2.supplyManagerV2,
+    );
+
+    return {
+        ...coreV2,
+        redeemController,
+    };
+}

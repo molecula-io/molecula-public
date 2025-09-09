@@ -1,10 +1,10 @@
 {
     "eth": {
-        "executorFeeLib": "0xfc0DB971386122585e57e55a07FE11B54F532c11",
-        "executor": "0xa7F2b24eb5fa018E20C3dFC5269812F4Aa5943f4"
+        "executorFeeLib": "0x7e4899e534a872eeb34cA965499Df563526351E9",
+        "executor": "0x72e37F9F8dD1ea0266D17aBc14cCd3E6d4D2501e"
     },
     "tron": {
-        "executorFeeLib": "TQosSFzCCFUfYYAvTnWZTFfC6qepE5sR8B",
-        "executor": "0xa15bf01dd2bf5b2e7e1344436a2043aec6defc53"
+        "executorFeeLib": "TPC5oTzosuJa4jQvxD2SBb9uRf9kS97Ggm",
+        "executor": "0x5c0dc1cbc00bdcec144b92e383aa68c0f418f5bc"
     }
 }

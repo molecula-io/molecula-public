@@ -83,7 +83,7 @@ interface IDelegationManagerTypes {
 }
 
 /**
- * @title DelegationManager
+ * @title DelegationManager.
  * @author Layr Labs, Inc.
  * @notice Terms of Service: https://docs.eigenlayer.xyz/overview/terms-of-service
  * @notice  This is the contract for delegation in EigenLayer. The main functionalities of this contract are

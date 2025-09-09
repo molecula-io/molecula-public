@@ -5,6 +5,10 @@
         "rebaseTokenV2": "",
         "stETHVault": "",
         "wETHVault": "",
-        "nativeTokenVault": ""
+        "nativeTokenVault": "",
+        "weETHVault": "",
+        "rsETHVault": "",
+        "ezETHVault": "",
+        "priceChecker": ""
     }
 }

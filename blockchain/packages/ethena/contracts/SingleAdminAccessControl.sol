@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/interfaces/IERC5313.sol";
 import "./interfaces/ISingleAdminAccessControl.sol";
 
 /**
- * @title SingleAdminAccessControl
+ * @title SingleAdminAccessControl.
  * @notice SingleAdminAccessControl is a contract that provides the single admin role.
  * @notice This contract is a simplified alternative to the OpenZeppelin's `AccessControlDefaultAdminRules`.
  */

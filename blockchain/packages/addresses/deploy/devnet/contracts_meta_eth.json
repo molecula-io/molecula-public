@@ -1,10 +1,14 @@
 {
     "eth": {
-        "metaPoolTreasury": "0xEf60A2BEE856e29E0b20106EA50FBFf48BDDE0a8",
-        "supplyManagerV2": "0x2fBAfE9Ffd0B47490053fEd0E9b91c5836e3f5E6",
-        "rebaseTokenV2": "0x1a12B7a0Ec16d2c0EeD6fF5C122BfE223C8879B9",
-        "stETHVault": "0x14F1cFdfE814Dd699b3A2930F8ba115246c032aD",
-        "wETHVault": "0x65D4B1e2766eD3C9F0527455d1eBF86c0461D36e",
-        "nativeTokenVault": "0x6c7b8CD829fF722B09CfE7237fdd1f4E4141202F"
+        "metaPoolTreasury": "0x1F78C5Fb21e1F317eC0ae7BF46F75cba18DefaB6",
+        "supplyManagerV2": "0xd7c39d642e56327D11436c2a6f2a493aAcd6c024",
+        "rebaseTokenV2": "0xa62eeFeCa527e5Ce648130D8693573D5cB132945",
+        "stETHVault": "0xC9e97fbFF1315a447CE8d55b79117132b7014a7A",
+        "wETHVault": "0x75A46d9a0879E4551FE9a3Ab388eee94E140ED56",
+        "nativeTokenVault": "0x50032e1E93Ed37436D07Cb919D866C98a2EbC060",
+        "weETHVault": "",
+        "rsETHVault": "",
+        "ezETHVault": "",
+        "priceChecker": "0x56349C677B65EDCF6F4Af62fc48cdDf601EBb244"
     }
 }

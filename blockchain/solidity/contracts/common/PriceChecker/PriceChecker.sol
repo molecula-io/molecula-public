@@ -11,7 +11,7 @@ import {_getDecimalsOr18, _normalize} from "./../Utils.sol";
 import {ValueValidator} from "./../ValueValidator.sol";
 import {IPriceChecker} from "./interfaces/IPriceChecker.sol";
 
-/// @title PriceChecker
+/// @title PriceChecker.
 /// @dev Check for pair kind of `(USDc, USDe, sUSDe) / USD`; `(stETH) / ETH`, etc.
 contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
     // ============ State Variables ============

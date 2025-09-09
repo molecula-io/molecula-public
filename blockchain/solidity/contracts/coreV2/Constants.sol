@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.24;
 
-/// @title ConstantsCoreV2
+/// @title ConstantsCoreV2.
 /// @notice Library containing core constants used across the protocol.
 /// @dev Contains immutable values that are frequently used in other contracts.
 library ConstantsCoreV2 {

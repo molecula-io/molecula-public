@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-/// @title Molecula Buffer Pool Interface
+/// @title Molecula Buffer Pool Interface.
 /// @notice Defines the functions required for interacting with the Molecula Buffer Pool.
 interface IMoleculaBuffer {
     /// @dev Error indicating invalid token provided.

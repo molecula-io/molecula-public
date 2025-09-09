@@ -48,7 +48,7 @@ export const sepoliaMrEthConfig: mrEthNetworkConfig = {
     MRETH_TOKEN_MIN_DEPOSIT: 1_000_000n,
 
     /** mrETH token minimum redeem. */
-    MRETH_TOKEN_MIN_REDEEM: 10n ** 18n,
+    MRETH_TOKEN_MIN_REDEEM: 10n ** 15n,
 
     /** Molecula Buffer name. */
     MOLECULA_BUFFER_NAME: 'Molecula Buffer Token test v0.1',

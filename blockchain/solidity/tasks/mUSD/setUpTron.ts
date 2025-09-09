@@ -114,9 +114,7 @@ tronSetupScope
         // Execute the migration function with the retrieved parameters
         await syncExecutorParams(hre, environment)
             .then(() => {
-                console.log(
-                    'Executor parameters synchronization completed completed successfully.',
-                );
+                console.log('Executor parameters synchronization completed successfully.');
             })
             .catch(error => {
                 console.error('Set failed:', error.message);

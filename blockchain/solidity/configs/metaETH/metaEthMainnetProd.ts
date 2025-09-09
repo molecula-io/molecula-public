@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 import { evmStaticTokenAddresses, EVMChainIDs } from '@molecula-monorepo/blockchain.addresses';
 
 import type { MetaEthNetworkConfig } from './metaEthTypes';
@@ -5,35 +7,56 @@ import type { MetaEthNetworkConfig } from './metaEthTypes';
 /** Ethereum Mainnet config for prod. */
 export const metaEthMainnetProdConfig: MetaEthNetworkConfig = {
     /** Wrapped ETH (WETH) token address on Ethereum Mainnet. */
-    WETH_ADDRESS: evmStaticTokenAddresses.wETH[EVMChainIDs.Mainnet],
+    wETH: evmStaticTokenAddresses.wETH[EVMChainIDs.Mainnet],
 
     /** Lido LRT Token address on Ethereum Mainnet. */
-    STETH_ADDRESS: evmStaticTokenAddresses.stETH[EVMChainIDs.Mainnet],
+    stETH: evmStaticTokenAddresses.stETH[EVMChainIDs.Mainnet],
+
+    /** Wrapped eETH (weETH) token address. */
+    weETH: evmStaticTokenAddresses.weETH[EVMChainIDs.Mainnet],
+
+    /** Kelp DAO Restaked ETH (rsETH) */
+    rsETH: evmStaticTokenAddresses.rsETH[EVMChainIDs.Mainnet],
+
+    /** Renzo Restaked ETH (ezETH) */
+    ezETH: evmStaticTokenAddresses.ezETH[EVMChainIDs.Mainnet],
 
     /** Owner address. Must specify it before the deployment. */
-    META_OWNER: '0x',
+    OWNER: '0x',
 
     /** Pool keeper address. Must specify it before the deployment. */
-    META_POOL_KEEPER: '0x',
+    POOL_KEEPER: '0x',
+
+    /** Yield distributor in supply manager. */
+    YIELD_DISTRIBUTOR: '0x',
 
     /** Guardian address that can pause MetaPoolTreasury contract. Must specify it before the deployment */
-    META_GUARDIAN: '0x',
+    GUARDIAN: '0x',
 
     /** (META_APY / 10_000) * 100% is the percentage of revenue retained by all molecula token holders. */
-    META_APY: 8_000,
+    APY: 8_000,
 
     /** MetaETH token name. */
-    META_TOKEN_NAME: 'MetaETH',
+    META_ETH_TOKEN_NAME: 'MetaETH',
 
     /** MetaETH token symbol. */
-    META_TOKEN_SYMBOL: 'METH',
+    META_ETH_TOKEN_SYMBOL: 'METH',
 
     /** MetaETH token decimals. */
-    META_TOKEN_DECIMALS: 18,
+    META_ETH_TOKEN_DECIMALS: 18,
 
-    /** Minimal deposit in eth */
-    META_MIN_DEPOSIT_ETH: 10n ** 15n,
+    /** Minimal deposit in ETH */
+    MIN_DEPOSIT_ETH: ethers.parseEther('0.001'),
+
+    /** Minimal deposit in weETH */
+    MIN_DEPOSIT_weETH: ethers.parseEther('0.00107'),
+
+    /** Minimal deposit in ezETH */
+    MIN_DEPOSIT_ezETH: ethers.parseEther('0.00105'),
+
+    /** Minimal deposit in rsETH */
+    MIN_DEPOSIT_rsETH: ethers.parseEther('0.00104'),
 
     /** Minimal redeem in shares */
-    META_MIN_REDEEM_SHARES: 5n * 10n ** 14n,
+    MIN_REDEEM_SHARES: ethers.parseEther('0.0005'),
 };

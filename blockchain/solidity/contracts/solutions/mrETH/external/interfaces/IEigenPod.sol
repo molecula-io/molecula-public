@@ -143,7 +143,7 @@ interface IEigenPodEvents is IEigenPodTypes {
 }
 
 /**
- * @title The implementation contract used for restaking beacon chain ETH on EigenLayer
+ * @title The implementation contract used for restaking beacon chain ETH on EigenLayer.
  * @author Layr Labs, Inc.
  * @notice Terms of Service: https://docs.eigenlayer.xyz/overview/terms-of-service
  * @dev Note that all beacon chain balances are stored as gwei within the beacon chain datastructures. We choose

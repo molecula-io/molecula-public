@@ -30,8 +30,28 @@ export type AllTronContracts =
     | SendULN;
 
 export type TronContractParams = {
+    /**
+     * TronWeb client
+     */
     client: TronWeb;
+
+    /**
+     * Contract address
+     */
     contractAddress: string;
+
+    /**
+     * Contract ABI
+     */
     abi: ContractAbiInterface;
+
+    /**
+     * API URL
+     */
     apiUrl?: string | undefined;
+
+    /**
+     * Subscription interval multiplier
+     */
+    subscriptionIntervalMultiplier?: number;
 };

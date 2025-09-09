@@ -13,7 +13,7 @@ import {ERC20TokenVault} from "./../../../coreV2/TokenVault/ERC20TokenVault.sol"
 import {ITokenVaultWithImmediateRedeem} from "./../../../coreV2/TokenVault/interfaces/ITokenVaultWithImmediateRedeem.sol";
 import {IMetaPoolTreasury} from "../interfaces/IMetaPoolTreasury.sol";
 
-/// @title MetaERC20TokenVault
+/// @title MetaERC20TokenVault.
 /// @dev Vault contract for managing ERC20 token deposits and withdrawals in the metaETH system.
 contract MetaERC20TokenVault is ITokenVaultWithImmediateRedeem, ERC20TokenVault {
     // ============ Constructor ============

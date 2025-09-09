@@ -7,7 +7,7 @@ import {IUnsuppliedWrappedRebaseAsset} from "./interfaces/IUnsuppliedWrappedReba
 import {IWrappedRebaseAsset} from "./interfaces/IWrappedRebaseAsset.sol";
 import {WrappedRebaseAsset} from "./WrappedRebaseAsset.sol";
 
-/// @title UnsuppliedWrappedRebaseAsset
+/// @title UnsuppliedWrappedRebaseAsset.
 /// @notice Wrapper contract has two possible states:
 /// - `supplied`: The `rebaseToken` address is set.
 /// - `unsupplied`: The `rebaseToken` address is not set.

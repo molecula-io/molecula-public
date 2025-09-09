@@ -11,7 +11,7 @@ import type { TronAddress } from './types';
 /**
  * Supported TRON token static addresses.
  */
-export const tronStaticTokenAddress: Record<'USDT', Record<TronChainIDs, TronAddress>> = {
+export const tronStaticTokenAddresses: Record<'USDT', Record<TronChainIDs, TronAddress>> = {
     USDT: {
         [TronChainIDs.Mainnet]: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
         [TronChainIDs.Shasta]: 'TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs',
@@ -49,5 +49,16 @@ export const tronMoleculaContractAddresses = {
             beta: MainBetaContractsCarbon.tron.mUSDLock as TronAddress,
         },
         [TronChainIDs.Shasta]: DevnetContractsCarbon.tron.mUSDLock as TronAddress,
+    },
+} as const;
+
+/**
+ * Supported TRON OFT static addresses.
+ * See: https://docs.usdt0.to/technical-documentation/developer for Mainnet.
+ */
+export const tronStaticOFTAddresses = {
+    USDT: {
+        [TronChainIDs.Mainnet]: 'TFG4wBaDQ8sHWWP1ACeSGnoNR6RRzevLPt',
+        [TronChainIDs.Shasta]: 'TKSnyHmNMFhU2vWp2zBDZE48b1gd54GBcs',
     },
 } as const;

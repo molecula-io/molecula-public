@@ -167,12 +167,12 @@ export const layerZeroDVNConfigs: Record<
 export const OAPP_GAS_LIMITS_BY_ENV: Record<EnvironmentType, GasLimitsConfig> = {
     [EnvironmentType.devnet]: {
         agentGasLimits: [
-            { msgType: 0x02, baseGas: 150_000, unitGas: 0 }, // CONFIRM_DEPOSIT
+            { msgType: 0x02, baseGas: 170_000, unitGas: 0 }, // CONFIRM_DEPOSIT
             { msgType: 0x04, baseGas: 150_000, unitGas: 50_000 }, // CONFIRM_REDEEM
             { msgType: 0x05, baseGas: 175_000, unitGas: 50_000 }, // DISTRIBUTE_YIELD
-            { msgType: 0x06, baseGas: 170_000, unitGas: 0 }, // CONFIRM_DEPOSIT_AND_UPDATE_ORACLE
+            { msgType: 0x06, baseGas: 200_000, unitGas: 0 }, // CONFIRM_DEPOSIT_AND_UPDATE_ORACLE
             { msgType: 0x07, baseGas: 200_000, unitGas: 50_000 }, // DISTRIBUTE_YIELD_AND_UPDATE_ORACLE
-            { msgType: 0x08, baseGas: 71000, unitGas: 0 }, // UPDATE_ORACLE
+            { msgType: 0x08, baseGas: 75_000, unitGas: 0 }, // UPDATE_ORACLE
         ],
         accountantGasLimits: [
             { msgType: 0x01, baseGas: 150_000, unitGas: 0 }, // REQUEST_DEPOSIT
@@ -186,7 +186,7 @@ export const OAPP_GAS_LIMITS_BY_ENV: Record<EnvironmentType, GasLimitsConfig> = 
             { msgType: 0x05, baseGas: 175_000, unitGas: 50_000 }, // DISTRIBUTE_YIELD
             { msgType: 0x06, baseGas: 200_000, unitGas: 0 }, // CONFIRM_DEPOSIT_AND_UPDATE_ORACLE
             { msgType: 0x07, baseGas: 200_000, unitGas: 50_000 }, // DISTRIBUTE_YIELD_AND_UPDATE_ORACLE
-            { msgType: 0x08, baseGas: 71000, unitGas: 0 }, // UPDATE_ORACLE
+            { msgType: 0x08, baseGas: 75_000, unitGas: 0 }, // UPDATE_ORACLE
         ],
         accountantGasLimits: [
             { msgType: 0x01, baseGas: 150_000, unitGas: 0 }, // REQUEST_DEPOSIT

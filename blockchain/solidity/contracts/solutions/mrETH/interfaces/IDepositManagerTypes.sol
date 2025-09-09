@@ -2,41 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import {IStrategy} from "../external/interfaces/IStrategy.sol";
+import {IStrategy} from "./../external/interfaces/IStrategy.sol";
+import {IDepositManagerLib} from "./IDepositManagerLib.sol";
 import {IStrategyLib} from "./IStrategyLib.sol";
 
-/// @title Deposit Manager Types Interface
+/// @title Deposit Manager Types Interface.
 /// @notice Defines the structs and enums used in the Deposit Manager contract.
 interface IDepositManagerTypes {
-    /**
-     * @dev Enum representing the possible statuses of an operation.
-     */
-    enum OperationStatus {
-        None, // Operation does not exist.
-        Pending, // Operation is pending confirmation.
-        Confirmed // Operation is confirmed.
-    }
-
-    /**
-     * @dev Struct to store the information about a redeem operation.
-     * @param value Value associated with the withdrawal operation.
-     * @param status Current status of the operation.
-     */
-    struct RedeemOperationInfo {
-        uint256 value;
-        OperationStatus status;
-    }
-
-    /**
-     * @dev Struct to store the yield distribution information for a party.
-     * @param party User's address.
-     * @param portion Portion of yield allocated to this party.
-     */
-    struct Party {
-        address party;
-        uint256 portion;
-    }
-
     /**
      * @dev Struct to store pool configuration data.
      * @param poolToken Address of the pool's rebase token.
@@ -67,10 +39,12 @@ interface IDepositManagerTypes {
      * @dev Struct to store the strategy-related data.
      * @param strategy EigenLayer strategy contract.
      * @param strategyLib Library for interacting with the strategy.
+     * @param requestedRedeemAssets Value to redeem in the token amount.
      */
-    struct StrategyData {
+    struct TokenData {
         IStrategy strategy;
         IStrategyLib strategyLib;
+        uint256 requestedRedeemAssets;
     }
 
     /**
@@ -81,5 +55,25 @@ interface IDepositManagerTypes {
     struct OperatorDelegation {
         address delegator;
         uint64 delegationPortion;
+    }
+
+    /**
+     * @dev Struct to store the configuration data.
+     * @param depositManagerLib External library for `DepositManager` calculations.
+     * @param moleculaBuffer Molecula buffer for unlimited deposits.
+     * @param delegatorImplementation Address of the minimal proxy clone implementation for the Delegator contract.
+     * @param bufferPercentage Buffer percentage parameter, where:
+     * `(TVL ETH * bufferPercentage / PERCENTAGE_FACTOR)` is the amount of ETH token staked in the Pools.
+     * @param minFeePercentage Minimum fee percentage.
+     * @param maxFeePercentage Maximum fee percentage.
+     */
+    // solhint-disable-next-line gas-struct-packing
+    struct Config {
+        address moleculaBuffer;
+        address delegatorImplementation;
+        IDepositManagerLib depositManagerLib;
+        uint16 bufferPercentage;
+        uint16 minFeePercentage;
+        uint16 maxFeePercentage;
     }
 }

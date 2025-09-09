@@ -28,6 +28,7 @@ export async function deployUsdtOFT(hre: HardhatRuntimeEnvironment) {
         config.LAYER_ZERO_ARBITRUM_EID,
         config.LAYER_ZERO_CELO_EID,
         config.LAYER_ZERO_ETHEREUM_EID,
+        config.LAYER_ZERO_SOLANA_EID,
         config.LAYER_ZERO_TRON_EID, // for ton testnet layerzero don't have eid
         config.LAYER_ZERO_TRON_EID,
         config.USDT_ADDRESS,
@@ -43,6 +44,7 @@ export async function deployUsdtOFT(hre: HardhatRuntimeEnvironment) {
         config.LAYER_ZERO_ARBITRUM_EID,
         config.LAYER_ZERO_CELO_EID,
         config.LAYER_ZERO_ETHEREUM_EID,
+        config.LAYER_ZERO_SOLANA_EID,
         config.LAYER_ZERO_TRON_EID, // for ton testnet layerzero don't have eid
         config.LAYER_ZERO_TRON_EID,
         config.USDT_ADDRESS,

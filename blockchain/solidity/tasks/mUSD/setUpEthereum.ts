@@ -143,7 +143,7 @@ ethereumSetupScope
         // Execute the migration function with the retrieved parameters
         await setupUsdtOftDVN(hre, environment)
             .then(() => {
-                console.log('UsdtOFT DVN setup completed completed successfully.');
+                console.log('UsdtOFT DVN setup completed successfully.');
             })
             .catch(error => {
                 console.error('Set failed:', error.message);
@@ -165,7 +165,7 @@ ethereumSetupScope
         // Execute the migration function with the retrieved parameters
         await setAgentLZGasLimits(hre, environment)
             .then(() => {
-                console.log('AgentLZ gasLimit setup completed completed successfully.');
+                console.log('AgentLZ gasLimit setup completed successfully.');
             })
             .catch(error => {
                 console.error('Set failed:', error.message);
@@ -190,9 +190,7 @@ ethereumSetupScope
         // Execute the migration function with the retrieved parameters
         await syncExecutorParams(hre, environment)
             .then(() => {
-                console.log(
-                    'Executor parameters synchronization completed completed successfully.',
-                );
+                console.log('Executor parameters synchronization completed successfully.');
             })
             .catch(error => {
                 console.error('Set failed:', error.message);

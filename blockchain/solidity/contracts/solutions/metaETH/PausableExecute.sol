@@ -6,7 +6,7 @@ import {PausableContract} from "./../../common/pausable/PausableContract.sol";
 import {IMetaPoolTreasury} from "./../../solutions/metaETH/interfaces/IMetaPoolTreasury.sol";
 
 /**
- * @title PausableExecute
+ * @title PausableExecute.
  * @dev Abstract contract that implements the pause functionality for the execute operation.
  */
 abstract contract PausableExecute is PausableContract {

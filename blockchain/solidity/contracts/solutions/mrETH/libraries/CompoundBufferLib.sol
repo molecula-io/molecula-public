@@ -5,7 +5,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ICompoundAssetDataProvider} from "./../external/interfaces/ICompoundAssetDataProvider.sol";
 
-/// @title Compound Buffer Library
+/// @title Compound Buffer Library.
 /// @notice Library for interacting with Compound lending pools.
 library CompoundBufferLib {
     /// @dev Constant for the selector of Compound's `deposit` function.

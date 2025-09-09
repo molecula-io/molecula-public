@@ -10,7 +10,7 @@
 pragma solidity 0.4.20;
 
 /**
- * @title SafeMath
+ * @title SafeMath.
  * @dev Math operations with safety checks that throw on error
  */
 library SafeMath {
@@ -66,7 +66,7 @@ contract Migrations {
 }
 
 /**
- * @title Ownable
+ * @title Ownable.
  * @dev The Ownable contract has an owner address, and provides basic authorization control
  * functions, this simplifies the implementation of "user permissions".
  */
@@ -105,7 +105,7 @@ contract Ownable {
 }
 
 /**
- * @title Pausable
+ * @title Pausable.
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
 contract Pausable is Ownable {
@@ -150,7 +150,7 @@ contract Pausable is Ownable {
 }
 
 /**
- * @title ERC20Basic
+ * @title ERC20Basic.
  * @dev Simpler version of ERC20 interface
  * @dev see https://github.com/ethereum/EIPs/issues/179
  */
@@ -162,7 +162,7 @@ contract ERC20Basic {
 }
 
 /**
- * @title Basic token
+ * @title Basic token.
  * @dev Basic version of StandardToken, with no allowances.
  */
 contract BasicToken is ERC20Basic {
@@ -223,7 +223,7 @@ contract BlackList is Ownable {
 }
 
 /**
- * @title ERC20 interface
+ * @title ERC20 interface.
  * @dev see https://github.com/ethereum/EIPs/issues/20
  */
 contract ERC20 is ERC20Basic {
@@ -234,7 +234,7 @@ contract ERC20 is ERC20Basic {
 }
 
 /**
- * @title Standard ERC20 token
+ * @title Standard ERC20 token.
  *
  * @dev Implementation of the basic standard token.
  * @dev https://github.com/ethereum/EIPs/issues/20

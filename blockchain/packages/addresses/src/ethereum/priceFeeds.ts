@@ -43,8 +43,8 @@ export const chainLinkFeeds = {
                 heartbeat: 86400,
             },
             [EVMChainIDs.Sepolia]: {
-                address: '0x8328e01902A47942Eecb9DBF97d6bF9dd3bd07E6',
-                heartbeat: 86400,
+                address: '0x0000000000000000000000000000000000000000',
+                heartbeat: 0,
             },
         },
         weETH: {

@@ -12,6 +12,7 @@ import {
     deployRebaseTokenOwner,
     deployOFTVault,
     deployOracle,
+    migrateAccountantLZ,
 } from '../../scripts/mUSD/tron/deploy';
 import { migrateAccountantLZwithOracle } from '../../scripts/mUSD/tron/migration/migrateAccountantLZwithOracle';
 import {
@@ -225,6 +226,41 @@ tronMajorScope
                 },
             });
             console.log('Deployment of TronOFTVault contract completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
+    });
+
+tronMajorScope
+    .task('migrateAccountantAgentLZ', 'Migrates AccountantLZ on Tron')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n TRON Deployment');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        try {
+            const contractsCarbon: ContractsCarbon = await readFromFile(
+                `${environment}/contracts_carbon.json`,
+            );
+
+            // Execute deployment
+            const accountantLZ = await migrateAccountantLZ(hre, environment, {
+                rebaseTokenAddress: contractsCarbon.tron.rebaseToken,
+                oracleAddress: contractsCarbon.tron.oracle,
+            });
+
+            writeToFile(`${environment}/contracts_carbon.json`, {
+                eth: contractsCarbon.eth,
+                tron: {
+                    ...contractsCarbon.tron,
+                    accountantLZ,
+                },
+            });
+
+            console.log('Deployment and file write completed successfully.');
         } catch (error) {
             handleError(error);
         }

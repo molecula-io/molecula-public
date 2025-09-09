@@ -10,7 +10,7 @@ import {MathUtils} from "./../external/libraries/MathUtils.sol";
 import {PercentageMath} from "./../external/libraries/PercentageMath.sol";
 import {WadRayMath} from "./../external/libraries/WadRayMath.sol";
 
-/// @title AAVE Buffer Library
+/// @title AAVE Buffer Library.
 /// @notice Library for interacting with AAVE lending Pools.
 library AaveBufferLib {
     using WadRayMath for uint256;
@@ -91,7 +91,7 @@ library AaveBufferLib {
      * @param pool Address of the protocol's balance storage.
      * @param token Deposit token's address.
      * @return available Maximum deposit amount in atomic units (e.g., wei for wETH).
-     *                   Returns `type(uint256).max` if unlimited. Returns `0` if the cap is reached.
+     *                   Returns `type(uint256).max` if unlimited. Returns 0 if the cap is reached.
      */
     function getAvailableAmountToDeposit(
         address pool,
@@ -148,7 +148,7 @@ library AaveBufferLib {
 
     /**
      * @dev Simulates index updates without state change. Based on `ReserveLogic._updateIndexes`.
-     *      Handles cases where no time has passed, useing current indexes.
+     *      Handles cases where no time has passed, using current indexes.
      * @param reserve Reserve data.
      * @return nextLiquidityIndex Next liquidity index.
      * @return nextVariableBorrowIndex Next variable borrow index.

@@ -200,12 +200,15 @@
         "TELEGRAM_CHAT_ID_ALPHA",
         "TELEGRAM_CHAT_ID_BETA",
         "SERVICE_PORT",
+        "SERVICE_WS_PORT",
         "UNLEASH_SERVER_API_URL",
         "UNLEASH_SERVER_API_TOKEN",
-        "WEBSITE_REVALIDATION_SECRET_TOKEN",
+        "WEBSITE_REVALIDATION_SECRET_HASH",
         "FIREBLOCKS_API_KEY",
         "FIREBLOCKS_API_PRIVATE_KEY_PATH",
-        "IS_ADMIN_PROJECT_RUN"
+        "IS_ADMIN_PROJECT_RUN",
+        "ETH_API_BASE_URL",
+        "CHAIN_ID"
     ],
     "globalDependencies": [".env"]
 }

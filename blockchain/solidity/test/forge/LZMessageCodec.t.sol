@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {LZMsgCodec} from "../../contracts/common/layerzero/LZMsgCodec.sol";
 import {MockLZMessageDecoder} from "../../contracts/mock/lz/MockLZMessageDecoder.sol";
 
-/// @title LZMsgCodecTest
+/// @title LZMsgCodecTest.
 /// @notice This test contract validates the encoding and decoding functions
 /// provided by the LZMsgCodec via a mock decoder, ensuring that messages are
 /// correctly serialized and deserialized.

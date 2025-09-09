@@ -250,3 +250,14 @@ export const renzoContractAddresses = {
 export const rsETHAddresses = {
     LRTOracle: '0x349A73444b1a310BAe67ef67973022020d70020d' as EVMAddress,
 } as const;
+
+/**
+ * Supported EVM OFT static addresses.
+ * See: https://docs.usdt0.to/technical-documentation/developer for Mainnet.
+ */
+export const evmStaticOFTAddresses = {
+    USDT: {
+        [EVMChainIDs.Mainnet]: '0x1f748c76de468e9d11bd340fa9d5cbadf315dfb0',
+        [EVMChainIDs.Sepolia]: '0x101760Fd9486AcC415f6f8c52f78f1cC1318A41a',
+    },
+} as const;

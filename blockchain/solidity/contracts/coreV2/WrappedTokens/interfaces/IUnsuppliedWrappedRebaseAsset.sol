@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
-/// @title IUnsuppliedWrappedRebaseAsset Interface
+/// @title IUnsuppliedWrappedRebaseAsset Interface.
 interface IUnsuppliedWrappedRebaseAsset {
     // ============ Events ============
 

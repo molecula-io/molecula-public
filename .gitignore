@@ -25,14 +25,8 @@ configs/frontend-environments/retail/.env.production
 configs/turbo-environments/.env
 configs/turbo-environments/.env.merge
 
-# Ui tests repo
-ui-tests/extensions/
-ui-tests/.husky/
+# UI tests repo
 test-results/
-ui-tests/integration-tests/tests-results/
-ui-tests/integration-tests/playwright-report/
-ui-tests/api-tests/tests-results/
-ui-tests/api-tests/playwright-report/
 
 # Turborepo logs, outputs, and other functionality.
 .turbo
@@ -42,38 +36,6 @@ ui-tests/api-tests/playwright-report/
 
 # Terraform
 tfState.json
-
-# Tests
-ui-tests/adminStorageState.json
-ui-tests/transactionHash.json
-tests-results/allure-results/
-ui-tests/transactionDeposit.json
-ui-tests/transactionDeposit.small.json
-ui-tests/transactionDeposit.swap.json
-ui-tests/transactionHashValue.json
-ui-tests/transactionHashValueTron.json
-ui-tests/transactionWithdraw.small.json
-ui-tests/transactionWithdraw.swap.json
-ui-tests/withdrawTransactionHashValue.json
-ui-tests/transactionWithdrawDev.swap.json
-ui-tests/transactionWithdrawDev.small.json
-ui-tests/transactionWithdrawDev.native.json
-ui-tests/transactionDeposit.native.json
-ui-tests/transactionDeposit.tron.small.json
-ui-tests/transactionDepositAlpha.tron.small.json
-ui-tests/transactionDepositAlpha.small.json
-ui-tests/transactionDepositAlpha.tron.native.json
-ui-tests/transactionDepositDev.small.json
-ui-tests/transactionDepositAlpha.native.json
-ui-tests/transactionDepositDev.native.json
-ui-tests/transactionWithdraw.native.json
-ui-tests/transactionDepositDev.swap.json
-ui-tests/transactionDepositTronDev.native.json
-ui-tests/transactionDepositTronDev.small.json
-ui-tests/transactionDepositTronDev.swap.json
-ui-tests/transactionWithdrawTronDev.native.json
-ui-tests/transactionDepositTronAlpha.native.json
-ui-tests/temp-wallet.json
 
 # Env
 .env.local

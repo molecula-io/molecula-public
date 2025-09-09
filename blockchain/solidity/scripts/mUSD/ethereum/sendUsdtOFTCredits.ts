@@ -29,6 +29,7 @@ async function sendUSDTCreditsCrossChain() {
         0n, // Arbitrum credits
         0n, // Celo credits
         amountToSend, // Ethereum credits
+        0n, // Solana credits
         0n, // Ton credits
         0n, // Tron credits
         '0x', // extraOptions
@@ -44,6 +45,7 @@ async function sendUSDTCreditsCrossChain() {
         0n, // Arbitrum credits
         0n, // Celo credits
         amountToSend, // Ethereum credits
+        0, // Solana credits
         0, // Ton credits
         0, // Tron credits
         '0x', // extraOptions

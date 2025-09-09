@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-
 import type { GetEventResultOptions, Contract as TronContract } from 'tronweb';
 
 import { BlockKeeper } from '@molecula-monorepo/common.evm-utilities/src/helpers';
@@ -9,16 +7,6 @@ import { Log } from '@molecula-monorepo/common.logs';
 import type { TronEventCallback, TronEventsLoadOptions, InternalTronEvent } from '../types';
 
 import { MAX_PART_SIZE, tronEventsLoad } from './tronEventsLoader';
-
-// Configure dotenv and get the env variables
-dotenv.config();
-const { TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER } = process.env;
-
-const subscriptionIntervalMultiplier = TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER
-    ? Number(TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER)
-    : 1;
-
-const loadNewEventsInterval = 3_000 * subscriptionIntervalMultiplier;
 
 export class TronSubscriber {
     // Properties
@@ -53,10 +41,23 @@ export class TronSubscriber {
      */
     private startTimestamp: number = Date.now();
 
+    /**
+     * Load new events interval.
+     */
+    private loadNewEventsInterval: number = 3_000;
+
     // Constructor
-    public constructor(contract: TronContract, method: string) {
+    public constructor(
+        contract: TronContract,
+        method: string,
+        options: { subscriptionIntervalMultiplier?: number } = {},
+    ) {
         this.contract = contract;
         this.method = method;
+
+        const { subscriptionIntervalMultiplier = 1 } = options;
+
+        this.loadNewEventsInterval = 3_000 * subscriptionIntervalMultiplier;
 
         if (!this.contract.address) {
             throw new Error('Failed to define contract address');
@@ -91,7 +92,7 @@ export class TronSubscriber {
         // start check new events
         this.newEventsInterval = setInterval(() => {
             this.checkNewEvents(callback);
-        }, loadNewEventsInterval);
+        }, this.loadNewEventsInterval);
     };
 
     /**

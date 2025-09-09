@@ -10,7 +10,7 @@ import {Transfer} from "@layerzerolabs/lz-evm-protocol-v2/contracts/libs/Transfe
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title ExecutorFeeLib
+ * @title ExecutorFeeLib.
  * @dev Library contract for dynamic fee calculation in the LayerZeroV2.
  *      Handles pricing based on calldata size, gas cost, price feeds, protocol margin,
  *      and protocol upgrades. Pluggable into Executor contracts for flexible fee policy.

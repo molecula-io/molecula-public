@@ -3,7 +3,9 @@ pragma solidity 0.8.30;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {DepositManager} from "../../contracts/solutions/mrETH/DepositManager.sol";
+import {DepositManagerPool} from "../../contracts/solutions/mrETH/DepositManagerPool.sol";
+import {DepositManagerRestaker, IDepositManagerRestaker} from "../../contracts/solutions/mrETH/DepositManagerRestaker.sol";
+import {DepositManagerLib} from "../../contracts/solutions/mrETH/libraries/DepositManagerLib.sol";
 import {DepositManagerStorage} from "../../contracts/solutions/mrETH/DepositManagerStorage.sol";
 import {IDepositManagerTypes} from "../../contracts/solutions/mrETH/interfaces/IDepositManagerTypes.sol";
 import {IStrategyLib} from "../../contracts/solutions/mrETH/interfaces/IStrategyLib.sol";
@@ -58,7 +60,8 @@ contract MrEthSetup is Test {
     address public guardian;
 
     // Main contracts.
-    DepositManager public depositManager;
+    DepositManagerPool public depositManagerPool;
+    DepositManagerRestaker public depositManagerRestaker;
     MockRewardsCoordinator public rewardsCoordinator;
     Delegator public delegatorImplementation;
     MoleculaBuffer public moleculaBuffer;
@@ -130,34 +133,35 @@ contract MrEthSetup is Test {
         uint256 transactionCount = vm.getNonce(owner);
 
         // Calculate the correct addresses based on the deployment order.
-        // After `DepositManager` deployment, the next contract will be `SupplyManagerV2`.
-        address supplyManagerFutureAddress = vm.computeCreateAddress(owner, transactionCount + 1);
+        // After `DepositManagerPool` deployment, the next contract will be `SupplyManagerV2`.
+        address supplyManagerFutureAddress = vm.computeCreateAddress(owner, transactionCount + 2);
 
         // Predict `RewardBearingToken` address `(nonce + 2)` after `SupplyManagerV2`.
         address rewardBearingTokenFutureAddress = vm.computeCreateAddress(
             owner,
-            transactionCount + 2
+            transactionCount + 3
         );
 
-        // Deploy `DepositManager` with predicted `SupplyManager` address.
+        // Deploy `DepositManagerPool` with predicted `SupplyManager` address.
         vm.startPrank(owner, owner);
-        depositManager = new DepositManager(
+        depositManagerRestaker = new DepositManagerRestaker();
+
+        depositManagerPool = new DepositManagerPool(
             owner,
-            authorizedStaker,
-            guardian,
             supplyManagerFutureAddress, // Use the predicted address.
             address(weth),
             address(strategyFactory),
             address(delegationManager),
             address(rewardsCoordinator),
-            address(delegatorImplementation)
+            address(depositManagerRestaker)
         );
-
         // Setup the initial Pool configuration.
         _setupInitialPools();
 
         // Deploy core V2 contracts with predicted addresses.
         _deployCoreV2Contracts(rewardBearingTokenFutureAddress);
+
+        _setupMrEthSystem();
 
         vm.stopPrank();
     }
@@ -188,14 +192,25 @@ contract MrEthSetup is Test {
             })
         );
 
-        // Initialize `DepositManager` with the AAVE Pool.
-        depositManager.initialize(
+        // Initialize `DepositManagerPool` with the AAVE Pool.
+        depositManagerPool.initialize(
+            address(delegatorImplementation),
             address(moleculaBuffer),
+            address(DepositManagerLib),
             0, // Buffer percentage.
             setPoolData
         );
 
         setupCompleteMrEthSystem();
+    }
+
+    function _setupMrEthSystem() internal {
+        depositManagerPool.grantRole(depositManagerPool.GUARDIAN_ROLE(), guardian);
+        depositManagerPool.grantRole(depositManagerPool.AUTHORIZED_STAKER_ROLE(), authorizedStaker);
+        // Deploy the Core V2 contracts: `SupplyManagerV2`, `rewardBearingToken`, and `TokenVaults`.
+
+        depositManagerPool.setMinFeePercentage(500);
+        depositManagerPool.setMaxFeePercentage(1000);
     }
 
     /**
@@ -207,7 +222,7 @@ contract MrEthSetup is Test {
         supplyManagerV2 = new SupplyManagerV2WithNative(
             owner,
             owner,
-            address(depositManager),
+            address(depositManagerPool),
             APY_FORMATTER,
             rewardBearingTokenFutureAddress, // Use the predicted address.
             VIRTUAL_OFFSET
@@ -223,10 +238,10 @@ contract MrEthSetup is Test {
         );
         mrETH = address(rewardBearingToken);
 
-        // Verify that `DepositManager`'s `SupplyManagerV2` address matches the deployed one.
+        // Verify that `DepositManagerPool`'s `SupplyManagerV2` address matches the deployed one.
         require(
-            depositManager.SUPPLY_MANAGER() == address(supplyManagerV2),
-            "DepositManager's SupplyManagerV2 address does not match deployed address"
+            depositManagerPool.SUPPLY_MANAGER() == address(supplyManagerV2),
+            "DepositManagerPool's SupplyManagerV2 address does not match deployed address"
         );
 
         // Deploy the WETH token Vault.
@@ -234,6 +249,7 @@ contract MrEthSetup is Test {
             owner,
             mrETH,
             address(supplyManagerV2),
+            owner,
             owner
         );
 
@@ -246,6 +262,7 @@ contract MrEthSetup is Test {
             owner,
             mrETH,
             address(supplyManagerV2),
+            owner,
             owner
         );
         stEthVault = address(tokenVaultStETH);
@@ -258,6 +275,7 @@ contract MrEthSetup is Test {
             owner,
             mrETH,
             address(supplyManagerV2),
+            owner,
             owner
         );
         ethVault = payable(address(tokenVaultETH));
@@ -300,8 +318,12 @@ contract MrEthSetup is Test {
 
         newDelegationPortions[0] = 10_000;
 
+        // Grant `AUTHORIZED_STAKER_ROLE` for the setup.
+        depositManagerPool.grantRole(depositManagerPool.AUTHORIZED_STAKER_ROLE(), owner);
+
         // Add the default operator.
-        depositManager.addOperator(
+        bytes memory addOperatorData = abi.encodeWithSelector(
+            depositManagerRestaker.addOperator.selector,
             defaultOperator,
             APPROVER_SALT,
             approverSignatureAndExpiry,
@@ -310,16 +332,25 @@ contract MrEthSetup is Test {
             newDelegationPortions // 100% allocation.
         );
 
+        (bool success, ) = address(depositManagerPool).call(addOperatorData);
+        require(success, "addOperator failed");
+
+        IDepositManagerRestaker.AddStrategyData[]
+            memory addStrategiesData = new IDepositManagerRestaker.AddStrategyData[](1);
+        addStrategiesData[0] = IDepositManagerRestaker.AddStrategyData({
+            token: address(stEth),
+            newStrategy: stEthStrategy,
+            strategyLib: IStrategyLib(address(0))
+        });
+
         // Add the stETH strategy.
-        address[] memory strategies = new address[](1);
-        IStrategy[] memory strategyAddresses = new IStrategy[](1);
-        IStrategyLib[] memory strategyLibraries = new IStrategyLib[](1);
+        bytes memory addStrategiesDataEncoded = abi.encodeWithSelector(
+            depositManagerRestaker.addStrategies.selector,
+            addStrategiesData
+        );
 
-        strategies[0] = address(stEth);
-        strategyAddresses[0] = stEthStrategy;
-        strategyLibraries[0] = IStrategyLib(address(0));
-
-        depositManager.addStrategies(strategies, strategyAddresses, strategyLibraries);
+        (success, ) = address(depositManagerPool).call(addStrategiesDataEncoded);
+        require(success, "addStrategies failed");
     }
 
     /**

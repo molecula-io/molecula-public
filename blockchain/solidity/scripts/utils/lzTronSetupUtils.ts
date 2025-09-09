@@ -38,9 +38,13 @@ export async function setUsdtOftFee(
 ) {
     const artifact = await hre.artifacts.readArtifact('UsdtOFT');
     const usdtOftContract = tronWeb.contract(artifact.abi, usdtOftAddress);
-    // @ts-ignore
-    await usdtOftContract.setFeeBps(10).send();
-    console.log(`\tSet fee for the contract ${usdtOftAddress}.`);
+    try {
+        // @ts-ignore
+        await usdtOftContract.setFeeBps(10).send();
+        console.log(`\tSet fee for the contract ${usdtOftAddress}.`);
+    } catch (error) {
+        console.error('Set fee for the contract failed:', error);
+    }
 }
 
 // @ts-ignore
@@ -77,9 +81,9 @@ export async function setReceiveConfig(
             // @ts-ignore
             .setConfig(oappAddress, receiveLibAddress, [setConfigParam])
             .send();
-        console.log('Transaction sent:', tx);
+        console.log('Receive configuration transaction sent:', tx);
     } catch (error) {
-        console.error('Transaction failed:', error);
+        console.error('Receive configuration transaction failed:', error);
     }
 }
 
@@ -137,8 +141,8 @@ export async function setSendConfig(
                 [setConfigParamUln, setConfigParamExecutor], // Array of SetConfigParam structs
             )
             .send();
-        console.log('Transaction sent:', tx);
+        console.log('Send configuration transaction sent:', tx);
     } catch (error) {
-        console.error('Transaction failed:', error);
+        console.error('Send configuration transaction failed:', error);
     }
 }

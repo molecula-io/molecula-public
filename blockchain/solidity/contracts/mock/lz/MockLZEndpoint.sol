@@ -94,12 +94,12 @@ contract MockLZEndpoint {
     /**
      * @dev Called when the data is received from the protocol. It overrides the equivalent function in the parent contract.
      * Protocol messages are defined as packets, comprised of the following parameters.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
-     * @param msgType The message type.
-     * @param requestId The request ID.
-     * @param value The data values.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
+     * @param msgType Message type.
+     * @param requestId Request ID.
+     * @param value Data values.
      */
     function lzReceive(
         address oApp,
@@ -124,14 +124,14 @@ contract MockLZEndpoint {
     /**
      * @dev Called when the data is received from the protocol and we need to update oracle data. It overrides the equivalent function in the parent contract.
      * Protocol messages are defined as packets, comprised of the following parameters.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
-     * @param msgType The message type.
-     * @param requestId The request ID.
-     * @param shares The data shares.
-     * @param totalValue The data totalValue.
-     * @param totalShares The data totalShares.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
+     * @param msgType Message type.
+     * @param requestId Request ID.
+     * @param shares Data shares.
+     * @param totalValue `totalValue` data.
+     * @param totalShares `totalShares` data.
      */
     function lzReceiveAndUpdateOracle(
         address oApp,
@@ -165,14 +165,14 @@ contract MockLZEndpoint {
     /**
      * @dev Called when the data is received from the protocol and we need to update oracle data. It overrides the equivalent function in the parent contract.
      * Protocol messages are defined as packets, comprised of the following parameters.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
-     * @param msgType The message type.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
+     * @param msgType Message type.
      * @param users Users.
      * @param shares Shares.
-     * @param totalValue The data totalValue.
-     * @param totalShares The data totalShares.
+     * @param totalValue `totalValue` data.
+     * @param totalShares `totalShares` data.
      */
     function lzReceiveDistributeYieldAndUpdateOracle(
         address oApp,
@@ -205,7 +205,7 @@ contract MockLZEndpoint {
 
     /**
      * @dev Encodes a distribute yield message and update the oracle.
-     * @param msgType The message type.
+     * @param msgType Message type.
      * @param users The addresses of the users.
      * @param shares Number of shares.
      * @param totalValue Total value.
@@ -258,10 +258,10 @@ contract MockLZEndpoint {
 
     /**
      * @dev Call the redeem operation on an OApp.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
-     * @param msgType The message type.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
+     * @param msgType Message type.
      * @param requestIds The request IDs.
      * @param values The data values.
      */
@@ -320,7 +320,7 @@ contract MockLZEndpoint {
 
     /**
      * @dev Encodes a distribute yield message.
-     * @param msgType The message type.
+     * @param msgType Message type.
      * @param users The addresses of the users.
      * @param shares Number of shares.
      * @return message Encoded message.
@@ -366,9 +366,9 @@ contract MockLZEndpoint {
     /**
      * @dev Called when the data is received from the protocol. It overrides the equivalent function in the parent contract.
      * Protocol messages are defined as packets, comprised of the following parameters.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
      * @param value The data values.
      */
     function lzReceiveConfirmToSwapUSDT(
@@ -391,9 +391,9 @@ contract MockLZEndpoint {
     /**
      * @dev Called when the data is received from the protocol. It overrides the equivalent function in the parent contract.
      * Protocol messages are defined as packets, comprised of the following parameters.
-     * @param oApp The address of the OApp.
-     * @param srcEid The source chain ID.
-     * @param sender The sender address.
+     * @param oApp OApp's address.
+     * @param srcEid Source chain ID.
+     * @param sender Sender's address.
      * @param value The data values.
      */
     function lzReceiveRequestToSwapWmUSDT(

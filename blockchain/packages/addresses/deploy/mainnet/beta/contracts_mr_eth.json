@@ -1,6 +1,8 @@
 {
     "eth": {
-        "depositManager": "",
+        "depositManagerPool": "",
+        "depositManagerRestaker": "",
+        "depositManagerLib": "",
         "delegatorImplementation": "",
         "supplyManagerV2": "",
         "mrETH": "",

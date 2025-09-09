@@ -21,6 +21,7 @@ export type TronNetworkConfig = {
     LAYER_ZERO_TRON_EID: number;
     LAYER_ZERO_ARBITRUM_EID: number;
     LAYER_ZERO_CELO_EID: number;
+    LAYER_ZERO_SOLANA_EID: number;
 
     // System contracts
     USDT_ADDRESS: TronAddress;

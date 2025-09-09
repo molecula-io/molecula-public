@@ -105,7 +105,7 @@ interface IAllocationManagerTypes {
     /**
      * @notice Defines allocation information from a strategy for an operator set.
      * @param currentMagnitude Current magnitude allocated from the strategy to the operator set.
-     * @param pendingDiff Pending change in magnitude, if exists, or `0` otherwise.
+     * @param pendingDiff Pending change in magnitude, if exists, or 0 otherwise.
      * @param effectBlock Block at which the pending magnitude difference will take effect.
      */
     struct Allocation {

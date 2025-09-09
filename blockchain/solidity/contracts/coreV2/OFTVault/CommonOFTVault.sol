@@ -14,7 +14,7 @@ import {ERC7540Operator} from "./../TokenVault/ERC7540Operator.sol";
 import {ICommonOFTVault} from "./interfaces/ICommonOFTVault.sol";
 
 /**
- * @title CommonOFTVault
+ * @title CommonOFTVault.
  * @notice Cross-chain Vault for bridging shares (e.g., mUSD) and synchronizing supply data via LayerZero v2.
  * @dev Handles bridging, burning, minting, and synchronizing total supply with an on-chain Oracle. Uses LayerZero OApp v2 messaging.
  */

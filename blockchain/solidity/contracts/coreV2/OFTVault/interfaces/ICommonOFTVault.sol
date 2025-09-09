@@ -3,7 +3,7 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title ICommonOFTVault
+ * @title ICommonOFTVault.
  * @notice Interface for the CommonOFTVault cross-chain bridging contract.
  */
 interface ICommonOFTVault {

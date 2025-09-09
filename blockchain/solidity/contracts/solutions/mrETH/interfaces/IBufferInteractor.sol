@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-/// @title Buffer Interactor Interface
+/// @title Buffer Interactor Interface.
 /// @notice Defines the functions required for interacting with liquidity pools.
 interface IBufferInteractor {
     /**

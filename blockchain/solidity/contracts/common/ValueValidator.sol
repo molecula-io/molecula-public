@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 
 import {ConstantsCoreV2} from "./../coreV2/Constants.sol";
 
-/// @title ValueValidator
+/// @title ValueValidator.
 /// @notice Contract for validating common value-based conditions.
 /// @dev Provides modifiers to check for zero values, zero addresses, and `msg.value` conditions.
 contract ValueValidator {

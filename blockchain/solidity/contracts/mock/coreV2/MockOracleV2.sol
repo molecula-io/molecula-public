@@ -8,7 +8,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IOracleV2} from "../../coreV2/interfaces/IOracleV2.sol";
 
 /**
- * @title MockOracle
+ * @title MockOracle.
  */
 contract MockOracleV2 is Ownable, IOracleV2 {
     /// @dev Total pool value tracked by the Oracle.

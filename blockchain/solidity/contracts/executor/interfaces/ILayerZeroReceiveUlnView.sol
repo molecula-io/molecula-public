@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title LayerZero ULN Verification and Execution State Enums & View Interface
+/// @title LayerZero ULN Verification and Execution State Enums & View Interface.
 /// @dev These enums and interface are used for verifying and tracking LayerZero Ultra Light Node packet states.
 
 /**
@@ -69,12 +69,19 @@ interface IReceiveUlnView {
 
     /**
      * @dev Returns the current ULN configuration for a given OApp and remote EID.
-     * @param _oapp       Address of the OApp (on this chain).
-     * @param _remoteEid  Remote LayerZero endpoint ID.
-     * @return rtnConfig  Current ULN config for this OApp and remote endpoint.
+     * @param _oapp Address of the OApp (on this chain).
+     * @param _remoteEid Remote LayerZero endpoint ID.
+     * @return rtnConfig Current ULN config for this OApp and remote endpoint.
      */
     function getUlnConfig(
         address _oapp,
         uint32 _remoteEid
     ) external view returns (UlnConfig memory rtnConfig);
+
+    /**
+     * @dev Asserts that the provided packet header is valid for the local endpoint ID.
+     * @param _packetHeader Encoded packet header bytes.
+     * @param _localEid Local LayerZero endpoint ID.
+     */
+    function assertHeader(bytes calldata _packetHeader, uint32 _localEid) external pure;
 }

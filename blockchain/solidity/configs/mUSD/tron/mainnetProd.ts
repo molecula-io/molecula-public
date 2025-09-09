@@ -1,4 +1,9 @@
-import { tronAuthorizedAddresses, TronChainIDs } from '@molecula-monorepo/blockchain.addresses';
+import {
+    tronAuthorizedAddresses,
+    TronChainIDs,
+    tronStaticOFTAddresses,
+    tronStaticTokenAddresses,
+} from '@molecula-monorepo/blockchain.addresses';
 
 import type { TronNetworkConfig } from './types';
 
@@ -29,10 +34,11 @@ export const tronMainnetProdConfig: TronNetworkConfig = {
     LAYER_ZERO_TRON_EID: 30420,
     LAYER_ZERO_ARBITRUM_EID: 30110,
     LAYER_ZERO_CELO_EID: 30125,
+    LAYER_ZERO_SOLANA_EID: 30168,
 
     // System contracts
-    USDT_ADDRESS: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-    USDT_OFT: 'TNUNom8gxjzLvyquXTKsS74DN2k1t9nTPP',
+    USDT_ADDRESS: tronStaticTokenAddresses.USDT[TronChainIDs.Mainnet],
+    USDT_OFT: tronStaticOFTAddresses.USDT[TronChainIDs.Mainnet],
 
     // Authorized wallets
     OWNER: 'TRe77oDAPYpxfdAZtswUfeqqjJ5ABcMs6S',

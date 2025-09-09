@@ -8,3 +8,4 @@ export * from './deployRebaseToken';
 export * from './deploywmUSD';
 export * from './deployRebaseTokenOwner';
 export * from './deployOFTVault';
+export * from './migrateAccountantLZ';

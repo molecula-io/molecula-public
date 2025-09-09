@@ -8,7 +8,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ValueValidator} from "./../common/ValueValidator.sol";
 import {IWhitelistedExecutor} from "./interfaces/IWhitelistedExecutor.sol";
 
-/// @title WhitelistedExecutor
+/// @title WhitelistedExecutor.
 abstract contract WhitelistedExecutor is Ownable, IWhitelistedExecutor, ValueValidator {
     using Address for address;
     using Address for address payable;

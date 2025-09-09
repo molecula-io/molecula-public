@@ -56,6 +56,7 @@ async function loadPartEvents<FilterName, Result>(
                       block: data.block_number,
                       name: subscriber.method as FilterName,
                       result: data.result as Result,
+                      index: data.event_index,
                   };
               })
             : [];

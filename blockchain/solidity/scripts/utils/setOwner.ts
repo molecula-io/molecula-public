@@ -22,7 +22,7 @@ export async function setOwner(
         const currentOwner = await ownableContract.owner();
         if (currentOwner === newOwner) {
             console.log(
-                `\tContract ${contract.name} ${contract.addr} has already the owner. Skipped.`,
+                `\tContract ${contract.name} ${contract.addr} already has this owner. Skipped.`,
             );
         } else if (currentOwner === account.address) {
             // @ts-ignore

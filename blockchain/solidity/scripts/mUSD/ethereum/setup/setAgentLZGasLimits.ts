@@ -4,7 +4,13 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { ContractsCarbon, EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import { OAPP_GAS_LIMITS_BY_ENV } from '../../../../configs/layerzero/omniConfig';
-import { readFromFile } from '../../../utils/deployUtils';
+
+import {
+    formatGasLimitMsgType,
+    GAS_LIMIT_BASE,
+    GAS_LIMIT_UNIT,
+    readFromFile,
+} from '../../../utils';
 
 export async function setAgentLZGasLimits(
     hre: HardhatRuntimeEnvironment,
@@ -28,6 +34,19 @@ export async function setAgentLZGasLimits(
         }
 
         try {
+            const currentBaseGas = await agentLZ.gasLimit(
+                formatGasLimitMsgType(msgType, GAS_LIMIT_BASE),
+            );
+            const currentUnitGas = await agentLZ.gasLimit(
+                formatGasLimitMsgType(msgType, GAS_LIMIT_UNIT),
+            );
+
+            if (currentBaseGas === BigInt(baseGas) && currentUnitGas === BigInt(unitGas)) {
+                console.log(`Skipped for (msgType: 0x${msgType.toString(16)})`);
+                console.log(`   → base: ${baseGas.toString()}, unit: ${unitGas.toString()}`);
+                continue;
+            }
+
             const tx = await agentLZ.setGasLimit(msgType, baseGas, unitGas);
             await tx.wait(); // Wait for transaction to be mined before proceeding
 

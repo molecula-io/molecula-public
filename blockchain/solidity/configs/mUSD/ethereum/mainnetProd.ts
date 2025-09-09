@@ -4,6 +4,7 @@ import {
     evmStaticTokenAddresses,
     staticPoolCurrenciesRetailMainnet,
     staticPoolCurrenciesMetaETHMainnet,
+    evmStaticOFTAddresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -41,12 +42,15 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
     /** CELO EID. */
     LAYER_ZERO_CELO_EID: 30125,
 
+    /** SOLANA EID. */
+    LAYER_ZERO_SOLANA_EID: 30168,
+
     /** MOCK Layer Zero OAPP Tron Mainnet */
     LAYER_ZERO_TRON_MAINNET_OAPP_MOCK:
         '0x51408ca3b420462a5b3f0bf75b6934a521ea3fe4dc2dce5614a995a89f54fcef',
 
     /** USDT_OFT address. */
-    USDT_OFT: '0x811ed79dB9D34E83BDB73DF6c3e07961Cfb0D5c0',
+    USDT_OFT: evmStaticOFTAddresses.USDT[EVMChainIDs.Mainnet],
 
     /** USDT token address on Ethereum Mainnet. */
     USDT_ADDRESS: evmStaticTokenAddresses.USDT[EVMChainIDs.Mainnet],

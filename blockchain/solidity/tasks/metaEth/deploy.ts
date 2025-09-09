@@ -2,7 +2,7 @@
 
 import { scope } from 'hardhat/config';
 
-import { deployMetaEth, getEnvironment, writeToFile } from '../../scripts';
+import { deployAndInitMetaEth, getEnvironment, getMetaEthConfig, writeToFile } from '../../scripts';
 
 const metaEthScope = scope('metaEth', 'Scope for metaEth solution');
 
@@ -14,9 +14,11 @@ metaEthScope
         console.log('Network:', hre.network.name);
 
         const environment = getEnvironment(hre, taskArgs.environment);
+        const { config, account, chainId } = await getMetaEthConfig(hre, environment);
 
+        const withPoolTokens = hre.network.name !== 'sepolia';
         const result = {
-            eth: await deployMetaEth(hre, environment),
+            eth: await deployAndInitMetaEth(hre, config, account, chainId, withPoolTokens),
         };
 
         writeToFile(`${environment}/contracts_meta_eth.json`, result);

@@ -7,7 +7,7 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title WadRayMath library
+ * @title WadRayMath library.
  * @author AAVE
  * @notice Provides functions to perform calculation with Wad and Ray units.
  * @dev Provides the `mul` and `div` functions for:

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../contracts/interfaces/IUSDeSiloDefinitions.sol";
 
 /**
- * @title USDeSilo
+ * @title USDeSilo.
  * @notice Silo allows to store USDe during the stake cooldown process.
  */
 contract USDeSilo is IUSDeSiloDefinitions {

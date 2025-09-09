@@ -5,7 +5,7 @@ pragma solidity ^0.8.24;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IPriceChecker} from "./interfaces/IPriceChecker.sol";
 
-/// @title PriceCheckerClient
+/// @title PriceCheckerClient.
 /// @dev Abstract contract for interacting with the price checker service.
 /// @dev Inherits from Ownable to manage price checker address updates.
 abstract contract PriceCheckerClient is Ownable {

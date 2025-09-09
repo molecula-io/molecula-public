@@ -6,7 +6,7 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title IScaledBalanceToken
+ * @title IScaledBalanceToken.
  * @author Aave
  * @notice Defines the basic interface for a scaled-balance token.
  */
