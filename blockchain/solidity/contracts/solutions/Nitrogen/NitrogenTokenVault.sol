@@ -108,13 +108,12 @@ contract NitrogenTokenVault is
             if (assets[i] > 0) {
                 // Store the assets' amount for this request.
                 RequestInfo storage requestInfo = redeemRequests[requestIds[i]];
-                requestInfo.assets = assets[i];
 
                 // Decrease the pending shares since the request is fulfilled and
                 // increase the amount of claimable assets that the user can withdraw.
                 RedeemInfo storage redeemInfo = _redeemInfo[requestInfo.controller];
                 redeemInfo.pendingRedeemShares -= requestInfo.shares;
-                redeemInfo.claimableRedeemAssets += requestInfo.assets;
+                redeemInfo.claimableRedeemAssets += assets[i];
             }
         }
 
@@ -128,24 +127,15 @@ contract NitrogenTokenVault is
         address receiver,
         address owner
     ) external virtual override onlyOperator(owner) returns (uint256 requestId) {
-        // Redeem the claimable assets.
-        uint256 claimableRedeemShares = convertToShares(_redeemInfo[owner].claimableRedeemAssets);
-        if (claimableRedeemShares > 0) {
-            if (shares <= claimableRedeemShares) {
-                _withdraw(convertToAssets(shares), receiver, owner);
-                return 0;
-            }
-
-            shares -= claimableRedeemShares;
-            _withdraw(convertToAssets(claimableRedeemShares), receiver, owner);
-        }
-
         // Request to redeem the remaining shares.
         // slither-disable-next-line reentrancy-no-eth
         requestId = _requestRedeem(shares, msg.sender, owner);
 
         // Find the Molecula Pool's address.
         address moleculaPool = ISupplyManager(SUPPLY_MANAGER).getMoleculaPool();
+
+        // Store the current claimable assets before redeeming to calculate the newly redeemed amount later.
+        uint256 prevAssets = _redeemInfo[msg.sender].claimableRedeemAssets;
 
         // Try to redeem from the Pool.
         uint256[] memory requestIds = new uint256[](1);
@@ -154,7 +144,7 @@ contract NitrogenTokenVault is
         MoleculaPoolTreasuryV2(moleculaPool).redeem(requestIds);
 
         // Withdraw the redeemed assets.
-        _withdraw(redeemRequests[requestId].assets, receiver, msg.sender);
+        _withdraw(_redeemInfo[msg.sender].claimableRedeemAssets - prevAssets, receiver, msg.sender);
     }
 
     /// @inheritdoc Ownable2Step
@@ -277,7 +267,6 @@ contract NitrogenTokenVault is
         redeemRequests[requestId] = RequestInfo({
             controller: controller,
             owner: owner,
-            assets: 0, // Set the correct value in the `_fulfillRedeemRequests` function.
             shares: shares
         });
     }

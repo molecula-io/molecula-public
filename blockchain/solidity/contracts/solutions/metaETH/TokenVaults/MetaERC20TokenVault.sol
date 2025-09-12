@@ -38,24 +38,15 @@ contract MetaERC20TokenVault is ITokenVaultWithImmediateRedeem, ERC20TokenVault 
         address receiver,
         address owner
     ) external virtual onlyOperator(owner) returns (uint256 requestId) {
-        // Redeem the claimable assets.
-        uint256 claimableRedeemShares = convertToShares(_redeemInfo[owner].claimableRedeemAssets);
-        if (claimableRedeemShares > 0) {
-            if (shares <= claimableRedeemShares) {
-                _withdraw(convertToAssets(shares), receiver, owner);
-                return 0;
-            }
-
-            shares -= claimableRedeemShares;
-            _withdraw(convertToAssets(claimableRedeemShares), receiver, owner);
-        }
-
         // Request to redeem the remaining shares.
         // slither-disable-next-line reentrancy-no-eth
         requestId = _requestRedeem(shares, msg.sender, owner);
 
         // Find the Molecula Pool's address.
         address moleculaPool = ISupplyManagerV2(SUPPLY_MANAGER).getMoleculaPool();
+
+        // Store the current claimable assets before redeeming to calculate the newly redeemed amount later.
+        uint256 prevAssets = _redeemInfo[msg.sender].claimableRedeemAssets;
 
         // Try to redeem from the Pool.
         uint256[] memory requestIds = new uint256[](1);
@@ -64,7 +55,7 @@ contract MetaERC20TokenVault is ITokenVaultWithImmediateRedeem, ERC20TokenVault 
         IMetaPoolTreasury(moleculaPool).fulfillRedeemRequests(requestIds);
 
         // Withdraw the redeemed assets.
-        _withdraw(_redeemInfo[msg.sender].claimableRedeemAssets, receiver, msg.sender);
+        _withdraw(_redeemInfo[msg.sender].claimableRedeemAssets - prevAssets, receiver, msg.sender);
     }
 
     // ============ View Functions ============

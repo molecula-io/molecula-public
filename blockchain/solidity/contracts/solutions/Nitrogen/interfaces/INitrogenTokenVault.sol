@@ -8,12 +8,10 @@ interface INitrogenTokenVault {
     /// @dev Information about a deposit or redemption request.
     /// @param controller Controller's address.
     /// @param owner Owner's address.
-    /// @param assets Assets amount.
     /// @param shares Shares amount.
     struct RequestInfo {
         address controller;
         address owner;
-        uint256 assets;
         uint256 shares;
     }
 
