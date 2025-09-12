@@ -37,27 +37,30 @@ abstract contract MrEthBaseTokenVault is
     /// @inheritdoc ITokenVaultWithImmediateRedeem
     function redeemImmediately(
         uint256 shares,
-        address controller,
+        address receiver,
         address owner
     ) external virtual onlyOperator(owner) returns (uint256 requestId) {
-        return _redeemImmediately(shares, controller, owner);
+        return _redeemImmediately(shares, receiver, owner);
     }
 
-    /// @dev Processes a redemption request.
-    /// @param shares Amount of shares to redeem.
-    /// @param controller Address that will receive assets.
-    /// @param owner Address that owns the shares.
-    /// @return requestId Redemption's ID.
-    /// Note: `notZeroAddress(owner)` is not called as the owner has already been checked.
+    /**  @dev Redeem shares immediately. Follows the sequences:
+     * - Creates a new redemption operation request.
+     * - Fulfills the request.
+     * - Claims the redeemed assets.
+     * @param shares Amount of shares to redeem.
+     * @param receiver Receiver's of assets address.
+     * @param owner Owner of shares.
+     * @return requestId Operation ID.
+     */
     function _redeemImmediately(
         uint256 shares,
-        address controller,
+        address receiver,
         address owner
     )
         internal
         virtual
         checkNotPause(_REQUEST_REDEEM_SELECTOR)
-        notZeroAddress(controller)
+        notZeroAddress(receiver)
         returns (uint256 requestId)
     {
         // Check if the requested shares do not exceed the owner's balance.
@@ -85,6 +88,9 @@ abstract contract MrEthBaseTokenVault is
         // Convert withdrawable assets into shares to determine the exact amount to request for redemption.
         uint256 withdrawableShares = convertToShares(withdrawableAssets);
 
+        // Increase the amount of pending redeem shares for the controller.
+        _redeemInfo[msg.sender].pendingRedeemShares += withdrawableShares;
+
         // Burn the owner's shares.
         // slither-disable-next-line reentrancy-benign
         IIssuer(_issuer()).burn(owner, shares);
@@ -96,20 +102,21 @@ abstract contract MrEthBaseTokenVault is
         // Call the Supply Manager's `requestRedeem` method.
         // slither-disable-next-line reentrancy-benign
         uint256 assets = _supplyManagerRequestRedeem(
-            controller,
+            msg.sender,
             owner,
             requestId,
             withdrawableShares
         );
 
-        // Increase the amount of pending redeem shares for the controller.
-        _redeemInfo[controller].pendingRedeemShares += withdrawableShares;
-
         // Redeem the assets from the Molecula Pool.
+        // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
         _redeemImmediatelyFromPool(requestId);
 
+        // Withdraw the redeemed assets.
+        _withdraw(assets, receiver, msg.sender);
+
         // Emit an event to log the immediate redemption operation request.
-        emit ImmediateRedeem(controller, owner, requestId, msg.sender, assets);
+        emit ImmediateRedeem(msg.sender, owner, requestId, receiver, assets);
     }
 
     /// @inheritdoc IMrEthImmediateRedeemVault

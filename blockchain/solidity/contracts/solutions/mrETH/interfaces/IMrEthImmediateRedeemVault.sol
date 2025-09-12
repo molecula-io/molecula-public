@@ -12,13 +12,13 @@ interface IMrEthImmediateRedeemVault is ITokenVaultWithImmediateRedeem {
     /// @param controller Controller's address.
     /// @param owner Owner's address.
     /// @param requestId Request's ID.
-    /// @param sender Sender's address.
+    /// @param receiver Receiver's of assets address.
     /// @param assets Amount of assets to redeem.
     event ImmediateRedeem(
         address indexed controller,
         address indexed owner,
         uint256 indexed requestId,
-        address sender,
+        address receiver,
         uint256 assets
     );
 

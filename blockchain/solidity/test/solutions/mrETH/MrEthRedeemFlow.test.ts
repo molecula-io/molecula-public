@@ -52,19 +52,14 @@ describe('Test mrETH redeem flow', () => {
 
             const ownerWithdrawableAssets = await wEthVault.claimableRedeemAssets(owner);
 
-            expect(ownerImmediateWithdrawableAssets).to.be.lessThan(ownerWithdrawableAssets);
-            expect(await rewardBearingToken.sharesOf(owner)).to.be.equal(0n);
-            expect(await WETH.balanceOf(wEthVault)).to.be.equal(ownerWithdrawableAssets);
-            expect(await WETH.balanceOf(owner)).to.be.equal(ownerBalanceBeforeRedeem);
-
-            await wEthVault
-                .connect(owner)
-                .withdraw(await wEthVault.claimableRedeemAssets(owner), owner, owner);
-
+            expect(ownerWithdrawableAssets).to.be.equal(0n);
             expect(await rewardBearingToken.sharesOf(owner)).to.be.equal(0n);
             expect(await WETH.balanceOf(wEthVault)).to.be.equal(0n);
-            expect(await WETH.balanceOf(owner)).to.be.equal(
-                ownerBalanceBeforeRedeem + ownerWithdrawableAssets,
+            expectEqual(
+                await WETH.balanceOf(owner),
+                ownerBalanceBeforeRedeem + ownerImmediateWithdrawableAssets,
+                18,
+                9,
             );
 
             // User0 redeem immediately
@@ -74,19 +69,14 @@ describe('Test mrETH redeem flow', () => {
 
             const user0WithdrawableAssets = await wEthVault.claimableRedeemAssets(user0);
 
-            expect(user0ImmediateWithdrawableAssets).to.be.lessThan(user0WithdrawableAssets);
-            expect(await rewardBearingToken.sharesOf(user0)).to.be.equal(0n);
-            expect(await WETH.balanceOf(wEthVault)).to.be.equal(user0WithdrawableAssets);
-            expect(await WETH.balanceOf(user0)).to.be.equal(user0BalanceBeforeRedeem);
-
-            await wEthVault
-                .connect(user0)
-                .withdraw(await wEthVault.claimableRedeemAssets(user0), user0, user0);
-
+            expect(user0WithdrawableAssets).to.be.equal(0n);
             expect(await rewardBearingToken.sharesOf(user0)).to.be.equal(0n);
             expect(await WETH.balanceOf(wEthVault)).to.be.equal(0n);
-            expect(await WETH.balanceOf(user0)).to.be.equal(
-                ownerBalanceBeforeRedeem + user0WithdrawableAssets,
+            expectEqual(
+                await WETH.balanceOf(user0),
+                user0BalanceBeforeRedeem + user0ImmediateWithdrawableAssets,
+                18,
+                9,
             );
 
             // Withdrawable assets in vault
@@ -129,25 +119,23 @@ describe('Test mrETH redeem flow', () => {
 
             expect(await provider.getBalance(nativeVault)).to.be.equal(0n);
 
+            const ownerBalanceBeforeRedeem = await provider.getBalance(owner);
+            const ownerImmediateWithdrawableAssets =
+                await nativeVault.previewImmediateRedeem(ownerShares);
+
             // Redeem immediately
             await nativeVault.redeemImmediately(ownerShares, owner, owner);
 
             const ownerWithdrawableAssets = await nativeVault.claimableRedeemAssets(owner);
-            const ownerBalanceBeforeRedeem = await provider.getBalance(owner);
 
-            expect(await provider.getBalance(nativeVault)).to.be.equal(ownerWithdrawableAssets);
-            expect(await rewardBearingToken.sharesOf(owner)).to.be.equal(0n);
-            expect(await provider.getBalance(nativeVault)).to.be.equal(ownerWithdrawableAssets);
-
-            await nativeVault.withdraw(ownerWithdrawableAssets, owner, owner);
-
+            expect(ownerWithdrawableAssets).to.be.equal(0n);
             expect(await nativeVault.claimableRedeemAssets(owner)).to.be.equal(0n);
             expect(await rewardBearingToken.sharesOf(owner)).to.be.equal(0n);
             expect(await provider.getBalance(nativeVault)).to.be.equal(0n);
 
-            // Less because of the gas fee
+            // Less because of the gas fee and yield
             expect(await provider.getBalance(owner)).to.be.lessThan(
-                ownerBalanceBeforeRedeem + ownerWithdrawableAssets,
+                ownerBalanceBeforeRedeem + ownerImmediateWithdrawableAssets,
             );
         });
 

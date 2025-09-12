@@ -9,6 +9,7 @@ import {
     MUSDLock__factory,
     IOracle__factory,
     AccountantAgent__factory,
+    IAgent__factory,
     ILayerZeroEndpointV2__factory,
     IERC20Basic__factory,
     IERC20Metadata__factory,
@@ -81,6 +82,7 @@ import type {
     CommonTokenVault,
     NativeTokenVault,
     ShareToken,
+    IAgent,
 } from './types';
 
 export const EvmContractSafeFactory = {
@@ -148,6 +150,16 @@ export const EvmContractSafeFactory = {
         return new EvmContractSafe<ERC4626>(
             {
                 factory: ERC4626__factory,
+                address,
+            },
+            rpcProvider,
+        );
+    },
+
+    IAgent: (address: string, rpcProvider: ProviderOrRunner) => {
+        return new EvmContractSafe<IAgent>(
+            {
+                factory: IAgent__factory,
                 address,
             },
             rpcProvider,

@@ -10,33 +10,34 @@ import type {
 } from '@molecula-monorepo/solidity/typechain-types';
 
 import type {
-    AgentLZ,
-    MUSDLock,
-    RebaseToken,
-    SupplyManager,
-    IOracle,
+    AavePool,
     AccountantAgent,
-    ILayerZeroEndpointV2,
-    MUSDE,
+    AgentLZ,
+    Aragon,
+    CommonTokenVault,
     ERC20,
     ERC4626,
-    StakedUSDe,
-    SavingsUSDS,
-    SFrxUSD,
-    AavePool,
-    PostfixOverrides,
-    IERC20Basic,
+    IAgent,
     ICurveStableSwapFactoryNG,
     ICurveStableSwapNG,
+    IERC20Basic,
     IERC20Metadata,
-    SparkPool,
-    UsdtOFT,
-    Aragon,
-    ReceiveULN,
-    SendULN,
-    TokenVault,
-    CommonTokenVault,
+    ILayerZeroEndpointV2,
+    IOracle,
+    MUSDE,
+    MUSDLock,
     NativeTokenVault,
+    PostfixOverrides,
+    RebaseToken,
+    ReceiveULN,
+    SavingsUSDS,
+    SendULN,
+    SFrxUSD,
+    SparkPool,
+    StakedUSDe,
+    SupplyManager,
+    TokenVault,
+    UsdtOFT,
 } from '../types';
 
 type AnyFunction = () => void;
@@ -75,37 +76,38 @@ export type EvmContractGasCall<Contract extends PickFunctions<Contract>, Respons
 ) => Promise<Response>;
 
 export type AllEvmContracts =
-    | IMoleculaPoolV2
-    | MoleculaPoolTreasury
-    | MoleculaPoolTreasuryV2
-    | AgentLZ
+    | AavePool
     | AccountantAgent
+    | AgentLZ
+    | Aragon
+    | CommonTokenVault
     | ERC20
     | ERC4626
-    | IERC20Basic
-    | IERC20Metadata
-    | RebaseToken
-    | MUSDLock
-    | SupplyManager
-    | IOracle
-    | StakedUSDe
-    | SavingsUSDS
-    | SFrxUSD
-    | ILayerZeroEndpointV2
-    | ReceiveULN
-    | SendULN
     | Executor
-    | MUSDE
-    | AavePool
-    | SparkPool
+    | IAgent
     | ICurveStableSwapFactoryNG
     | ICurveStableSwapNG
-    | UsdtOFT
-    | Aragon
-    | TokenVault
-    | CommonTokenVault
+    | IERC20Basic
+    | IERC20Metadata
+    | ILayerZeroEndpointV2
+    | IMoleculaPoolV2
+    | IOracle
+    | MoleculaPoolTreasury
+    | MoleculaPoolTreasuryV2
+    | MUSDE
+    | MUSDLock
     | NativeTokenVault
     | NitrogenTokenVault
-    | ShareToken;
+    | RebaseToken
+    | ReceiveULN
+    | SavingsUSDS
+    | SendULN
+    | SFrxUSD
+    | ShareToken
+    | SparkPool
+    | StakedUSDe
+    | SupplyManager
+    | TokenVault
+    | UsdtOFT;
 
 export type ProviderOrRunner = Provider | ContractRunner;
