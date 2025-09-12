@@ -4,7 +4,7 @@
 contracts/solutions/Carbon/common/UsdtOFT.sol
 contracts/solutions/Carbon/common/interfaces/IUsdtOFT.sol
 
-# mrETH external contracts contracts
+# mrETH external contracts
 contracts/solutions/mrETH/external
 
 # Hardhat and Forge service directories, npm packages included in node_modules

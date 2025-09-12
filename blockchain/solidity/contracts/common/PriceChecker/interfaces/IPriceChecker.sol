@@ -73,10 +73,12 @@ interface IPriceChecker {
     // ============ Errors ============
 
     /// @dev Error: Chainlink price feed data is stale — exceeded staleness threshold.
-    error EChainlinkPriceFeedStale();
+    /// @param feed Feed's address.
+    error EChainlinkPriceFeedStale(address feed);
 
     /// @dev Error: Price not set.
-    error EPriceNotSet();
+    /// @param feed Feed's address.
+    error EPriceNotSet(address feed);
 
     /// @dev Error: Too low or high staleness threshold.
     error EBadStalenessThreshold();
