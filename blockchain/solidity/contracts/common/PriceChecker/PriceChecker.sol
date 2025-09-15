@@ -85,7 +85,8 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
         if (
             checkerInfo.priceFeed == feed &&
             checkerInfo.priceDeviationBps == bps &&
-            checkerInfo.stalenessThreshold == stalenessThreshold
+            checkerInfo.stalenessThreshold == stalenessThreshold &&
+            checkerInfo.isPresent
         ) {
             revert ESameValue();
         }
