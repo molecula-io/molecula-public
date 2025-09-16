@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
+using Address for address;
 
 /// @dev Gets the decimals of an asset token, defaulting to `18` if the query fails.
 /// @param asset Address of the asset token to query.
@@ -39,4 +43,32 @@ function _normalize(
         value *= uint256(10) ** (targetDecimals - actualDecimals);
     }
     result = value;
+}
+
+/// @dev Call `previewRedeem` function. If the token does not has it, then call `convertToAssets`.
+/// @param token Token address.
+/// @param shares Amount of shares to redeem.
+/// @return assets Amount of assets to receive.
+function _callPreviewRedeem(address token, uint256 shares) view returns (uint256 assets) {
+    // slither-disable-next-line low-level-calls
+    (bool success, bytes memory data) = token.staticcall(
+        abi.encodeWithSelector(IERC4626.previewRedeem.selector, shares)
+    );
+    assets = success && data.length == 32
+        ? abi.decode(data, (uint256))
+        : IERC4626(token).convertToAssets(shares);
+}
+
+/// @dev Call `previewDeposit` function. If the token does not has it, then call `convertToShares`.
+/// @param token Token address.
+/// @param assets Amount of assets to deposit.
+/// @return shares Amount of shares to mint.
+function _callPreviewDeposit(address token, uint256 assets) view returns (uint256 shares) {
+    // slither-disable-next-line low-level-calls
+    (bool success, bytes memory data) = token.staticcall(
+        abi.encodeWithSelector(IERC4626.previewDeposit.selector, assets)
+    );
+    shares = success && data.length == 32
+        ? abi.decode(data, (uint256))
+        : IERC4626(token).convertToShares(assets);
 }

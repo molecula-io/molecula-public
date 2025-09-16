@@ -11,6 +11,7 @@ import { getEthena, grantStakedUSDE, grantUSDe } from '../../utils/Common';
 import {
     deployMoleculaPool,
     deployNitrogenWithStakedUSDe,
+    deployNitrogenWithTokenVault,
     deployNitrogenWithUSDT,
     deployNitrogenWithUSDTAndOldPool,
     getRidOf,
@@ -1299,5 +1300,66 @@ describe('Test Nitrogen solution', () => {
         const { supply, totalRedeem } = await moleculaPool.totalPoolsSupplyAndRedeem();
         expect(supply).to.be.equal(0);
         expect(totalRedeem).to.be.greaterThan(0);
+    });
+
+    it('Test _callPreviewRedeem/_callPreviewDeposit', async () => {
+        const {
+            poolOwner,
+            rebaseToken,
+            guardian,
+            supplyManager,
+            rebaseTokenOwner,
+            moleculaPool,
+            USDT,
+            user0,
+        } = await loadFixture(deployNitrogenWithTokenVault);
+        const oneUnit = 10n ** 18n;
+        const Mock4626Token = await ethers.getContractFactory('MockToken4626');
+        const mock4626Token = await Mock4626Token.deploy(USDT);
+
+        // deposit 100 USDT
+        const depositValue = 100n * 10n ** 6n;
+        // Grant user wallet with 100 USDT
+        await grantERC20(user0, USDT, depositValue);
+        await USDT.connect(user0).approve(mock4626Token, ethers.MaxUint256);
+
+        await mock4626Token.connect(user0).deposit(depositValue, user0);
+        await grantERC20(mock4626Token, USDT, 2n * depositValue);
+
+        const TokenVault = await ethers.getContractFactory('NitrogenTokenVault');
+        const mock4626TokenVault = await TokenVault.connect(poolOwner).deploy(
+            poolOwner,
+            rebaseToken,
+            supplyManager,
+            rebaseTokenOwner,
+            guardian,
+            ethers.ZeroAddress,
+        );
+        await mock4626TokenVault.init(
+            mock4626Token, // asset
+            10n ** 6n, // minDepositValue
+            10n ** 18n, // minRedeemShares
+        );
+        await mock4626TokenVault.unpauseAll();
+
+        await moleculaPool.addToken(mock4626Token);
+        await rebaseTokenOwner.addTokenVault(mock4626TokenVault);
+        await supplyManager.setAgent(mock4626TokenVault, true);
+
+        await mock4626Token.connect(user0).approve(mock4626TokenVault, ethers.MaxUint256);
+        await mock4626TokenVault
+            .connect(user0)
+            .requestDeposit(await mock4626Token.balanceOf(user0), user0, user0);
+
+        const prevAssets = await mock4626TokenVault.convertToAssets(oneUnit);
+        const prevShares = await mock4626TokenVault.convertToShares(oneUnit);
+        const prevSupply = await moleculaPool.totalSupply();
+
+        await mock4626Token.setPreviewDeposit(false);
+        await mock4626Token.setPreviewRedeem(false);
+
+        expect(await mock4626TokenVault.convertToAssets(oneUnit)).to.be.equal(prevAssets);
+        expect(await mock4626TokenVault.convertToShares(oneUnit)).to.be.equal(prevShares);
+        expect(await moleculaPool.totalSupply()).to.be.equal(prevSupply);
     });
 });

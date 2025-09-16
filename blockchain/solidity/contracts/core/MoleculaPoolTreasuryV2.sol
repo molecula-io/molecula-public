@@ -5,7 +5,6 @@ pragma solidity ^0.8.30;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -13,6 +12,7 @@ import {IAgent} from "./../common/interfaces/IAgent.sol";
 import {IMoleculaPool} from "./../common/interfaces/IMoleculaPool.sol";
 import {ISupplyManager} from "./../common/interfaces/ISupplyManager.sol";
 import {PriceCheckerClient} from "./../common/PriceChecker/PriceCheckerClient.sol";
+import {_callPreviewRedeem, _getDecimalsOr18} from "./../common/Utils.sol";
 import {WhitelistedExecutor} from "./../coreV2/WhitelistedExecutor.sol";
 
 /**
@@ -243,7 +243,6 @@ contract MoleculaPoolTreasuryV2 is
             // n == 0.
             result = value;
         }
-        return result;
     }
 
     /// @dev Convert the token value (sUSDe, USDe, etc) to mUSDe.
@@ -262,7 +261,7 @@ contract MoleculaPoolTreasuryV2 is
         if (value > 0) {
             if (isERC4626) {
                 // Convert `value` (e.g. mUSDe to USDe) to assets.
-                value = IERC4626(token).convertToAssets(value);
+                value = _callPreviewRedeem(token, value);
             }
             // Note: `value` is in USD (e.g. USDT, USDe, etc).
             mUSDAmount = _normalize(n, value);
@@ -321,6 +320,7 @@ contract MoleculaPoolTreasuryV2 is
             revert ENotERC20PoolToken();
         }
 
+        // We assume that token is ERC-4626 if it has `convertToAssets` function.
         bool isERC4626 = _hasConvertToAssets(token);
 
         // Ensure that the token is not duplicated.
@@ -338,9 +338,9 @@ contract MoleculaPoolTreasuryV2 is
             // We normalize the underlying asset amount (not the Vault token amount)
             // to mUSD when calculating the total pool supply.
             address underlyingAsset = IERC4626(token).asset();
-            decimals = IERC20Metadata(underlyingAsset).decimals();
+            decimals = _getDecimalsOr18(underlyingAsset);
         } else {
-            decimals = IERC20Metadata(token).decimals();
+            decimals = _getDecimalsOr18(token);
         }
         int8 n = 18 - int8(decimals);
         pool.push(TokenParams(token, n, isERC4626));
@@ -456,13 +456,12 @@ contract MoleculaPoolTreasuryV2 is
         if (poolMap[token].tokenType == TokenType.ERC20) {
             formattedValue = _normalize(poolMap[token].n, value);
         } else {
-            uint256 assets = IERC4626(token).convertToAssets(value);
+            uint256 assets = _callPreviewRedeem(token, value);
             formattedValue = _normalize(poolMap[token].n, assets);
         }
         // Transfer assets to the token holder.
         // slither-disable-next-line arbitrary-send-erc20
         IERC20(token).safeTransferFrom(from, address(this), value);
-        return formattedValue;
     }
 
     /// @inheritdoc IMoleculaPool

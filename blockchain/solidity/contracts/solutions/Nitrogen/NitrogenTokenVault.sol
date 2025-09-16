@@ -4,7 +4,6 @@
 pragma solidity 0.8.30;
 
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IAgent} from "./../../common/interfaces/IAgent.sol";
@@ -12,6 +11,7 @@ import {ISupplyManager} from "./../../common/interfaces/ISupplyManager.sol";
 import {Guardian} from "./../../common/pausable/Guardian.sol";
 import {PriceCheckerClient} from "./../../common/PriceChecker/PriceCheckerClient.sol";
 import {RebaseTokenOwner} from "./../../common/rebase/RebaseTokenOwner.sol";
+import {_callPreviewRedeem, _callPreviewDeposit} from "./../../common/Utils.sol";
 import {MoleculaPoolTreasuryV2, TokenType} from "./../../core/MoleculaPoolTreasuryV2.sol";
 import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {BaseTokenVault} from "./../../coreV2/TokenVault/BaseTokenVault.sol";
@@ -187,8 +187,8 @@ contract NitrogenTokenVault is
         if (tokenType == TokenType.ERC20) {
             moleculaAssets = assets * (uint256(10) ** uint256(int256(n)));
         } else {
-            uint256 assets4626 = IERC4626(_asset).convertToAssets(assets);
-            moleculaAssets = assets4626 * (uint256(10) ** uint256(int256(n)));
+            uint256 underlyingAssets = _callPreviewRedeem(_asset, assets);
+            moleculaAssets = underlyingAssets * (uint256(10) ** uint256(int256(n)));
         }
     }
 
@@ -209,8 +209,8 @@ contract NitrogenTokenVault is
         if (tokenType == TokenType.ERC20) {
             assets = moleculaAssets / (uint256(10) ** uint256(int256(n)));
         } else {
-            uint256 assets2 = moleculaAssets / (uint256(10) ** uint256(int256(n)));
-            assets = IERC4626(_asset).convertToShares(assets2);
+            uint256 underlyingAssets = moleculaAssets / (uint256(10) ** uint256(int256(n)));
+            assets = _callPreviewDeposit(_asset, underlyingAssets);
         }
     }
 
