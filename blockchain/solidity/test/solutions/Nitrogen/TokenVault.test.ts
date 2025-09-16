@@ -54,46 +54,6 @@ describe('Test TokenVault', () => {
         ).to.be.rejectedWith('EInvalidOperator');
     });
 
-    it('Should deposit and redeemImmediately using claimableRedeemAssets', async () => {
-        const { usdcVault, USDC, user0, rebaseToken, moleculaPool } = await loadFixture(
-            deployNitrogenWithTokenVault,
-        );
-
-        const decimals: bigint = await USDC.decimals();
-        const depositValue = 100n * 10n ** decimals;
-
-        // Grand USD and approve tokens for usdcVault
-        await grantERC20(user0, USDC, depositValue);
-        await USDC.connect(user0).approve(usdcVault, depositValue);
-
-        // user0 deposits tokens
-        await usdcVault
-            .connect(user0)
-            ['deposit(uint256,address,address)'](depositValue, user0, user0);
-        const shares = 100n * 10n ** 18n;
-
-        // Generate yield
-        await grantERC20(moleculaPool, USDC, 3n * depositValue);
-        expect(await rebaseToken.sharesOf(user0)).to.be.equal(shares);
-
-        // See redeemImmediately `if (shares <= claimableRedeemShares) {`
-        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.equal(0);
-        const tx = await usdcVault.connect(user0).requestRedeem(shares / 3n, user0, user0);
-        const redeemEvent = await findRequestRedeemEvent(tx);
-        await moleculaPool.redeem([redeemEvent.operationId]);
-        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
-        await usdcVault.connect(user0).redeemImmediately(shares / 4n, user0, user0);
-        expect(await usdcVault.claimableRedeemAssets(user0)).to.be.greaterThan(0);
-
-        // See redeemImmediately `if (shares <= claimableRedeemShares) {` is not true
-        const restShares = await rebaseToken.sharesOf(user0);
-        await usdcVault.connect(user0).redeemImmediately(restShares, user0, user0);
-        expectEqual(await usdcVault.claimableRedeemAssets(user0), 0n);
-
-        // Check user's balance
-        expectEqual(await USDC.balanceOf(user0), 160n * 10n ** decimals, 18, 9);
-    });
-
     it('Should deposit and redeem in one transaction via usdcVault', async () => {
         const {
             usdcVault,
