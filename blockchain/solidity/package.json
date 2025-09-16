@@ -95,7 +95,6 @@
     },
     "dependencies": {
         "@aave/core-v3": "^1.19.3",
-        "@chainlink/contracts": "^1.4.0",
         "@cyfrin/aderyn": "^0.5.5",
         "@fireblocks/ts-sdk": "^10.2.0",
         "@layerzerolabs/lz-definitions": "^3.0.75",
