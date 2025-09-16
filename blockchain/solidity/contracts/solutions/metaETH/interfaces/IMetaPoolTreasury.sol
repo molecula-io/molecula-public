@@ -66,6 +66,9 @@ interface IMetaPoolTreasury {
     /// @dev Error: Wrong attached message value.
     error EWrongMsgValue();
 
+    /// @dev Error: Total supply is less than the total redeem value.
+    error ESupplyLessThanRedeem();
+
     // ============ Events ============
 
     /// @dev Emitted when `token` is blocked or unblocked.

@@ -498,7 +498,13 @@ contract MetaPoolTreasury is
         (uint256 totalMoleculaAssets, uint256 totalRedeem) = totalPoolsSupplyAndRedeem(
             doCheckPrice
         );
-        if (totalRedeem < totalMoleculaAssets) {
+
+        if (totalMoleculaAssets < totalRedeem) {
+            if (doCheckPrice) {
+                // Throw an exception. Otherwise, depositor's shares will be calculated incorrectly.
+                revert ESupplyLessThanRedeem();
+            }
+        } else {
             unchecked {
                 totalPool = totalMoleculaAssets - totalRedeem;
             }
