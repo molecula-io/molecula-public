@@ -1,5 +1,6 @@
 /* eslint-disable camelcase, max-lines, no-restricted-syntax, no-await-in-loop */
 
+import { type Signer } from 'ethers';
 import * as hre from 'hardhat';
 
 import { type EVMAddress, EVMChainIDs } from '@molecula-monorepo/blockchain.addresses';
@@ -7,6 +8,8 @@ import { type EVMAddress, EVMChainIDs } from '@molecula-monorepo/blockchain.addr
 import { metaEthMainnetBetaConfig } from '../../configs';
 
 import { deployAndInitMetaEth } from '../../scripts';
+
+import type { IERC20, MetaPoolTreasury } from '../../typechain-types';
 
 import { generateRandomWallet } from './Common';
 
@@ -131,4 +134,32 @@ export async function deployMetaEth() {
 
         minDepositAssets: config.MIN_DEPOSIT_ETH,
     };
+}
+
+export async function metaGetRidOf(
+    moleculaPool: MetaPoolTreasury,
+    poolOwner: Signer,
+    token: IERC20,
+    receiver: string,
+    poolKeeper: Signer,
+) {
+    // get rid of token from moleculaPool
+    const { selector } = token.interface.getFunction('transfer');
+    if (!(await moleculaPool.connect(poolOwner).isWhitelistedSignature(token, selector))) {
+        await moleculaPool.connect(poolOwner).addInWhiteList(token, selector);
+    }
+    const encodedTransfer = token.interface.encodeFunctionData('transfer', [
+        receiver,
+        await token.balanceOf(moleculaPool),
+    ]);
+    await moleculaPool.connect(poolKeeper).execute(
+        [
+            {
+                target: token,
+                data: encodedTransfer,
+                value: 0n,
+            },
+        ],
+        0,
+    );
 }

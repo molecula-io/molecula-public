@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.24;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ConstantsCoreV2} from "./../../coreV2/Constants.sol";
 import {IERC7575} from "./../../coreV2/external/interfaces/IERC7575.sol";
 import {IBaseTokenVault} from "./../../coreV2/TokenVault/interfaces/ITokenVault.sol";
 import {_getDecimalsOr18, _normalize} from "./../Utils.sol";
 import {ValueValidator} from "./../ValueValidator.sol";
+import {AggregatorV3Interface} from "./externals/AggregatorV3Interface.sol";
 import {IPriceChecker} from "./interfaces/IPriceChecker.sol";
 
 /// @title PriceChecker.
@@ -85,7 +85,8 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
         if (
             checkerInfo.priceFeed == feed &&
             checkerInfo.priceDeviationBps == bps &&
-            checkerInfo.stalenessThreshold == stalenessThreshold
+            checkerInfo.stalenessThreshold == stalenessThreshold &&
+            checkerInfo.isPresent
         ) {
             revert ESameValue();
         }
@@ -243,12 +244,12 @@ contract PriceChecker is IPriceChecker, Ownable2Step, ValueValidator {
 
         // Check that the price is present.
         if (price <= 0) {
-            revert EPriceNotSet();
+            revert EPriceNotSet(feed);
         }
 
         // Check if the price feed data is stale based on the configured threshold.
         if (updatedAt + stalenessThreshold < block.timestamp) {
-            revert EChainlinkPriceFeedStale();
+            revert EChainlinkPriceFeedStale(feed);
         }
     }
 

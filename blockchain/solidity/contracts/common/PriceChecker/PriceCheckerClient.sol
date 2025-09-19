@@ -57,7 +57,7 @@ abstract contract PriceCheckerClient is Ownable {
     /// @dev Validates that the price checker is properly set and has the specified asset.
     /// @param asset Asset address to validate in the price checker.
     /// @notice Validation is skipped if the price checker is the zero address.
-    function _validatePriceChecker(address asset) internal view {
+    function _validatePriceChecker(address asset) internal view virtual {
         if (priceChecker != address(0)) {
             IPriceChecker(priceChecker).ensureHasPriceFeed(asset);
         }
