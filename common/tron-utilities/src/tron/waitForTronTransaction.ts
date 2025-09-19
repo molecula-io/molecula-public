@@ -1,4 +1,4 @@
-import type { TronWeb, GetTransactionResponse, TransactionInfo } from 'tronweb';
+import type { TronWeb, Types } from 'tronweb';
 
 import { Log } from '@molecula-monorepo/common.logs';
 import { Async } from '@molecula-monorepo/common.utilities';
@@ -41,7 +41,7 @@ export async function waitForTronTransaction(
     tronWeb: TronWeb,
     transactionId: string,
     options: Options = {},
-): Promise<TransactionInfo | GetTransactionResponse> {
+): Promise<Types.TransactionInfo | Types.GetTransactionResponse> {
     const { silent = false, printEnergyInfo = false, signal } = options;
     // Note: the transaction is supposed to succeed if one of two conditions is met:
     // 1. Either the transaction info's "receipt" object has a "SUCCESS" "result"
@@ -49,8 +49,8 @@ export async function waitForTronTransaction(
 
     // Get the transaction info and tne transaction data
 
-    let info: TransactionInfo | undefined;
-    let data: GetTransactionResponse | undefined;
+    let info: Types.TransactionInfo | undefined;
+    let data: Types.GetTransactionResponse | undefined;
     try {
         [info, data] = await Promise.all([
             tronWeb.trx.getTransactionInfo(transactionId),
@@ -81,7 +81,6 @@ export async function waitForTronTransaction(
         if (printEnergyInfo) {
             console.log(
                 'TRX consumed: ',
-                // @ts-ignore (probably wrong type annotation)
                 tronWeb.fromSun(info.receipt.energy_fee),
                 'TRX\nEnergy consumed: ',
                 info.receipt.energy_usage_total,

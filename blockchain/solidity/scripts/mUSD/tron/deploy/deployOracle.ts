@@ -52,10 +52,8 @@ export async function deployOracle(
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 1_000_000_000, // 1000 TRX max burn
-            // @ts-ignore Tron types
             abi: artifact.abi,
             bytecode: artifact.bytecode,
-            // @ts-ignore Tron types
             parameters: [
                 config.MUSD_TOKEN_INITIAL_SUPPLY,
                 config.MUSD_TOKEN_INITIAL_SUPPLY,

@@ -14,7 +14,7 @@ import type {
     MemoCollectionLoaderListener,
     MemoCollectionLoaderOptions,
 } from './types';
-import { reduceItems } from './utils';
+import { replaceItemWithNewOne } from './utils';
 
 const log = new Log('MemoCollectionLoader');
 
@@ -29,10 +29,14 @@ const storageManagerID = 'MemoCollectionLoader';
 const storageManagerLimit = 100;
 
 /**
- * `MemoCollectionLoader` is an example of CollectionLoader which can be used to load the items
+ * `MemoCollectionLoaderV2` is an example of CollectionLoader which can be used to load the items
  * and at the same time cache the result in storage in order to reuse it next time we need it.
+ *
+ * Also, `MemoCollectionLoaderV2` is second version of MemoCollectionLoader which does not reducing data
+ * into dictionary format, but works with raw data presentation which helps to serve data in same
+ * order as it comes from server.
  */
-export class MemoCollectionLoader<Item extends BaseCollectionItem>
+export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
     implements CollectionLoader<Item>
 {
     /**
@@ -106,12 +110,12 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
     /**
      * Top items of the collection (fetched with the `topItemsFetcher`).
      */
-    private topItems: { [key: string]: Item } | null = null;
+    private topItems: Item[] | null = null;
 
     /**
      * More items of the collection (fetched with the `moreItemsFetcher`).
      */
-    private moreItems: { [key: string]: Item } | null = null;
+    private moreItems: Item[] | null = null;
 
     /**
      * Saved top items array in the storage. Used to avoid re-saving the same items.
@@ -157,7 +161,7 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
         });
 
         makeObservable<
-            MemoCollectionLoader<Item>,
+            MemoCollectionLoaderV2<Item>,
             | 'items'
             | 'loading'
             | 'isLoading'
@@ -181,10 +185,10 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
     // Getters
     public get items(): Item[] {
         // Combine existing items by assigning the MOST ACTUAL items at last (which are `topItems`).
-        const itemsDictionary = { ...this.moreItems, ...this.topItems };
+        const itemsCombined = [...(this.topItems || []), ...(this.moreItems || [])];
 
         // Sort all the items by the `time` in DESCENDING order.
-        return Object.values(itemsDictionary).sort((a, b) => b.time - a.time);
+        return itemsCombined;
     }
 
     /**
@@ -301,7 +305,7 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
                     this.savedTopItems = JSON.parse(cachedItems) as Item[];
 
                     // Fill the top items dictionary with it
-                    this.topItems = reduceItems(this.savedTopItems);
+                    this.topItems = this.savedTopItems;
 
                     // Complete loading the cached collection from the storage
                     this.completeLoadingCollection(false);
@@ -334,7 +338,7 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
 
             if (items !== undefined) {
                 // Set the fetched top items
-                const fetchedTopItems = reduceItems(items);
+                const fetchedTopItems = items;
 
                 // Check if the top items already have been loaded with the fetcher
                 if (!this.topItemsLoaded) {
@@ -348,7 +352,8 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
                     this.topItems = fetchedTopItems;
                 } else {
                     // Combine existing top items with the updates received from the fetcher
-                    this.topItems = { ...this.topItems, ...fetchedTopItems };
+                    // this.topItems = [...(this.topItems || []), ...fetchedTopItems];
+                    this.topItems = [...fetchedTopItems];
                 }
 
                 // Complete loading the collection
@@ -372,8 +377,7 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
             return;
         }
 
-        const { lastItem } = this;
-        if (!lastItem) {
+        if (!this.lastItem) {
             // Do not have the last item
             return;
         }
@@ -383,13 +387,13 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
 
         try {
             // Load more items after the last one as a dictionary
-            const moreItems = reduceItems(await this.moreItemsFetcher(lastItem));
+            const moreItems = await this.moreItemsFetcher(this.lastItem);
 
             // Update more items dictionary with the loaded items
-            this.moreItems = { ...this.moreItems, ...moreItems };
+            this.moreItems = [...(this.moreItems || []), ...moreItems];
 
             // Check if can load more items
-            this.canLoadMore = Object.keys(moreItems).length >= this.limit;
+            this.canLoadMore = moreItems.length >= this.limit;
         } catch (error) {
             log.error('Failed to load more collection items with error:', error);
             this.error = error as Error;
@@ -474,8 +478,7 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
     // Internals
 
     private get lastItem(): Item | undefined {
-        const { items } = this;
-        return items[items.length - 1];
+        return this.items[this.items.length - 1];
     }
 
     private updateItem(item: Item | null, unsubscribeOnUpdate: boolean = false) {
@@ -485,12 +488,12 @@ export class MemoCollectionLoader<Item extends BaseCollectionItem>
 
         // Should update an item only in case the top items are already loaded
         if (this.topItems) {
-            if (this.topItems[item.key]) {
-                this.topItems[item.key] = item;
-            } else if (this.moreItems) {
-                this.moreItems[item.key] = item;
+            this.topItems = replaceItemWithNewOne(item, this.topItems);
+
+            if (this.moreItems) {
+                this.moreItems = replaceItemWithNewOne(item, this.moreItems);
             } else {
-                this.moreItems = { [item.key]: item };
+                this.moreItems = [item];
             }
         }
 

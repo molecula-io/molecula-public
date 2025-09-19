@@ -368,6 +368,8 @@ yarn nitrogen:set:owner:[test|beta|production]
 yarn carbon:set:owner:[test|beta|production]
 ```
 
+⚠️ **Important**: Many contracts use OpenZeppelin's `Ownable2Step` pattern for enhanced security. After running these commands, the new owner must call `acceptOwnership()` on each applicable contract to complete the ownership transfer. The scripts will display warnings for contracts that require this additional step.
+
 ### Specialized Deployments
 
 #### Deploy RebaseTokenOwner
@@ -430,25 +432,25 @@ yarn nitrogen:deploy:lmUSD:test
 
 ### Verification
 
-After deployment, verify contracts on Etherscan:
+After deployment, verify contracts on block explorers using the verification scope:
 
 ```bash
-# Verify Nitrogen on Sepolia
-yarn nitrogen:verify:sepolia
+# Verify Carbon contracts
+yarn carbon:verify:test        # Test environment (Sepolia)
+yarn carbon:verify:beta        # Beta environment (Mainnet)
+yarn carbon:verify:production  # Production environment (Mainnet)
 
-# Verify Carbon on Sepolia
-yarn carbon:verify:sepolia
+# Verify Nitrogen contracts
+yarn nitrogen:verify:test        # Test environment (Sepolia)
+yarn nitrogen:verify:beta        # Beta environment (Mainnet)
+yarn nitrogen:verify:production  # Production environment (Mainnet)
 
-# Verify mrETH on Sepolia
+# Verify mrETH contracts (legacy commands)
 yarn mrEth:verify:sepolia
-
-# Verify mrETH on Holesky
 yarn mrEth:verify:holesky
-
-# Verify mrETH on Hoodi
 yarn mrEth:verify:hoodi
 
-# Verify MetaEth on Sepolia
+# Verify MetaEth contracts (legacy commands)
 yarn metaEth:verify:sepolia
 ```
 

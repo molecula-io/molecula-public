@@ -1,9 +1,9 @@
-import type { TronWeb, CreateSmartContractTransaction } from 'tronweb';
+import type { TronWeb, Types } from 'tronweb';
 
 // Wait for the smart-contract deployment
 export async function waitForDeployment(
     tronWeb: TronWeb,
-    transaction: CreateSmartContractTransaction,
+    transaction: Types.CreateSmartContractTransaction,
 ): Promise<string> {
     console.log('waiting for 5s ...');
     // Sleep for 5 seconds

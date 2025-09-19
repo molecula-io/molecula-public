@@ -53,13 +53,11 @@ export async function getTronOAppConfig(
     oappAddress: string,
 ) {
     // Fetch send library address for this OApp and remote EID
-    // @ts-ignore (Missing types for contracts)
     const sendLibRes = await lzEndpoint.getSendLibrary(oappAddress, remoteEid).call();
     const sendLibAddress = tronWeb.address.fromHex(sendLibRes[0]);
     console.log('Send Library:', sendLibAddress);
 
     // Fetch receive library address for this OApp and remote EID
-    // @ts-ignore (Missing types for contracts)
     const receiveRes = await lzEndpoint.getReceiveLibrary(oappAddress, remoteEid).call();
     const receiveLibAddress = tronWeb.address.fromHex(receiveRes[0]);
     console.log('Receive Library:', receiveLibAddress);
@@ -67,12 +65,10 @@ export async function getTronOAppConfig(
     // Fetch and decode for sendLib (both Executor and ULN Config)
     const sendExecutorConfigBytes = (
         await lzEndpoint
-            // @ts-ignore
             .getConfig(oappAddress, sendLibAddress, remoteEid, executorConfigType)
             .call()
     )[0];
 
-    // @ts-ignore
     const executorConfigArray = tronWeb.utils.abi.decodeParams(
         [],
         executorConfigAbi,
@@ -91,14 +87,10 @@ export async function getTronOAppConfig(
 
     // Fetch and decode for sendLib ULN Config
     const sendUlnConfigBytes = (
-        await lzEndpoint
-            // @ts-ignore
-            .getConfig(oappAddress, sendLibAddress, remoteEid, ulnConfigType)
-            .call()
+        await lzEndpoint.getConfig(oappAddress, sendLibAddress, remoteEid, ulnConfigType).call()
     )[0];
 
     // Decode the ULN config struct
-    // @ts-ignore: type mismatch due to TronWeb decodeParams
     const sendUlnConfigArray = tronWeb.utils.abi.decodeParams(
         [],
         ulnConfigStructType,
@@ -108,13 +100,9 @@ export async function getTronOAppConfig(
 
     // Fetch ULN config bytes for receive library
     const receiveUlnConfigBytes = (
-        await lzEndpoint
-            // @ts-ignore: contract ABI typing not available
-            .getConfig(oappAddress, receiveLibAddress, remoteEid, ulnConfigType)
-            .call()
+        await lzEndpoint.getConfig(oappAddress, receiveLibAddress, remoteEid, ulnConfigType).call()
     )[0];
     // Decode the ULN config struct for receive library
-    // @ts-ignore: type mismatch due to TronWeb decodeParams
     const receiveUlnConfigArray = tronWeb.utils.abi.decodeParams(
         [],
         ulnConfigStructType,

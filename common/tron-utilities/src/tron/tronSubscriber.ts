@@ -1,4 +1,4 @@
-import type { GetEventResultOptions, Contract as TronContract } from 'tronweb';
+import type { Types, Contract as TronContract } from 'tronweb';
 
 import { BlockKeeper } from '@molecula-monorepo/common.evm-utilities/src/helpers';
 
@@ -7,6 +7,19 @@ import { Log } from '@molecula-monorepo/common.logs';
 import type { TronEventCallback, TronEventsLoadOptions, InternalTronEvent } from '../types';
 
 import { MAX_PART_SIZE, tronEventsLoad } from './tronEventsLoader';
+
+let subscriptionIntervalMultiplier = 1;
+
+if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+    // Node.js detected
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    require('dotenv').config();
+    subscriptionIntervalMultiplier = process.env.TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER
+        ? +process.env.TRON_SUBSCRIPTION_INTERVAL_MULTIPLIER
+        : 1;
+} else {
+    // For browser subscriptionIntervalMultiplier still equal 1
+}
 
 export class TronSubscriber {
     // Properties
@@ -47,15 +60,9 @@ export class TronSubscriber {
     private loadNewEventsInterval: number = 3_000;
 
     // Constructor
-    public constructor(
-        contract: TronContract,
-        method: string,
-        options: { subscriptionIntervalMultiplier?: number } = {},
-    ) {
+    public constructor(contract: TronContract, method: string) {
         this.contract = contract;
         this.method = method;
-
-        const { subscriptionIntervalMultiplier = 1 } = options;
 
         this.loadNewEventsInterval = 3_000 * subscriptionIntervalMultiplier;
 
@@ -112,7 +119,7 @@ export class TronSubscriber {
      * @returns loaded events array.
      */
     public async loadLastEvents<FilterName, Result>(
-        params: GetEventResultOptions,
+        params: Types.GetEventResultOptions,
         options?: TronEventsLoadOptions,
     ): Promise<InternalTronEvent<FilterName, Result>[]> {
         return tronEventsLoad<FilterName, Result>(

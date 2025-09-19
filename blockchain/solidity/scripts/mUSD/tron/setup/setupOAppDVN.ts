@@ -38,9 +38,23 @@ export async function setupOAppDVN(hre: HardhatRuntimeEnvironment, environment: 
     // Set Peer
     await setPeer(hre, hre.tronweb, oappAddress, remoteEid, contractsCarbon.eth.agentLZ);
     // Set Receive Config
-    await setReceiveConfig(hre.tronweb, lzEndpoint, remoteEid, oappAddress, receiveLibAddress);
+    await setReceiveConfig(
+        hre.tronweb,
+        lzEndpoint,
+        remoteEid,
+        oappAddress,
+        receiveLibAddress,
+        environment,
+    );
     // Set Send Config
-    await setSendConfig(hre.tronweb, lzEndpoint, remoteEid, oappAddress, sendLibAddress);
+    await setSendConfig(
+        hre.tronweb,
+        lzEndpoint,
+        remoteEid,
+        oappAddress,
+        sendLibAddress,
+        environment,
+    );
 
     console.log('Done');
 }

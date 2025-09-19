@@ -24,7 +24,7 @@ export async function deployCarbon(hre: HardhatRuntimeEnvironment, environment: 
     // deploy Accountant LZ
     const accountantLZ = await deployAccountantLZ(hre, {
         initialOwner,
-        authorizedLZConfiguratorAddress: config.ACCOUNTANT_AUTHORIZED_LZ_CONFIGURATOR, // update after lz configuration
+        authorizedLZConfiguratorAddress: initialOwner, // Use deployer address initially, will be changed in carbon:set:owner
         endpoint: config.LAYER_ZERO_TRON_ENDPOINT,
         lzDstEid: config.LAYER_ZERO_ETHEREUM_EID,
         usdtAddress: config.USDT_ADDRESS,

@@ -1,6 +1,8 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { TronWeb, Contract as TronContract } from 'tronweb';
 
+import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+
 import {
     CONFIG_TYPE_EXECUTOR,
     CONFIG_TYPE_ULN,
@@ -26,7 +28,6 @@ export async function setPeer(
     const artifact = await hre.artifacts.readArtifact('OAppCore');
     const oAppContract = tronWeb.contract(artifact.abi, oappAddress);
     const bytes32FromAddress = hre.ethers.zeroPadValue(oAppRemoteAddress, 32);
-    // @ts-ignore
     await oAppContract.setPeer(remoteEid, bytes32FromAddress).send();
     console.log(`\tSet peer for the contract ${oappAddress}.`);
 }
@@ -39,7 +40,6 @@ export async function setUsdtOftFee(
     const artifact = await hre.artifacts.readArtifact('UsdtOFT');
     const usdtOftContract = tronWeb.contract(artifact.abi, usdtOftAddress);
     try {
-        // @ts-ignore
         await usdtOftContract.setFeeBps(10).send();
         console.log(`\tSet fee for the contract ${usdtOftAddress}.`);
     } catch (error) {
@@ -47,24 +47,27 @@ export async function setUsdtOftFee(
     }
 }
 
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function setReceiveConfig(
     tronWeb: TronWeb,
     lzEndpoint: TronContract,
     remoteEid: number,
     oappAddress: string,
     receiveLibAddress: string,
+    environment: EnvironmentType,
 ) {
-    const config = layerZeroDVNConfigs[remoteEid];
+    const envConfigs = layerZeroDVNConfigs[environment];
+    if (!envConfigs) {
+        throw new Error(`No configs found for environment ${environment}`);
+    }
+
+    const config = envConfigs[remoteEid];
     if (!config) {
-        throw new Error(`No config found for remoteEid ${remoteEid}`);
+        throw new Error(`No config found for remoteEid ${remoteEid} in environment ${environment}`);
     }
 
     // Encode UlnConfig using defaultAbiCoder
     const configTypeUlnStruct =
         'tuple(uint64 confirmations, uint8 requiredDVNCount, uint8 optionalDVNCount, uint8 optionalDVNThreshold, address[] requiredDVNs, address[] optionalDVNs)';
-    // @ts-ignore
     const encodedUlnConfig = tronWeb.utils.abi.encodeParams(
         [configTypeUlnStruct],
         [config.receiveLibrary.ulnConfig],
@@ -78,7 +81,6 @@ export async function setReceiveConfig(
     ];
     try {
         const tx = await lzEndpoint
-            // @ts-ignore
             .setConfig(oappAddress, receiveLibAddress, [setConfigParam])
             .send();
         console.log('Receive configuration transaction sent:', tx);
@@ -87,24 +89,27 @@ export async function setReceiveConfig(
     }
 }
 
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function setSendConfig(
     tronWeb: TronWeb,
     lzEndpoint: TronContract,
     remoteEid: number,
     oappAddress: string,
     sendLibAddress: string,
+    environment: EnvironmentType,
 ) {
-    const config = layerZeroDVNConfigs[remoteEid];
+    const envConfigs = layerZeroDVNConfigs[environment];
+    if (!envConfigs) {
+        throw new Error(`No configs found for environment ${environment}`);
+    }
+
+    const config = envConfigs[remoteEid];
     if (!config) {
-        throw new Error(`No config found for remoteEid ${remoteEid}`);
+        throw new Error(`No config found for remoteEid ${remoteEid} in environment ${environment}`);
     }
 
     // Encode UlnConfig using defaultAbiCoder
     const configTypeUlnStruct =
         'tuple(uint64 confirmations, uint8 requiredDVNCount, uint8 optionalDVNCount, uint8 optionalDVNThreshold, address[] requiredDVNs, address[] optionalDVNs)';
-    // @ts-ignore
     const encodedUlnConfig = tronWeb.utils.abi.encodeParams(
         [configTypeUlnStruct],
         [config.sendLibrary.ulnConfig],
@@ -112,7 +117,6 @@ export async function setSendConfig(
 
     // Encode ExecutorConfig using defaultAbiCoder
     const configTypeExecutorStruct = 'tuple(uint32 maxMessageSize, address executorAddress)';
-    // @ts-ignore
     const encodedExecutorConfig = tronWeb.utils.abi.encodeParams(
         [configTypeExecutorStruct],
         [config.executorConfig],
@@ -134,7 +138,6 @@ export async function setSendConfig(
     // Send the transaction
     try {
         const tx = await lzEndpoint
-            // @ts-ignore
             .setConfig(
                 oappAddress,
                 sendLibAddress,

@@ -11,20 +11,26 @@ async function getExecutorParams() {
 
     const executor = tronweb.contract(executorABI, executorAddress);
 
-    // @ts-ignore (Missing types for contracts)
-    const priceFeed = await executor.methods.priceFeed().call({ _isConstant: true });
+    const priceFeed = await executor.methods.priceFeed?.().call({
+        // @ts-ignore (passing private option)
+        isConstant: true,
+    });
     const priceFeedAddress = tronweb.address.fromHex(priceFeed.toString());
     console.log('priceFeed contract', priceFeedAddress);
 
-    // @ts-ignore (Missing types for contracts)
-    const workerFeeLib = await executor.methods.workerFeeLib().call({ _isConstant: true });
+    const workerFeeLib = await executor.methods.workerFeeLib?.().call({
+        // @ts-ignore (passing private option)
+        isConstant: true,
+    });
     const workerFeeLibAddress = tronweb.address.fromHex(workerFeeLib.toString());
     console.log('workerFeeLib contract', workerFeeLibAddress);
 
-    // @ts-ignore (Missing types for contracts)
     const dstConfig = await executor.methods
-        .dstConfig(shastaConfig.LAYER_ZERO_ETHEREUM_EID)
-        .call({ _isConstant: true });
+        .dstConfig?.(shastaConfig.LAYER_ZERO_ETHEREUM_EID)
+        .call({
+            // @ts-ignore (passing private option)
+            isConstant: true,
+        });
     console.log('dstConfig', dstConfig);
 }
 

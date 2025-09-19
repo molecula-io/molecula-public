@@ -11,6 +11,24 @@ export async function setCarbonOwner(hre: HardhatRuntimeEnvironment, environment
     );
     const config = getEnvironmentConfig(environment);
 
+    // First, transfer the LZ configurator role to the authorized address
+    const agentLZContract = await hre.ethers.getContractAt('AgentLZ', contractsCarbon.eth.agentLZ);
+    const currentLZConfigurator = await agentLZContract.authorizedLZConfigurator();
+
+    if (currentLZConfigurator !== config.AGENT_AUTHORIZED_LZ_CONFIGURATOR) {
+        console.log('Transferring AgentLZ LZ configurator role to authorized address...');
+        const setConfigTx = await agentLZContract.setAuthorizedLZConfigurator(
+            config.AGENT_AUTHORIZED_LZ_CONFIGURATOR,
+        );
+        await setConfigTx.wait();
+        console.log(
+            `AgentLZ LZ configurator role transferred to: ${config.AGENT_AUTHORIZED_LZ_CONFIGURATOR}`,
+        );
+    } else {
+        console.log(`AgentLZ LZ configurator role already set to: ${currentLZConfigurator}`);
+    }
+
+    // Then, transfer the ownership to the new owner
     const contracts = [{ name: 'AgentLZ', addr: contractsCarbon.eth.agentLZ }];
 
     await setOwner(hre, contracts, config.OWNER);

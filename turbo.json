@@ -39,9 +39,13 @@
     "globalEnv": [
         "MODE",
         "NODE_ENV",
+        "STAGE",
+        "PRODUCT_NAME",
+        "SOLUTION_NAME",
         "MONGO_TRANSACTIONS",
         "MONGO_DB_URL",
         "MONGO_DB_NAME",
+        "MONGO_DIRECT_CONNECTION",
         "CI",
         "ANALYZE",
         "SENTRY_AUTH_TOKEN",

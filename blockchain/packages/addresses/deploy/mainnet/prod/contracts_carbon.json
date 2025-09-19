@@ -1,21 +1,21 @@
 {
     "eth": {
-        "moleculaPool": "",
-        "agentLZ": "",
-        "supplyManager": "",
-        "poolKeeper": "",
+        "moleculaPool": "0x5d3E2cC49cEf1780c9e235802CC4C158e74Cb590",
+        "agentLZ": "0x69d716654EF8971C9692D2fA05ec0d8cd43Ca28f",
+        "supplyManager": "0x32491Af8f6B66f8491C6356ad3cd332597322caF",
+        "poolKeeper": "0xD6a625Bc1AeD44e4F0F8E1Fee6F2578f4105Cd06",
         "ethena": {
-            "USDe": "",
-            "sUSDe": ""
+            "USDe": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+            "sUSDe": "0x9d39a5de30e57443bff2a8307a4256c8797a3497"
         },
         "mUSDe": ""
     },
     "tron": {
-        "rebaseToken": "",
+        "rebaseToken": "TZCBATKqzJ4gWJx9G23fie9CZLFfT5u3C8",
         "rebaseTokenOwner": "",
-        "oracle": "",
-        "accountantLZ": "",
-        "mUSDLock": "",
+        "oracle": "TWMEKkeUd979bnhGs13ShqZf9M6tcLNrR3",
+        "accountantLZ": "TDYAAcbDVN6w5hfYDmzZA4M2HNgCRjyHfx",
+        "mUSDLock": "TNbHi42xf14E4bgf6D7hPSNzy1TbNpt27b",
         "wmUSD": ""
     }
 }

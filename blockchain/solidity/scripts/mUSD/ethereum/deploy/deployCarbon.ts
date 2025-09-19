@@ -26,7 +26,7 @@ export async function deployCarbon(
     const AgentLZ = await hre.ethers.getContractFactory('AgentLZ');
     const agentLZ = await AgentLZ.deploy(
         account.address,
-        config.AGENT_AUTHORIZED_LZ_CONFIGURATOR,
+        account.address, // Use deployer address initially, will be changed in carbon:set:owner
         config.LAYER_ZERO_ENDPOINT,
         contracts.supplyManagerAddress,
         config.LAYER_ZERO_TRON_EID,

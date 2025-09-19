@@ -55,14 +55,12 @@ export async function deployRebaseTokenOwner(
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 2_000_000_000, // 2000 TRX max burn for resources
-            // @ts-ignore TronWeb type definitions
             abi: artifact.abi,
             bytecode: artifact.bytecode,
             // Parameters:
             //  1. initialOwner       -> issuerAddress (the deployer's address, may differ if needed)
             //  2. rebaseTokenAddress -> from contractsCarbon.tron registry
             //  3. guardianAddress    -> from config.OWNER (replace if different guardian is required)
-            // @ts-ignore TronWeb type definitions
             parameters: [issuerAddress, contractsCarbon.tron.rebaseToken, config.OWNER],
         },
         issuerAddress, // Deployer's base58 address

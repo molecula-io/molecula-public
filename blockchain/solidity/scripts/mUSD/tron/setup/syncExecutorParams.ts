@@ -27,8 +27,7 @@ export async function syncExecutorParams(
     const artifact = await hre.artifacts.readArtifact('Executor');
     const executorLz = hre.tronweb.contract(artifact.abi, executorLzAddress);
 
-    // @ts-ignore (TronWeb typings for contract calls are incomplete)
-    const dstConfig = await executorLz.methods.dstConfig(config.LAYER_ZERO_ETHEREUM_EID).call();
+    const dstConfig = await executorLz.methods.dstConfig?.(config.LAYER_ZERO_ETHEREUM_EID).call();
     console.log('Current LZ destination config:', dstConfig);
 
     // Get the deployed Executor contract address for Tron (Shasta)
@@ -38,8 +37,9 @@ export async function syncExecutorParams(
     const executor = hre.tronweb.contract(artifact.abi, executorAddress);
 
     // Set the WorkerFeeLib contract address for the Executor (enables fee computation)
-    // @ts-ignore (TronWeb typings for contract calls are incomplete)
-    const tx = await executor.methods.setWorkerFeeLib(contractsExecutor.tron.executorFeeLib).send();
+    const tx = await executor.methods
+        .setWorkerFeeLib?.(contractsExecutor.tron.executorFeeLib)
+        .send();
     console.log('ExecutorFeeLib setup transaction:', tx);
 
     // Prepare and send destination configuration update.
@@ -55,7 +55,6 @@ export async function syncExecutorParams(
         String(dstConfig[2]), // floorMarginUSD
         String(dstConfig[3]), // nativeCap
     ];
-    // @ts-ignore (TronWeb typings for contract calls are incomplete)
-    const setConfigTx = await executor.methods.setDstConfig([dstConfigWithEid]).send();
+    const setConfigTx = await executor.methods.setDstConfig?.([dstConfigWithEid]).send();
     console.log('Set config transaction:', setConfigTx);
 }

@@ -2536,13 +2536,13 @@ axios-token-interceptor@^0.2.0:
   dependencies:
     lock "^1.1.0"
 
-axios@*, axios@1.8.3, axios@^1.6.0, axios@^1.6.7, axios@^1.7.7, axios@^1.7.8, axios@^1.7.9:
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.3.tgz#9ebccd71c98651d547162a018a1a95a4b4ed4de8"
-  integrity sha512-iP4DebzoNlP/YN2dpwCgb8zoCmhtkajzS48JvwmkSkXvPI3DHc7m+XYL5tGnSlJtR6nImXZmdCuN5aP8dh1d8A==
+axios@*, axios@1.11.0, axios@1.8.3, axios@^1.12.2, axios@^1.6.0, axios@^1.6.7, axios@^1.7.7, axios@^1.7.8, axios@^1.7.9:
+  version "1.12.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.12.2.tgz#6c307390136cf7a2278d09cec63b136dfc6e6da7"
+  integrity sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==
   dependencies:
     follow-redirects "^1.15.6"
-    form-data "^4.0.0"
+    form-data "^4.0.4"
     proxy-from-env "^1.1.0"
 
 axobject-query@^3.2.1:
@@ -4365,7 +4365,7 @@ form-data-encoder@^2.1.2:
   resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-2.1.4.tgz#261ea35d2a70d48d30ec7a9603130fa5515e9cd5"
   integrity sha512-yDYSgNMraqvnxiEXO4hi88+YZxaHC6QKzb5N84iRCTDeRO7ZALpir/lVmf/uXUhnwUr2O4HU8s/n6x+yNjQkHw==
 
-form-data@^4.0.0:
+form-data@^4.0.4:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.4.tgz#784cdcce0669a9d68e94d11ac4eea98088edd2c4"
   integrity sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==
@@ -7933,13 +7933,13 @@ tree-kill@1.2.2, tree-kill@^1.2.2:
   resolved "https://registry.npmjs.org/tree-kill/-/tree-kill-1.2.2.tgz"
   integrity sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
 
-tronweb@^6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/tronweb/-/tronweb-6.0.3.tgz#f7d806987714bb4d201020bf1b99a918c9f37f1f"
-  integrity sha512-5FKHuGiSqleQ2ASxio7h9URsJ5w8nCjfI0hZawTWefbgeVM1r0sZ7qfGMWl3xjKTLvILrnocwB97TQYBnL0Faw==
+tronweb@^6.0.3, tronweb@^6.0.4:
+  version "6.0.4"
+  resolved "https://registry.yarnpkg.com/tronweb/-/tronweb-6.0.4.tgz#4f9f83383d9eab2a076c02ee51dcd86213b39e8f"
+  integrity sha512-+9Nc7H4FYVh2DcOnQG93WLm3UdlHSf9W+GXkfrXI77oLjTB1cptROJDKRSSxQBiOAyjjAJOOTuYDzlAkaLT85w==
   dependencies:
     "@babel/runtime" "7.26.10"
-    axios "1.8.3"
+    axios "1.11.0"
     bignumber.js "9.1.2"
     ethereum-cryptography "2.2.1"
     ethers "6.13.5"

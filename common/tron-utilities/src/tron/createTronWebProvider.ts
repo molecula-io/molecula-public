@@ -1,10 +1,8 @@
 import type { AxiosInstance } from 'axios';
 import axiosThrottle from 'axios-request-throttle';
-import { TronWeb } from 'tronweb';
+import { TronWeb, type Types } from 'tronweb';
 
-import type { TronWebOptions } from '../types/provider';
-
-type TronWebParams = TronWebOptions & {
+type TronWebParams = Types.TronWebOptions & {
     /**
      * An optional account's seed phrase or key.
      * Note, this parameter has a higher priority than a "privateKey" provided by {@link TronWebOptions}.

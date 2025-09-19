@@ -84,9 +84,31 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
     /** Pools Currencies config for MetaETH solution. */
     META_POOL_TOKENS: Object.values(staticPoolCurrenciesMetaETHMainnet),
 
-    // TODO set WHITE_LIST
-    /** White list of address callable by MoleculaPoolFactory contract. */
-    WHITE_LIST: [],
+    /** Default whitelist of addresses callable by MoleculaPoolFactory contract. */
+    WHITE_LIST: [
+        // ODOS router
+        {
+            target: '0xcf5540fffcdc3d510b18bfca6d2b9987b0772559',
+            // swapCompact
+            selector: '0x83bd37f9',
+        },
+        {
+            target: '0xcf5540fffcdc3d510b18bfca6d2b9987b0772559',
+            // swapMultiCompact
+            selector: '0x84a7f3dd',
+        },
+        // AAVE POOL v3
+        {
+            target: '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2',
+            // supply
+            selector: '0x617ba037',
+        },
+        {
+            target: '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2',
+            // withdraw
+            selector: '0x69328dec',
+        },
+    ],
 
     /** Guardian address that can pause MoleculaPoolTreasury contract. */
     GUARDIAN_ADDRESS: '0x287C4e87840E02032D4518eF6d7E69E20B5184a4', // TODO: change guardian address

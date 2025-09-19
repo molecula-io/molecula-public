@@ -1,4 +1,4 @@
-import type { TronWeb, TransactionInfo } from 'tronweb';
+import type { TronWeb, Types } from 'tronweb';
 
 import { Log } from '@molecula-monorepo/common.logs';
 import { Async } from '@molecula-monorepo/common.utilities';
@@ -31,10 +31,10 @@ export async function waitForTronTransactionInfo(
     tronWeb: TronWeb,
     transactionId: string,
     options: Options = {},
-): Promise<TransactionInfo> {
+): Promise<Types.TransactionInfo> {
     const { silent = false, printEnergyInfo = false } = options;
     // Get the transaction info
-    let info: TransactionInfo | undefined;
+    let info: Types.TransactionInfo | undefined;
     try {
         info = await tronWeb.trx.getTransactionInfo(transactionId);
     } catch (error) {
@@ -59,7 +59,6 @@ export async function waitForTronTransactionInfo(
         if (printEnergyInfo) {
             console.log(
                 'TRX consumed: ',
-                // @ts-ignore (probably wrong type annotation)
                 tronWeb.fromSun(info.receipt.energy_fee),
                 'TRX\nEnergy consumed: ',
                 info.receipt.energy_usage_total,

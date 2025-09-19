@@ -51,9 +51,23 @@ export async function setupUsdtOftDVN(
         // Set peer
         await setPeer(hre, usdtOFTAddress, remoteEid, tronConfig.USDT_OFT);
         // Set send config
-        await setSendConfig(hre, lzEndpoint, remoteEid, usdtOFTAddress, sendLibAddress);
+        await setSendConfig(
+            hre,
+            lzEndpoint,
+            remoteEid,
+            usdtOFTAddress,
+            sendLibAddress,
+            environment,
+        );
         // Set receive config
-        await setReceiveConfig(hre, lzEndpoint, remoteEid, usdtOFTAddress, receiveLibAddress);
+        await setReceiveConfig(
+            hre,
+            lzEndpoint,
+            remoteEid,
+            usdtOFTAddress,
+            receiveLibAddress,
+            environment,
+        );
         // Set Fee for usdtOFT
         await setUsdtOftFee(hre, usdtOFTAddress);
 

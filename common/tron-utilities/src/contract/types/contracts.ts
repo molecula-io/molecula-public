@@ -1,4 +1,4 @@
-import type { TronWeb, ContractAbiInterface } from 'tronweb';
+import type { TronWeb, Types } from 'tronweb';
 
 import type {
     SunCurve,
@@ -43,15 +43,10 @@ export type TronContractParams = {
     /**
      * Contract ABI
      */
-    abi: ContractAbiInterface;
+    abi: Types.ContractAbiInterface;
 
     /**
      * API URL
      */
     apiUrl?: string | undefined;
-
-    /**
-     * Subscription interval multiplier
-     */
-    subscriptionIntervalMultiplier?: number;
 };

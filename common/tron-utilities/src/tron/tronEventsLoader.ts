@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
-import type { Contract as TronContract, EventResponse, GetEventResultOptions } from 'tronweb';
+import type { Contract as TronContract, Types } from 'tronweb';
 
 import type { Log } from '@molecula-monorepo/common.logs';
 
@@ -31,14 +31,14 @@ type Subscriber = {
  */
 async function loadPartEvents<FilterName, Result>(
     subscriber: Subscriber,
-    params: GetEventResultOptions,
+    params: Types.GetEventResultOptions,
 ): Promise<InternalTronEvent<FilterName, Result>[]> {
     try {
         if (!subscriber.contract.address) {
             throw new Error('Failed to define contract address');
         }
 
-        const events: EventResponse =
+        const events: Types.EventResponse =
             await subscriber.contract.tronWeb.event.getEventsByContractAddress(
                 subscriber.contract.address,
                 {
@@ -120,7 +120,7 @@ export const MAX_PART_SIZE = 199;
  */
 export async function tronEventsLoad<FilterName, Result>(
     subscriber: Subscriber,
-    params: GetEventResultOptions,
+    params: Types.GetEventResultOptions,
     options?: TronEventsLoadOptions,
 ) {
     const { limit: totalSize, maxBlockTimestamp, minBlockTimestamp, orderBy: order } = params;

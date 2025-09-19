@@ -27,7 +27,7 @@
         "ethers": "^6.15.0",
         "ethers-decode-error": "^2.1.3",
         "p-queue": "6.6.2",
-        "tronweb": "^6.0.3"
+        "tronweb": "^6.0.4"
     },
     "devDependencies": {
         "@molecula-monorepo/eslint-config-shared": "*",

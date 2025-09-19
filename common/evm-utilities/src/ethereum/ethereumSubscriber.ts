@@ -13,6 +13,19 @@ import type {
 
 import { BlockKeeper } from '../helpers';
 
+let subscriptionIntervalMultiplier = 1;
+
+if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+    // Node.js detected
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    require('dotenv').config();
+    subscriptionIntervalMultiplier = process.env.EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER
+        ? +process.env.EVM_SUBSCRIPTION_INTERVAL_MULTIPLIER
+        : 1;
+} else {
+    // For browser subscriptionIntervalMultiplier still equal 1
+}
+
 /**
  * Each 20th subscription request use enlarged depth to avoid events missing
  * Value 20 equal to `once in a 5 minutes`, think it should be enough
@@ -71,17 +84,11 @@ export class EthereumSubscriber<
 
     // Constructor
 
-    public constructor(
-        contract: B,
-        event: T,
-        options: { subscriptionIntervalMultiplier?: number } = {},
-    ) {
+    public constructor(contract: B, event: T) {
         this.log = new Log(`Ethereum Subscriber`);
 
         this.contract = contract;
         this.event = event;
-
-        const { subscriptionIntervalMultiplier = 1 } = options;
 
         // Ethereum produce 4 blocks in a minute (once in a 15 seconds)
         this.loadNewEventsInterval = 15_000 * subscriptionIntervalMultiplier;

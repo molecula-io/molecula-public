@@ -150,7 +150,7 @@ const config: HardhatUserConfig = {
     etherscan: {
         apiKey: {
             sepolia: process.env.ETHEREUM_API_KEY as string,
-            ethereum: process.env.ETHEREUM_API_KEY as string,
+            mainnet: process.env.ETHEREUM_API_KEY as string,
             holesky: process.env.ETHEREUM_API_KEY as string,
             hoodi: process.env.ETHEREUM_API_KEY as string,
         },

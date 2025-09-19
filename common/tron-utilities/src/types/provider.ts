@@ -1,1 +1,3 @@
-export type { TronWebOptions } from 'tronweb';
+import type { Types } from 'tronweb';
+
+export type TronWebOptions = Types.TronWebOptions;

@@ -2,6 +2,8 @@ import type { AddressLike } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TronWeb } from 'tronweb';
 
+import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
+
 import {
     CONFIG_TYPE_EXECUTOR,
     CONFIG_TYPE_ULN,
@@ -109,13 +111,19 @@ export async function setReceiveConfig(
     remoteEid: number,
     oappAddress: string,
     receiveLibAddress: string,
+    environment: EnvironmentType,
 ) {
     // 1) Prepare the ABI coder for tuple encoding
     const abiCoder = hre.ethers.AbiCoder.defaultAbiCoder();
-    // 2) Fetch pre-defined configs for this remoteEid
-    const config = layerZeroDVNConfigs[remoteEid];
+    // 2) Fetch pre-defined configs for this environment and remoteEid
+    const envConfigs = layerZeroDVNConfigs[environment];
+    if (!envConfigs) {
+        throw new Error(`No configs found for environment ${environment}`);
+    }
+
+    const config = envConfigs[remoteEid];
     if (!config) {
-        throw new Error(`No config found for remoteEid ${remoteEid}`);
+        throw new Error(`No config found for remoteEid ${remoteEid} in environment ${environment}`);
     }
 
     // 3) Define the tuple types for ULN and Executor
@@ -179,13 +187,19 @@ export async function setSendConfig(
     remoteEid: number,
     oappAddress: string,
     sendLibAddress: string,
+    environment: EnvironmentType,
 ) {
     // 1) Prepare the ABI coder for tuple encoding
     const abiCoder = hre.ethers.AbiCoder.defaultAbiCoder();
-    // 2) Fetch pre-defined configs for this remoteEid
-    const config = layerZeroDVNConfigs[remoteEid];
+    // 2) Fetch pre-defined configs for this environment and remoteEid
+    const envConfigs = layerZeroDVNConfigs[environment];
+    if (!envConfigs) {
+        throw new Error(`No configs found for environment ${environment}`);
+    }
+
+    const config = envConfigs[remoteEid];
     if (!config) {
-        throw new Error(`No config found for remoteEid ${remoteEid}`);
+        throw new Error(`No config found for remoteEid ${remoteEid} in environment ${environment}`);
     }
 
     // 3) Define the tuple types for ULN and Executor

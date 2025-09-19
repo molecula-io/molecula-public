@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { Transaction, TriggerSmartContract } from 'tronweb';
+import type { Types } from 'tronweb';
 
 import type { Hex } from '@molecula-monorepo/common.evm-utilities';
 
@@ -68,7 +68,7 @@ export type TronSafeCreateTx<Contract extends PickAnyFunctions<Contract>> = <
     createData: CreateTxData,
     method: Method,
     ...args: Parameters<Contract[Method]>
-) => Promise<Transaction<TriggerSmartContract>>;
+) => Promise<Types.Transaction<Types.TriggerSmartContract>>;
 
 export type TronSafeEstimateEnergy<Contract extends PickAnyFunctions<Contract>> = <
     Method extends keyof Contract,

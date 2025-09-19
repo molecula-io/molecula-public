@@ -40,5 +40,7 @@ echo "🔍 Running general code quality checks..."
 turbo run tsc \
   eslint:check \
   prettier:check \
-  cycles:check \
-  unitTests || { echo "❌ Code quality checks failed"; exit 1; }
+  cycles:check || { echo "❌ Code quality checks failed"; exit 1; }
+
+# Unit tests are CPU-intensive, so we limit concurrency to 2 (instead of turbo's default 10)
+turbo run unitTests --concurrency=2 || { echo "❌ Unit tests failed"; exit 1; }

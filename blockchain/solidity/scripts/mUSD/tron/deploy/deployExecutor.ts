@@ -30,7 +30,6 @@ export async function deployExecutor(hre: HardhatRuntimeEnvironment, environment
     const feeLibDeploymentTransaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 1_000_000_000, // Max TRX for deployment (in SUN)
-            // @ts-ignore: ABI and bytecode types may mismatch on TronWeb
             abi: executorFeeLibArtifact.abi,
             bytecode: executorFeeLibArtifact.bytecode,
             // Constructor parameters: (endpointEID, nativeDecimalsRate)
@@ -59,7 +58,6 @@ export async function deployExecutor(hre: HardhatRuntimeEnvironment, environment
     const executorDeploymentTransaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 5_000_000_000, // Higher TRX limit, since this contract is larger
-            // @ts-ignore: ABI and bytecode types may mismatch on TronWeb
             abi: executorArtifact.abi,
             bytecode: executorArtifact.bytecode,
             // Constructor parameters:

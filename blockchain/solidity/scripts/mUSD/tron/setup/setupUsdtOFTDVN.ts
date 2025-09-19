@@ -52,9 +52,17 @@ export async function setupUsdtOftDVN(
             remoteEid,
             usdtOFTAddress,
             receiveLibAddress,
+            environment,
         );
         // Set Send Config
-        await setSendConfig(hre.tronweb, lzEndpoint, remoteEid, usdtOFTAddress, sendLibAddress);
+        await setSendConfig(
+            hre.tronweb,
+            lzEndpoint,
+            remoteEid,
+            usdtOFTAddress,
+            sendLibAddress,
+            environment,
+        );
         // Set Fee for usdtOFT
         await setUsdtOftFee(hre, hre.tronweb, usdtOFTAddress);
 

@@ -37,8 +37,7 @@ async function sendUSDTCreditsCrossChain() {
     console.log('Transaction Hash:', approveTx);
 
     // Step 2: Depositing local liquidity
-    // @ts-ignore
-    const depositTx = await usdtOFTContract.methods.depositLocal(amountToSend).send({
+    const depositTx = await usdtOFTContract.methods.depositLocal?.(amountToSend).send({
         feeLimit: +tronweb.toSun(100),
     });
 
@@ -52,9 +51,10 @@ async function sendUSDTCreditsCrossChain() {
         throw new Error('QuoteSendCredits method not supported');
     }
 
-    const feeQuote = await usdtOFTContract.methods
-        .quoteSendCredits(...quoteParams)
-        .call({ _isConstant: true });
+    const feeQuote = await usdtOFTContract.methods.quoteSendCredits?.(...quoteParams).call({
+        // @ts-ignore (passing private option)
+        isConstant: true,
+    });
 
     console.log('txresponse:', feeQuote);
     const nativeFee = feeQuote[0].nativeFee.toString();
@@ -68,8 +68,7 @@ async function sendUSDTCreditsCrossChain() {
     }
 
     const sendCreditTxId = await usdtOFTContract.methods
-        // @ts-ignore
-        .sendCredits(
+        .sendCredits?.(
             sepoliaConfig.LAYER_ZERO_ETHEREUM_EID.toString(), // dstEid
             '0', // Arbitrum credits
             '0', // Celo credits

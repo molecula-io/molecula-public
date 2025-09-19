@@ -1,6 +1,6 @@
-import { TronWeb } from 'tronweb';
+import { TronWeb, type Types } from 'tronweb';
 
-import type { TronAddress, TronWebOptions } from '../types';
+import type { TronAddress } from '../types';
 
 import { getTRC20BalanceWithTronWeb } from './getTRC20BalanceWithTronWeb';
 
@@ -18,7 +18,7 @@ type GetTRC20BalanceOptions = {
     /**
      * Tron web options required for Tron provider.
      */
-    tronWebOptions: TronWebOptions;
+    tronWebOptions: Types.TronWebOptions;
 };
 
 /**

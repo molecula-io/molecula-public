@@ -45,8 +45,8 @@ function _normalize(
     result = value;
 }
 
-/// @dev Call `previewRedeem` function. If the token does not has it, then call `convertToAssets`.
-/// @param token Token address.
+/// @dev Call the `previewRedeem` function. If the token does not have it, call `convertToAssets`.
+/// @param token Token's address.
 /// @param shares Amount of shares to redeem.
 /// @return assets Amount of assets to receive.
 function _callPreviewRedeem(address token, uint256 shares) view returns (uint256 assets) {
@@ -59,8 +59,8 @@ function _callPreviewRedeem(address token, uint256 shares) view returns (uint256
         : IERC4626(token).convertToAssets(shares);
 }
 
-/// @dev Call `previewDeposit` function. If the token does not has it, then call `convertToShares`.
-/// @param token Token address.
+/// @dev Call the `previewDeposit` function. If the token does not have it, call `convertToShares`.
+/// @param token Token's address.
 /// @param assets Amount of assets to deposit.
 /// @return shares Amount of shares to mint.
 function _callPreviewDeposit(address token, uint256 assets) view returns (uint256 shares) {

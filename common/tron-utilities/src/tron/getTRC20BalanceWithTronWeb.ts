@@ -41,7 +41,6 @@ export async function getTRC20BalanceWithTronWeb({
 
     // Call the method to get the balance
     const balance = await contract
-        // @ts-ignore (Missing types for TRC-20 contracts)
         .balanceOf(address)
         .call()
         .catch((error: string) => {

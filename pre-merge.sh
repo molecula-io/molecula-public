@@ -70,7 +70,7 @@ if [[ "${IS_BLOCKCHAIN}" == true ]]; then
 
   # Run slither first and do it separately because slither cleans compiled artifacts
   echo "🔍 Running slither check..."
-  turbo run slither --affected || { echo "❌ pre-merge slither failed"; exit 1; }
+  yarn turbo run slither --affected || { echo "❌ pre-merge slither failed"; exit 1; }
 fi
 
 if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^frontend/website/'; then
@@ -93,8 +93,10 @@ echo "🔍 Running general code quality checks..."
 yarn turbo run tsc \
   eslint:check \
   prettier:check \
-  cycles:check \
-  unitTests || { echo "❌ Code quality checks failed"; exit 1; }
+  cycles:check || { echo "❌ Code quality checks failed"; exit 1; }
+
+# Unit tests are CPU-intensive, so we limit concurrency to 2 (instead of turbo's default 10)
+yarn turbo run unitTests --concurrency=2 || { echo "❌ Unit tests failed"; exit 1; }
 
 
 if [[ "${IS_BLOCKCHAIN}" == true && -n "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}" ]]; then

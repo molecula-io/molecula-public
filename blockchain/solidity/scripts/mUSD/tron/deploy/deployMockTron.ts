@@ -15,10 +15,8 @@ export async function deployMockUSDT(hre: HardhatRuntimeEnvironment) {
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 1000000000, // The maximum TRX burns for resource consumption（1TRX = 1,000,000 sun
-            // @ts-ignore (probably wrong type annotation)
             abi: artifact.abi,
             bytecode: artifact.bytecode,
-            // @ts-ignore (probably wrong type annotation)
             parameters: [hre.ethers.formatUnits(1000000, 6), 'Tether token', 'USDT', 6],
         },
         issuerAddress,
@@ -43,10 +41,8 @@ export async function deployUsdtOFT(hre: HardhatRuntimeEnvironment, network: Env
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 3000000000, // The maximum TRX burns for resource consumption（3TRX = 3,000,000 sun
-            // @ts-ignore (probably wrong type annotation)
             abi: artifact.abi,
             bytecode: artifact.bytecode,
-            // @ts-ignore (probably wrong type annotation)
             parameters: [
                 config.LAYER_ZERO_ARBITRUM_EID,
                 config.LAYER_ZERO_CELO_EID,

@@ -7,13 +7,7 @@ import { type DecodedError, ErrorDecoder } from 'ethers-decode-error';
 
 import PQueue from 'p-queue';
 
-import type {
-    TronWeb,
-    Contract as TronContract,
-    ContractAbiInterface,
-    Transaction,
-    TriggerSmartContract,
-} from 'tronweb';
+import type { TronWeb, Contract as TronContract, Types } from 'tronweb';
 
 import { normalizeAddress, type Hex } from '@molecula-monorepo/common.evm-utilities';
 
@@ -60,7 +54,7 @@ export class TronContractSafe<Contract extends AllTronContracts> {
      */
     public readonly client: TronWeb;
 
-    private readonly abi: ContractAbiInterface;
+    private readonly abi: Types.ContractAbiInterface;
 
     private readonly apiUrl: string | undefined;
 
@@ -70,17 +64,12 @@ export class TronContractSafe<Contract extends AllTronContracts> {
     protected contract: TronContract;
 
     /**
-     * Subscription interval multiplier
-     */
-    private subscriptionIntervalMultiplier: number;
-
-    /**
      * A error decoder.
      */
     private errorDecoder: ErrorDecoder;
 
     public constructor(params: TronContractParams) {
-        const { contractAddress, client, abi, apiUrl, subscriptionIntervalMultiplier = 1 } = params;
+        const { contractAddress, client, abi, apiUrl } = params;
 
         this.client = client;
 
@@ -89,8 +78,6 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         this.apiUrl = apiUrl;
 
         this.contract = this.client.contract(abi, contractAddress);
-
-        this.subscriptionIntervalMultiplier = subscriptionIntervalMultiplier;
 
         this.errorDecoder = ErrorDecoder.create([abi as JsonFragment[]]);
     }
@@ -134,7 +121,7 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         txData,
         method,
         ...args
-    ): Promise<Transaction<TriggerSmartContract>> => {
+    ): Promise<Types.Transaction<Types.TriggerSmartContract>> => {
         const { fromAddress, feeLimit, callValue } = txData;
         const methodName = method.toString();
 
@@ -168,7 +155,6 @@ export class TronContractSafe<Contract extends AllTronContracts> {
      */
     public safeViewCall: TronSafeViewCall<Contract> = async (method, ...args) => {
         try {
-            // @ts-ignore
             return await safeCallQueue.add(() => this.contract[method](...args).call(), {
                 priority: Priority.Low,
             });
@@ -190,7 +176,6 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         let tx: Hex;
 
         try {
-            // @ts-ignore
             tx = await safeCallQueue.add(() => this.contract[method](...args).send(), {
                 priority: Priority.High,
             });
@@ -246,9 +231,7 @@ export class TronContractSafe<Contract extends AllTronContracts> {
      */
     public createSubscriber: TronSafeSubscriber<Contract> = async (filterName, callback) => {
         const eventName = filterName as string;
-        const subscriber = new TronSubscriber(this.contract, eventName, {
-            subscriptionIntervalMultiplier: this.subscriptionIntervalMultiplier,
-        });
+        const subscriber = new TronSubscriber(this.contract, eventName);
         try {
             await subscriber.start(callback);
 
@@ -271,9 +254,7 @@ export class TronContractSafe<Contract extends AllTronContracts> {
         const eventName = filterName as string;
         const sinceTimestamp = filterOptions?.timestamp;
 
-        const subscriber = new TronSubscriber(this.contract, eventName, {
-            subscriptionIntervalMultiplier: this.subscriptionIntervalMultiplier,
-        });
+        const subscriber = new TronSubscriber(this.contract, eventName);
 
         return subscriber.loadLastEvents({
             orderBy: 'block_timestamp,desc',

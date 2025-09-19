@@ -40,11 +40,9 @@ export async function deployOFTVault(
     const transaction = await hre.tronweb.transactionBuilder.createSmartContract(
         {
             feeLimit: 2_000_000_000, // Max TRX to burn for deployment (in SUN; 1 TRX = 1,000,000 SUN)
-            // @ts-ignore TronWeb type mismatch
             abi: artifact.abi, // Contract ABI from artifact
             bytecode: artifact.bytecode, // Compiled bytecode
             // Constructor parameters — must exactly match contract ABI order
-            // @ts-ignore TronWeb type mismatch
             parameters: [
                 config.LAYER_ZERO_TRON_ENDPOINT, // LayerZero Endpoint address on Tron
                 config.LAYER_ZERO_ETHEREUM_EID, // Ethereum EID in LayerZero network

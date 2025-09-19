@@ -145,6 +145,7 @@ export type MemoCollectionLoaderOptions<Item extends BaseCollectionItem> = {
      * Amount of items to be fetched in one portion (i.e. first top items & each more items call)
      */
     limit: number;
+
     /**
      * Fetcher used to load the top items and receive updates.
      */

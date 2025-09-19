@@ -11,6 +11,7 @@ export * from './SubscriptionCenter';
 export * from './TokensConversion';
 export * from './ChunkStrings';
 export * from './SortedArray';
+export * from './SortedMap';
 
 // Export public utilities types
 export * from './types';
