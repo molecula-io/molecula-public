@@ -187,6 +187,17 @@ export async function deployAndInitMetaEth(
     await nativeTokenVault.waitForDeployment();
     console.log('NativeTokenVault address:', await nativeTokenVault.getAddress());
 
+    console.log('Deploying wmetaETH...');
+    const RewardBearingWrapper = await hre.ethers.getContractFactory('RewardBearingWrapper');
+    const wmetaETH = await RewardBearingWrapper.deploy(
+        config.WMETA_ETH_TOKEN_NAME,
+        config.WMETA_ETH_TOKEN_SYMBOL,
+        rebaseTokenV2,
+        { gasLimit: DEPLOY_GAS_LIMIT },
+    );
+    await wmetaETH.waitForDeployment();
+    console.log('wmetaETH address:', await wmetaETH.getAddress());
+
     console.log('Adding code hashes into rebaseTokenV2...');
     const codeHashes = [
         keccak256((await wETHVault.getDeployedCode())!),
@@ -258,7 +269,8 @@ export async function deployAndInitMetaEth(
     return {
         metaPoolTreasury: await metaPoolTreasury.getAddress(),
         supplyManagerV2: await supplyManagerV2.getAddress(),
-        rebaseTokenV2: await rebaseTokenV2.getAddress(),
+        metaETH: await rebaseTokenV2.getAddress(),
+        wmetaETH: await wmetaETH.getAddress(),
         stETHVault: await stETHVault.getAddress(),
         wETHVault: await wETHVault.getAddress(),
         nativeTokenVault: await nativeTokenVault.getAddress(),

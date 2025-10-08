@@ -2,6 +2,15 @@ import type { mrEthNetworkConfig } from './mrEthConfigTypes';
 
 /** Sepolia config for mrETH protocol. */
 export const sepoliaMrEthConfig: mrEthNetworkConfig = {
+    /** Owner address on Ethereum Sepolia. */
+    OWNER: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Yield distributor address on Ethereum Sepolia. */
+    YIELD_DISTRIBUTOR: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Guardian address on Ethereum Sepolia. */
+    GUARDIAN: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
     /** Wrapped ETH (WETH) token address on Ethereum Sepolia. */
     WETH_ADDRESS: '0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c',
 
@@ -56,6 +65,15 @@ export const sepoliaMrEthConfig: mrEthNetworkConfig = {
     /** Molecula Buffer symbol. */
     MOLECULA_BUFFER_SYMBOL: 'mwETHtS',
 
-    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mUSD holder. */
+    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mrETH holders. */
     APY_FORMATTER: 8_000,
+
+    /** (BUFFER_PERCENTAGE / 10_000) * 100% is the percentage of TVL that must stay in the Buffer. */
+    BUFFER_PERCENTAGE: 500,
+
+    /** (MIN_FEE_PERCENTAGE / 10_000) * 100% is the minimum fee percentage for instant withdrawals. */
+    MIN_FEE_PERCENTAGE: 500,
+
+    /** (MAX_FEE_PERCENTAGE / 10_000) * 100% is the maximum fee percentage for instant withdrawals. */
+    MAX_FEE_PERCENTAGE: 1000,
 };

@@ -20,6 +20,7 @@
             "aEthUSDT": "0xF7A29169b1eC1555aFCEF79FA42020873a8a58B5",
             "aEthUSDC": "0x72e1EfEfa65bB3b8E9B8dD2DA1b6705b69Ceaec3"
         },
+        "priceChecker": "0x67D2F8151747ad811E531F14Bb22275C1571DB1A",
         "ethena": {
             "USDe": "0x3882Ef2d84B0aA75b1565Bb99A8fb90e52612b92",
             "sUSDe": "0x572d3e6b50BB4B2CB4061db7aa233Ae50d9ab258"

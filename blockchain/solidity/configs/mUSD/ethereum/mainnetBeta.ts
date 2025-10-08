@@ -139,11 +139,11 @@ export const ethMainnetBetaConfig: EthereumNetworkConfig = {
     AGENT_AUTHORIZED_LZ_CONFIGURATOR:
         evmAuthorizedAddresses.AGENT_AUTHORIZED_LZ_CONFIGURATOR[EVMChainIDs.Mainnet].beta,
 
-    WMUSD_TOKEN_NAME: 'Wrapped mUSD beta',
-    WMUSD_TOKEN_SYMBOL: 'wmUSDb',
+    WMUSD_TOKEN_NAME: 'Wrapped mUSD release candidate', // Note: "Wrapped mUSD beta" was deployed
+    WMUSD_TOKEN_SYMBOL: 'wmUSDrec', // Note: "wmUSDb" was deployed
 
-    LMUSD_TOKEN_NAME: 'Locked mUSD beta',
-    LMUSD_TOKEN_SYMBOL: 'lmUSDb',
+    LMUSD_TOKEN_NAME: 'Locked mUSD release candidate',
+    LMUSD_TOKEN_SYMBOL: 'lmUSDrec',
     LMUSD_PERIODS: [],
     LMUSD_MULTIPLIERS: [],
 };

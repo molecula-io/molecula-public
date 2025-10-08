@@ -12,6 +12,7 @@ import {
 
 import { ethMainnetBetaConfig } from '../../configs';
 
+import { DEFAULT_PRICE_DEVIATION_BPS, zeroPriceFeed } from '../../scripts';
 import type { IERC20, MoleculaPoolTreasuryV2 } from '../../typechain-types';
 
 import { generateRandomWallet } from './Common';
@@ -27,109 +28,33 @@ function getTokensForPriceChecker() {
     const usdcFeed = chainLinkFeeds.usd.usdc[EVMChainIDs.Mainnet];
     const susdeFeed = chainLinkFeeds.usd.sUSDe[EVMChainIDs.Mainnet];
     return [
-        {
-            asset: SPARK_USDC,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-
-        {
-            asset: staticPoolCurrenciesRetailMainnet.DAI.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.sDAI.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.USDT.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
+        zeroPriceFeed(SPARK_USDC),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.DAI.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.sDAI.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.USDT.token),
         {
             asset: staticPoolCurrenciesRetailMainnet.USDC.token,
             priceFeed: usdcFeed.address,
-            priceDeviationBps: 50, // 0.5 %
+            priceDeviationBps: DEFAULT_PRICE_DEVIATION_BPS,
             stalenessThreshold: usdcFeed.heartbeat,
         },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.spDAI.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.USDe.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.spDAI.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.USDe.token),
         {
             asset: staticPoolCurrenciesRetailMainnet.sUSDe.token,
             priceFeed: susdeFeed.address,
-            priceDeviationBps: 50, // 0.5 %
+            priceDeviationBps: DEFAULT_PRICE_DEVIATION_BPS,
             stalenessThreshold: susdeFeed.heartbeat,
         },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.aEthUSDT.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.aEthUSDC.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.aEthDAI.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.FRAX.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.sFRAX.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.frxUSD.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.sFrxUSD.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.USDS.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: staticPoolCurrenciesRetailMainnet.sUSDS.token,
-            priceFeed: ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.aEthUSDT.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.aEthUSDC.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.aEthDAI.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.FRAX.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.sFRAX.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.frxUSD.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.sFrxUSD.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.USDS.token),
+        zeroPriceFeed(staticPoolCurrenciesRetailMainnet.sUSDS.token),
     ];
 }
 

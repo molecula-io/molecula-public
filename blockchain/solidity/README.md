@@ -49,6 +49,7 @@ Before you begin, ensure you have the following installed:
     ```
 
 4. **Run tests:**
+
     ```bash
     yarn test
     ```
@@ -181,6 +182,7 @@ The project supports multiple networks:
 
 - **Sepolia** - Ethereum testnet
 - **Holesky** - Ethereum testnet
+- **Hoodi** - Ethereum testnet
 - **Ethereum Mainnet** - Production Ethereum
 - **Shasta** - Tron testnet
 - **Tron Mainnet** - Production Tron
@@ -196,7 +198,7 @@ yarn test
 # Run Forge tests
 yarn test:forge
 
-# Run all tests (Hardhat + Forge)
+# Run all tests (Forge + Hardhat)
 yarn test:all
 ```
 
@@ -292,168 +294,6 @@ Before deploying, ensure you have:
 2. **Generated wallet addresses** using `yarn generate:wallet`
 3. **Configured network settings** in the appropriate config files
 
-### Deployment Process
-
-#### 1. Configure Addresses
-
-Set `POOL_KEEPER`, `OWNER` and `GUARDIAN_ADDRESS` in the appropriate config files:
-
-- **Ethereum**:
-    - [Sepolia config](configs/mUSD/ethereum/sepolia.ts)
-    - [Mainnet Beta config](configs/mUSD/ethereum/mainnetBeta.ts)
-    - [Mainnet Production config](configs/mUSD/ethereum/mainnetProd.ts)
-
-- **Tron**:
-    - [Shasta config](configs/mUSD/tron/shasta.ts)
-    - [Mainnet Beta config](configs/mUSD/tron/mainnetBeta.ts)
-    - [Mainnet Production config](configs/mUSD/tron/mainnetProd.ts)
-
-#### 2. Deploy Core Contracts
-
-```bash
-# Test environment
-yarn core:deploy:test
-
-# Beta environment
-yarn core:deploy:beta
-
-# Production environment
-yarn core:deploy:production
-```
-
-Use `--nomusde` flag to skip mUSDe contract deployment:
-
-```bash
-yarn core:deploy:test --nomusde
-```
-
-#### 3. Deploy Nitrogen Contracts
-
-```bash
-# Test environment
-yarn nitrogen:deploy:test
-
-# Beta environment
-yarn nitrogen:deploy:beta
-
-# Production environment
-yarn nitrogen:deploy:production
-```
-
-#### 4. Deploy Carbon Contracts
-
-> **Note**: Carbon deployment needs to be fixed after carbon contracts refactor.
-
-```bash
-# Test environment
-yarn carbon:deploy:test
-
-# Beta environment
-yarn carbon:deploy:beta
-
-# Production environment
-yarn carbon:deploy:production
-```
-
-#### 5. Set Contract Owners
-
-```bash
-# Set core owner
-yarn core:set:owner:[test|beta|production]
-
-# Set nitrogen owner
-yarn nitrogen:set:owner:[test|beta|production]
-
-# Set carbon owner
-yarn carbon:set:owner:[test|beta|production]
-```
-
-⚠️ **Important**: Many contracts use OpenZeppelin's `Ownable2Step` pattern for enhanced security. After running these commands, the new owner must call `acceptOwnership()` on each applicable contract to complete the ownership transfer. The scripts will display warnings for contracts that require this additional step.
-
-### Specialized Deployments
-
-#### Deploy RebaseTokenOwner
-
-1. Deploy RebaseTokenOwner:
-
-    ```bash
-    yarn nitrogen:deploy:tokenOwner:test
-    ```
-
-2. Set up the system:
-    ```typescript
-    await rebaseToken.transferOwnership(rebaseTokenOwner);
-    ```
-
-#### Deploy NitrogenTokenVault
-
-1. Deploy NitrogenTokenVault with parameters:
-
-    ```bash
-    yarn nitrogen:deploy:vault:test \
-      --token-name <TOKEN_NAME> \
-      --token <TOKEN_ADDRESS> \
-      --min-deposit <MIN_DEPOSIT> \
-      --min-redeem <MIN_REDEEM>
-    ```
-
-    Parameters:
-    - `--token`: ERC20 token address
-    - `--token-name`: Token name
-    - `--min-deposit`: Minimal deposit assets
-    - `--min-redeem`: Minimal redeem shares
-
-2. Set up the system:
-
-    ```typescript
-    // Accept ownership
-    await NitrogenTokenVault.acceptOwnership();
-
-    // Set as agent
-    await SupplyManager.setAgent(NitrogenTokenVault, true);
-
-    // Add to RebaseTokenOwner
-    const codeHash = keccak256((await NitrogenTokenVault.getDeployedCode())!);
-    await rebaseTokenOwner.setCodeHash(codeHash, true);
-    await rebaseTokenOwner.addTokenVault(NitrogenTokenVault);
-    ```
-
-#### Deploy wmUSD Contracts
-
-```bash
-yarn nitrogen:deploy:wmUSD:[test|beta|production] --yield-dist <YIELD_DISTRIBUTOR>
-```
-
-#### Deploy lmUSD Contract
-
-```bash
-yarn nitrogen:deploy:lmUSD:test
-```
-
-### Verification
-
-After deployment, verify contracts on block explorers using the verification scope:
-
-```bash
-# Verify Carbon contracts
-yarn carbon:verify:test        # Test environment (Sepolia)
-yarn carbon:verify:beta        # Beta environment (Mainnet)
-yarn carbon:verify:production  # Production environment (Mainnet)
-
-# Verify Nitrogen contracts
-yarn nitrogen:verify:test        # Test environment (Sepolia)
-yarn nitrogen:verify:beta        # Beta environment (Mainnet)
-yarn nitrogen:verify:production  # Production environment (Mainnet)
-
-# Verify mrETH contracts (legacy commands)
-yarn mrEth:verify:sepolia
-yarn mrEth:verify:holesky
-yarn mrEth:verify:hoodi
-
-# Verify MetaEth contracts (legacy commands)
-yarn metaEth:verify:sepolia
-```
-
 ## Security
 
 ### Best Practices
@@ -506,4 +346,4 @@ Security audit reports are stored in the `audits/` directory. Always review thes
 
 ---
 
-For more information contact the development team.
+For more information, contact the development team.

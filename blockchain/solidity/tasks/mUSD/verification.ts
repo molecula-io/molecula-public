@@ -19,7 +19,7 @@ import { verifyContract } from '../../scripts/verificationUtils';
 const verificationScope = scope('verificationScope', 'Scope for contract verification tasks');
 
 verificationScope
-    .task('verifyCarbon', 'Verifies Carbon contracts')
+    .task('verifyCarbon', 'Verify Carbon configuration')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('\n Contract Verification');
@@ -53,7 +53,7 @@ verificationScope
     });
 
 verificationScope
-    .task('verifyNitrogen', 'Verifies Nitrogen contracts')
+    .task('verifyNitrogen', 'Verify Nitrogen configuration')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('\n Contract Verification');
@@ -197,7 +197,7 @@ verificationScope
     });
 
 verificationScope
-    .task('verifyExecutor', 'Verifies Executor contracts')
+    .task('verifyExecutor', 'Verify Executor configuration')
     .addParam('environment', 'Deployment environment')
     .setAction(async (taskArgs, hre) => {
         console.log('\n Contract Verification');

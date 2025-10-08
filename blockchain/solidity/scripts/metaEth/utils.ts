@@ -15,6 +15,7 @@ import {
     metaEthSepoliaConfig,
     NATIVE_TOKEN,
 } from '../../configs';
+import { DEFAULT_PRICE_DEVIATION_BPS, zeroPriceFeed } from '../utils';
 
 export function getMetaEthEnvironmentConfig(network: EnvironmentType) {
     switch (network) {
@@ -56,7 +57,8 @@ export function getFeeds(
     withPoolTokens: boolean,
 ) {
     const stETHFeed = chainLinkFeeds.eth.stETH[chainId];
-    const stEthPriceDeviationBps = stETHFeed.address === hre.ethers.ZeroAddress ? 0 : 50; // 0.5%
+    const stEthPriceDeviationBps =
+        stETHFeed.address === hre.ethers.ZeroAddress ? 0 : DEFAULT_PRICE_DEVIATION_BPS;
     const feeds = [
         {
             asset: config.stETH,
@@ -64,18 +66,8 @@ export function getFeeds(
             priceDeviationBps: stEthPriceDeviationBps,
             stalenessThreshold: stETHFeed.heartbeat,
         },
-        {
-            asset: config.wETH,
-            priceFeed: hre.ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
-        {
-            asset: NATIVE_TOKEN,
-            priceFeed: hre.ethers.ZeroAddress,
-            priceDeviationBps: 0,
-            stalenessThreshold: 0,
-        },
+        zeroPriceFeed(config.wETH),
+        zeroPriceFeed(NATIVE_TOKEN),
     ];
     if (withPoolTokens) {
         const weETHFeed = chainLinkFeeds.eth.weETH[chainId];
@@ -85,19 +77,19 @@ export function getFeeds(
             {
                 asset: config.weETH,
                 priceFeed: weETHFeed.address,
-                priceDeviationBps: 50, // 0.5 %
+                priceDeviationBps: DEFAULT_PRICE_DEVIATION_BPS,
                 stalenessThreshold: weETHFeed.heartbeat,
             },
             {
                 asset: config.rsETH,
                 priceFeed: rsETHFeed.address,
-                priceDeviationBps: 50, // 0.5 %
+                priceDeviationBps: DEFAULT_PRICE_DEVIATION_BPS,
                 stalenessThreshold: rsETHFeed.heartbeat,
             },
             {
                 asset: config.ezETH,
                 priceFeed: ezETHFeed.address,
-                priceDeviationBps: 50, // 0.5 %
+                priceDeviationBps: DEFAULT_PRICE_DEVIATION_BPS,
                 stalenessThreshold: ezETHFeed.heartbeat,
             },
         );

@@ -99,7 +99,7 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     MUSD_TOKEN_DECIMALS: 18,
 
     /** MUSD token name. */
-    MUSD_TOKEN_NAME: 'mUSD retail test v0.13',
+    MUSD_TOKEN_NAME: 'mUSD retail test',
 
     /** mUSD token symbol. */
     MUSD_TOKEN_SYMBOL: 'mUSDretS',
@@ -114,11 +114,11 @@ export const sepoliaConfig: EthereumNetworkConfig = {
     AGENT_AUTHORIZED_LZ_CONFIGURATOR:
         evmAuthorizedAddresses.AGENT_AUTHORIZED_LZ_CONFIGURATOR[EVMChainIDs.Sepolia],
 
-    WMUSD_TOKEN_NAME: 'Wrapped mUSD test',
-    WMUSD_TOKEN_SYMBOL: 'wmUSDt',
+    WMUSD_TOKEN_NAME: 'Wrapped mUSD retail test',
+    WMUSD_TOKEN_SYMBOL: 'wmUSDretS',
 
-    LMUSD_TOKEN_NAME: 'Locked mUSD test',
-    LMUSD_TOKEN_SYMBOL: 'lmUSDt',
+    LMUSD_TOKEN_NAME: 'Locked mUSD retail test',
+    LMUSD_TOKEN_SYMBOL: 'lmUSDretS',
     LMUSD_PERIODS: [],
     LMUSD_MULTIPLIERS: [],
 };

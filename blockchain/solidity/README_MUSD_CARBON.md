@@ -4,31 +4,9 @@
 
 The mUSD Carbon protocol integrates Tron into the mUSD Core product, enabling cross-chain functionality with Ethereum using LayerZero. This setup allows for stablecoin operations on the Tron network while maintaining connectivity to Ethereum-based assets.
 
-## Quick Start
+## Installation
 
-1. Install dependencies:
-
-    ```
-    yarn install
-    ```
-
-2. Navigate to the solidity directory:
-
-    ```
-    cd blockchain/solidity
-    ```
-
-3. Set up environment file (e.g., .env.test for testnet):
-
-    ```
-    cp .env.example .env.test
-    # Edit with your keys and RPC URLs
-    ```
-
-4. Compile contracts:
-    ```
-    yarn compile
-    ```
+See [Quick Start](README.md#quick-start) and [Installation](README.md#installation).
 
 ## Project Structure (Relevant to Carbon)
 
@@ -53,7 +31,8 @@ Required variables (example for testnet):
 ```
 # Ethereum
 ETHEREUM_SEED_PHRASE=your_seed
-JSON_RPC_URL_SEPOLIA=your_rpc
+JSON_RPC_URL=your_rpc_ethereum
+JSON_RPC_URL_SEPOLIA=your_rpc_sepolia
 
 # Tron
 TRON_SEED_PHRASE=your_seed
@@ -65,7 +44,7 @@ Update configuration files in `configs/mUSD/` for addresses like OWNER, GUARDIAN
 
 Run tests to ensure everything is working:
 
-```
+```bash
 yarn test
 yarn test:forge
 yarn test:all
@@ -92,30 +71,60 @@ The **LayerZero Executor** is a critical infrastructure component required for C
 
 **Step 1: Deploy LayerZero Executor (Required First)**
 
-- **yarn carbon:executor:deploy:test**: Deploys LayerZero Executor contracts on both Ethereum (Sepolia) and Tron (Shasta). This must be done before deploying Carbon contracts as they depend on the executor for cross-chain message handling.
+```bash
+yarn carbon:executor:deploy:test
+```
+
+Deploys LayerZero Executor contracts on both Ethereum (Sepolia) and Tron (Shasta). This must be done before deploying Carbon contracts as they depend on the executor for cross-chain message handling.
 
 **Step 2: Deploy Carbon Contracts (Includes LayerZero Configuration)**
 
-- **yarn carbon:deploy:test**: Deploys the core Carbon contracts across Ethereum (Sepolia) and Tron (Shasta) testnets, and automatically configures LayerZero DVN settings and gas limits.
+```bash
+yarn carbon:deploy:test
+```
+
+Deploys the core Carbon contracts across Ethereum (Sepolia) and Tron (Shasta) testnets, and automatically configures LayerZero DVN settings and gas limits.
 
 **Step 3: Sync Executor Parameters**
 
-- **yarn carbon:sync:executor:test**: Synchronizes executor parameters across networks for automated message execution on testnets.
+```bash
+yarn carbon:sync:executor:test
+```
+
+Synchronizes executor parameters across networks for automated message execution on testnets.
 
 **Step 4: Transfer Ownership**
 
-- **yarn carbon:set:owner:test**: Transfers ownership of deployed contracts to the specified owner address on testnets. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
+```bash
+yarn carbon:set:owner:test
+```
+
+Transfers ownership of deployed contracts to the specified owner address on testnets. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
 
 **Step 5: Optional Components**
 
-- **yarn carbon:tron:deploy:wmUSD:test**: Deploys the wrapped mUSD (wmUSD) contract specifically on the Tron testnet (Shasta).
+```bash
+yarn carbon:tron:deploy:wmUSD:test --yield-dist <YIELD_DISTRIBUTOR>
+```
+
+Deploys the wrapped mUSD (wmUSD) contract specifically on the Tron testnet (Shasta).
+Note, that if `--yield-dist` isn't provided, than a contract owner is used by default.
 
 #### Recovery Commands (Use Only If Step 2 Fails)
 
 If the main deployment fails during LayerZero configuration, you can run these individually:
 
-- **yarn carbon:set:lz:dvn:test**: Configures LayerZero DVN (Decentralized Verifier Network) settings.
-- **yarn carbon:set:lz:gaslimit:test**: Sets gas limit parameters for LayerZero operations.
+```bash
+yarn carbon:set:lz:dvn:test
+```
+
+Configures LayerZero DVN (Decentralized Verifier Network) settings.
+
+```bash
+yarn carbon:set:lz:gaslimit:test
+```
+
+Sets gas limit parameters for LayerZero operations.
 
 ---
 
@@ -125,30 +134,60 @@ If the main deployment fails during LayerZero configuration, you can run these i
 
 **Step 1: Deploy LayerZero Executor (Required First)**
 
-- **yarn carbon:executor:deploy:beta**: Deploys LayerZero Executor contracts on both Ethereum and Tron mainnet beta environments.
+```bash
+yarn carbon:executor:deploy:beta
+```
+
+Deploys LayerZero Executor contracts on both Ethereum and Tron mainnet beta environments.
 
 **Step 2: Deploy Carbon Contracts (Includes LayerZero Configuration)**
 
-- **yarn carbon:deploy:beta**: Deploys the core Carbon contracts on Ethereum and Tron mainnet beta environments, and automatically configures LayerZero DVN settings and gas limits.
+```bash
+yarn carbon:deploy:beta
+```
+
+Deploys the core Carbon contracts on Ethereum and Tron mainnet beta environments, and automatically configures LayerZero DVN settings and gas limits.
 
 **Step 3: Sync Executor Parameters**
 
-- **yarn carbon:sync:executor:beta**: Syncs executor params for beta networks.
+```bash
+yarn carbon:sync:executor:beta
+```
+
+Syncs executor params for beta networks.
 
 **Step 4: Transfer Ownership**
 
-- **yarn carbon:set:owner:beta**: Sets contract owners for beta deployments. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
+```bash
+yarn carbon:set:owner:beta
+```
+
+Sets contract owners for beta deployments. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
 
 **Step 5: Optional Components**
 
-- **yarn carbon:tron:deploy:wmUSD:beta**: Deploys wmUSD on Tron mainnet beta.
+```bash
+yarn carbon:tron:deploy:wmUSD:beta --yield-dist <YIELD_DISTRIBUTOR>
+```
+
+Deploys wmUSD on Tron mainnet beta.
+Note, that if `--yield-dist` isn't provided, than a contract owner is used by default.
 
 #### Recovery Commands (Use Only If Step 2 Fails)
 
 If the main deployment fails during LayerZero configuration, you can run these individually:
 
-- **yarn carbon:set:lz:dvn:beta**: Configures LayerZero DVN settings for beta mainnets.
-- **yarn carbon:set:lz:gaslimit:beta**: Sets gas limits for LayerZero in beta environments.
+```bash
+yarn carbon:set:lz:dvn:beta
+```
+
+Configures LayerZero DVN settings for beta mainnets.
+
+```bash
+yarn carbon:set:lz:gaslimit:beta
+```
+
+Sets gas limits for LayerZero in beta environments.
 
 ---
 
@@ -158,30 +197,60 @@ If the main deployment fails during LayerZero configuration, you can run these i
 
 **Step 1: Deploy LayerZero Executor (Required First)**
 
-- **yarn carbon:executor:deploy:production**: Deploys LayerZero Executor contracts on both Ethereum and Tron production mainnets.
+```bash
+yarn carbon:executor:deploy:production
+```
+
+Deploys LayerZero Executor contracts on both Ethereum and Tron production mainnets.
 
 **Step 2: Deploy Carbon Contracts (Includes LayerZero Configuration)**
 
-- **yarn carbon:deploy:production**: Deploys the core Carbon contracts on production Ethereum and Tron mainnets, and automatically configures LayerZero DVN settings and gas limits.
+```bash
+yarn carbon:deploy:production
+```
+
+Deploys the core Carbon contracts on production Ethereum and Tron mainnets, and automatically configures LayerZero DVN settings and gas limits.
 
 **Step 3: Sync Executor Parameters**
 
-- **yarn carbon:sync:executor:production**: Syncs executor parameters for production.
+```bash
+yarn carbon:sync:executor:production
+```
+
+Syncs executor parameters for production.
 
 **Step 4: Transfer Ownership**
 
-- **yarn carbon:set:owner:production**: Sets owners for production contracts. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
+```bash
+yarn carbon:set:owner:production
+```
+
+Sets owners for production contracts. ⚠️ **Important**: Some contracts use 2-step ownership and require the new owner to call `acceptOwnership()` to complete the transfer.
 
 **Step 5: Optional Components**
 
-- **yarn carbon:tron:deploy:wmUSD:production**: Deploys wmUSD on Tron production mainnet.
+```bash
+yarn carbon:tron:deploy:wmUSD:production --yield-dist <YIELD_DISTRIBUTOR>
+```
+
+Deploys wmUSD on Tron production mainnet.
+Note, that if `--yield-dist` isn't provided, than a contract owner is used by default.
 
 #### Recovery Commands (Use Only If Step 2 Fails)
 
 If the main deployment fails during LayerZero configuration, you can run these individually:
 
-- **yarn carbon:set:lz:dvn:production**: Configures LayerZero DVN for production.
-- **yarn carbon:set:lz:gaslimit:production**: Sets production gas limits for LayerZero.
+```bash
+yarn carbon:set:lz:dvn:production
+```
+
+Configures LayerZero DVN for production.
+
+```bash
+yarn carbon:set:lz:gaslimit:production
+```
+
+Sets production gas limits for LayerZero.
 
 ### ⚠️ Post-Deployment Integration Required
 
@@ -198,7 +267,7 @@ See the **Critical Integration Step** section below for detailed instructions.
 
 Contracts are generally immutable, but ownership can be transferred:
 
-```
+```bash
 yarn carbon:set:owner:[test|beta|production]
 ```
 
@@ -264,7 +333,9 @@ console.log('AgentLZ authorized:', isAuthorized); // Should be true
 
 To migrate (re-deploy) AccountantLZ (Tron) and AgentLZ (Ethereum) while preserving configurations:
 
-- Run the multichain migration task: `yarn carbon:migrate:lz:[env]` (replace [env] with test, beta, or production)
+```bash
+yarn carbon:migrate:lz:[test|beta|production]
+```
 
 **Warnings from Migration Scripts (Manual Steps Required)**:
 
@@ -281,4 +352,15 @@ Verify deployed contracts on block explorers using the verification scope:
 yarn carbon:verify:test        # Test environment (Sepolia)
 yarn carbon:verify:beta        # Beta environment (Mainnet)
 yarn carbon:verify:production  # Production environment (Mainnet)
+```
+
+## Verification of protocol configuration
+
+To verify the protocol configuration, use the following command:
+
+```bash
+# Verify Carbon protocol configuration across all environments and chains
+yarn carbon:verify:configuration:test        # Test environment (Sepolia and Shasta)
+yarn carbon:verify:configuration:beta        # Beta environment (Mainnet Ethereum and Tron)
+yarn carbon:verify:configuration:production  # Production environment (Mainnet Ethereum and Tron)
 ```

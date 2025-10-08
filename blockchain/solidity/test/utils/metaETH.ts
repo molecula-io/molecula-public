@@ -44,7 +44,7 @@ export async function deployMetaEth() {
 
     const result = await deployAndInitMetaEth(hre, config, deployer, chainId, true);
 
-    const rebaseTokenV2 = await hre.ethers.getContractAt('RebaseTokenV2', result.rebaseTokenV2);
+    const rebaseTokenV2 = await hre.ethers.getContractAt('RebaseTokenV2', result.metaETH);
 
     const RewardBearingWrapper = await hre.ethers.getContractFactory('RewardBearingWrapper');
     const wmetaETH = await RewardBearingWrapper.connect(poolOwner).deploy(

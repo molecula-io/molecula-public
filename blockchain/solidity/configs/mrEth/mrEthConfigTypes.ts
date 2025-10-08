@@ -4,6 +4,11 @@ import type { EVMAddress } from '@molecula-monorepo/common.evm-utilities';
  * Configuration parameters for a mrETH protocol in Ethereum-based networks.
  */
 export type mrEthNetworkConfig = {
+    // Admin addresses
+    OWNER: EVMAddress;
+    YIELD_DISTRIBUTOR: EVMAddress;
+    GUARDIAN: EVMAddress;
+
     // Token addresses
     WETH_ADDRESS: EVMAddress;
     AWETH_ADDRESS: EVMAddress;
@@ -29,4 +34,8 @@ export type mrEthNetworkConfig = {
     MOLECULA_BUFFER_SYMBOL: string;
 
     APY_FORMATTER: number;
+
+    BUFFER_PERCENTAGE: number;
+    MIN_FEE_PERCENTAGE: number;
+    MAX_FEE_PERCENTAGE: number;
 };

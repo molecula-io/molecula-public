@@ -9,6 +9,7 @@ import {
     APPROVER_SALT,
     NATIVE_TOKEN,
     ETH_VIRTUAL_OFFSET,
+    PERCENTAGE_FACTOR,
 } from '../../configs';
 
 import { getMrEthConfig } from '../utils/deployUtils';
@@ -294,14 +295,14 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
         await delegatorImplementation.getAddress(),
         await moleculaBuffer.getAddress(),
         await depositManagerLib.getAddress(),
-        500n,
+        config.BUFFER_PERCENTAGE,
         [
             {
                 pool: aavePool,
                 newPoolData: {
                     poolToken: config.AWETH_ADDRESS,
                     poolLib: await aaveBufferLib.getAddress(),
-                    poolPortion: 10_000n, // 100% allocation
+                    poolPortion: PERCENTAGE_FACTOR, // 100% allocation
                     poolId: 0,
                 },
                 auth: true,
@@ -324,7 +325,7 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
                 APPROVER_SIGNATURE_AND_EXPIRY,
                 APPROVER_SALT,
                 [config.EIGENLAYER_OPERATOR],
-                [10_000n], // 100% allocation
+                [PERCENTAGE_FACTOR], // 100% allocation
             ]),
             gasLimit: DEPLOY_GAS_LIMIT,
         });
@@ -366,9 +367,9 @@ export async function deployMrEth(hre: HardhatRuntimeEnvironment, environment: E
     }
 
     // Set min and max fee percentages
-    tx = await depositManagerPool.setMinFeePercentage(500n);
+    tx = await depositManagerPool.setMinFeePercentage(config.MIN_FEE_PERCENTAGE);
     await tx.wait();
-    tx = await depositManagerPool.setMaxFeePercentage(1000n);
+    tx = await depositManagerPool.setMaxFeePercentage(config.MAX_FEE_PERCENTAGE);
     await tx.wait();
 
     // Grant GUARDIAN_ROLE for guardian

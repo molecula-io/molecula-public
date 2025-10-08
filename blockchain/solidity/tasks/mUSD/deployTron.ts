@@ -184,6 +184,7 @@ tronMajorScope
 tronMajorScope
     .task('deploywmUSD', 'Deploys wmUSD (Supplied) on Tron')
     .addParam('environment', 'Deployment environment')
+    .addOptionalParam('yieldDist', 'Yield distributor address')
     .setAction(async (taskArgs, hre) => {
         console.log('\n TRON Deployment');
         console.log('Environment:', taskArgs.environment);
@@ -196,7 +197,10 @@ tronMajorScope
         );
 
         // Execute deployment
-        contractsCarbon.tron.wmUSD = await deploywmUSD(hre, contractsCarbon, environment);
+        contractsCarbon.tron.wmUSD = await deploywmUSD(hre, environment, {
+            mUSD: contractsCarbon.tron.rebaseToken,
+            yieldDistributor: taskArgs.yieldDist,
+        });
 
         writeToFile(`${environment}/contracts_carbon.json`, contractsCarbon);
     });

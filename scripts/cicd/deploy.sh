@@ -14,27 +14,30 @@ display_usage() {
 
 OPTIONS:
     -p PACKAGE   (Optional) Specify package to deploy:
-                 ┌────────────────────────┬─────────────────────────┐
-                 │ Package                │ Environments            │
-                 ├────────────────────────┼─────────────────────────┤
-                 │ back                   │ dev, alpha, beta, prod  │
-                 │ back-account-service   │ dev, alpha, beta, prod  │
-                 │ back-atoms-service     │ dev, alpha, beta, prod  │
-                 │ back-atoms-service-nest│ dev, alpha, beta, prod  │
-                 │ back-carbon            │ dev, alpha, beta, prod  │
-                 │ back-dex-service       │ dev, alpha, beta, prod  │
-                 │ back-events-service    │ dev, alpha, beta, prod  │
-                 │ back-info-service      │ dev, alpha, beta, prod  │
-                 │ back-monitoring-service│ dev, alpha, beta, prod  │
-                 │ back-nitrogen          │ dev, alpha, beta, prod  │
-                 │ back-pool-service      │ dev, alpha, beta, prod  │
-                 │ back-pool-service-nest │ dev, alpha, beta, prod  │
-                 │ front                  │ dev, alpha, beta, prod  │
-                 │ pool-admin             │ dev, alpha, beta, prod  │
-                 │ retail                 │ dev,        beta, prod  │
-                 │ website                │ dev,        beta, prod  │
-                 │ ui-test-image          │ (No environment needed) │
-                 └────────────────────────┴─────────────────────────┘
+                 ┌─────────────────────────────┬─────────────────────────┐
+                 │ Package                     │ Environments            │
+                 ├─────────────────────────────┼─────────────────────────┤
+                 │ back-events-service         │ dev, alpha, beta, prod  │
+                 │ back-account-service        │ dev, alpha, beta, prod  │
+                 │ back-atoms-service          │ dev, alpha, beta, prod  │
+                 │ back-atoms-service-nest     │ dev, alpha, beta, prod  │
+                 │ back-carbon                 │ dev, alpha, beta, prod  │
+                 │ back-dex-service            │ dev, alpha, beta, prod  │
+                 │ back-events-service         │ dev, alpha, beta, prod  │
+                 │ back-events-service-metaeth │ dev, alpha, beta, prod  │
+                 │ back-info-service           │ dev, alpha, beta, prod  │
+                 │ back-info-service-nest      │ dev, alpha, beta, prod  │
+                 │ back-monitoring-service     │ dev, alpha, beta, prod  │
+                 │ back-nitrogen               │ dev, alpha, beta, prod  │
+                 │ back-pool-service           │ dev, alpha, beta, prod  │
+                 │ back-pool-service-nest      │ dev, alpha, beta, prod  │
+                 │ back-tracker-service-metaeth│ dev, alpha, beta, prod  │
+                 │ front                       │ dev, alpha, beta, prod  │
+                 │ pool-admin                  │ dev, alpha, beta, prod  │
+                 │ retail                      │ dev,        beta, prod  │
+                 │ website                     │ dev,        beta, prod  │
+                 │ ui-test-image               │ (No environment needed) │
+                 └─────────────────────────────┴─────────────────────────┘
                  
     -s STAND     Specify environment: dev, alpha, beta, or prod
                  (Required except for packages without environment in the PACKAGE table)
@@ -105,7 +108,13 @@ _get_envs_for_package() {
         "back-events-service")
             echo "dev alpha beta prod"
             ;;
+        "back-events-service-metaeth")
+            echo "dev alpha beta prod"
+            ;;
         "back-info-service")
+            echo "dev alpha beta prod"
+            ;;
+        "back-info-service-nest")
             echo "dev alpha beta prod"
             ;;
         "back-monitoring-service")
@@ -118,6 +127,9 @@ _get_envs_for_package() {
             echo "dev alpha beta prod"
             ;;
         "back-pool-service-nest")
+            echo "dev alpha beta prod"
+            ;;
+        "back-tracker-service-metaeth")
             echo "dev alpha beta prod"
             ;;
         "website")

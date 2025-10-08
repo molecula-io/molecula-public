@@ -200,10 +200,10 @@ export const evmMoleculaContractAddresses = {
 
     MetaETH: {
         [EVMChainIDs.Mainnet]: {
-            beta: MainBetaContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
-            prod: MainProdContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
+            beta: MainBetaContractsMetaEth.eth.metaETH as EVMAddress,
+            prod: MainProdContractsMetaEth.eth.metaETH as EVMAddress,
         },
-        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.rebaseTokenV2 as EVMAddress,
+        [EVMChainIDs.Sepolia]: DevnetContractsMetaEth.eth.metaETH as EVMAddress,
     },
     MetaETHSupplyManager: {
         [EVMChainIDs.Mainnet]: {

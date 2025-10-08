@@ -57,6 +57,6 @@ export const tronMainnetProdConfig: TronNetworkConfig = {
     MUSD_TOKEN_INITIAL_SUPPLY: 10_000_000_000_000_000_000n,
 
     // Wrapped token info
-    WMUSD_NAME: 'Wrapped Molecula USD',
-    WMUSD_SYMBOL: 'wmUSD',
+    WMUSD_TOKEN_NAME: 'Wrapped Molecula USD',
+    WMUSD_TOKEN_SYMBOL: 'wmUSD',
 };

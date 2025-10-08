@@ -25,3 +25,14 @@ To verify the contracts, use the following command:
 ```bash
 yarn metaEth:verify:sepolia
 ```
+
+## Verification of protocol configuration
+
+To verify the protocol configuration, use the following command:
+
+```bash
+# Verify metaEth protocol configuration across all environments
+yarn metaEth:verify:configuration:test        # Test environment (Sepolia)
+yarn metaEth:verify:configuration:beta        # Beta environment (Mainnet Ethereum)
+yarn metaEth:verify:configuration:production  # Production environment (Mainnet Ethereum)
+```

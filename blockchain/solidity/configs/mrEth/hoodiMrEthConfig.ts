@@ -1,7 +1,18 @@
+import { ZeroAddress } from '../constants';
+
 import type { mrEthNetworkConfig } from './mrEthConfigTypes';
 
 /** Hoodi config for mrETH protocol. */
 export const hoodiMrEthConfig: mrEthNetworkConfig = {
+    /** Owner address on Ethereum Hoodi. */
+    OWNER: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Yield distributor address on Ethereum Hoodi. */
+    YIELD_DISTRIBUTOR: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Guardian address on Ethereum Hoodi. */
+    GUARDIAN: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
     /** Wrapped ETH (WETH) token address on Ethereum Hoodi. */
     WETH_ADDRESS: '0x5baCb4970Bb6e17f8Db9267eBeD2dc824fFd7F78',
 
@@ -9,7 +20,7 @@ export const hoodiMrEthConfig: mrEthNetworkConfig = {
     AWETH_ADDRESS: '0x62Ef2a0cE8c8FD9E51133E5FcfcC2F779b69A1A8',
 
     /** Compound Token for WETH (cWETHv3) token address on Ethereum Hoodi. */
-    CWETH_V3: '0x0000000000000000000000000000000000000000',
+    CWETH_V3: ZeroAddress,
 
     /** Lido LRT Token address on Ethereum Hoodi. */
     STETH_ADDRESS: '0x2C220A2a91602dd93bEAC7b3A1773cdADE369ba1',
@@ -56,6 +67,15 @@ export const hoodiMrEthConfig: mrEthNetworkConfig = {
     /** Molecula Buffer symbol on Ethereum Hoodi. */
     MOLECULA_BUFFER_SYMBOL: 'mwETHtS',
 
-    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mUSD holder. */
+    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mrETH holders. */
     APY_FORMATTER: 8_000,
+
+    /** (BUFFER_PERCENTAGE / 10_000) * 100% is the percentage of TVL that must stay in the Buffer. */
+    BUFFER_PERCENTAGE: 500,
+
+    /** (MIN_FEE_PERCENTAGE / 10_000) * 100% is the minimum fee percentage for instant withdrawals. */
+    MIN_FEE_PERCENTAGE: 500,
+
+    /** (MAX_FEE_PERCENTAGE / 10_000) * 100% is the maximum fee percentage for instant withdrawals. */
+    MAX_FEE_PERCENTAGE: 1000,
 };

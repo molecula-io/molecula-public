@@ -57,6 +57,6 @@ export const tronMainnetBetaConfig: TronNetworkConfig = {
     MUSD_TOKEN_INITIAL_SUPPLY: 10_000_000_000_000_000_000n,
 
     // Wrapped token info
-    WMUSD_NAME: 'Wrapped mUSD release candidate',
-    WMUSD_SYMBOL: 'mUSDrec',
+    WMUSD_TOKEN_NAME: 'Wrapped mUSD release candidate',
+    WMUSD_TOKEN_SYMBOL: 'wmUSDrec',
 };

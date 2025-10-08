@@ -1,9 +1,6 @@
-import { type HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import {
-    type ContractsCarbon,
-    type EnvironmentType,
-} from '@molecula-monorepo/blockchain.addresses';
+import type { EnvironmentType } from '@molecula-monorepo/blockchain.addresses';
 
 import { getTronEnvironmentConfig } from '../../../utils/deployUtils';
 
@@ -11,8 +8,11 @@ import { waitForDeployment } from './waitForDeployment';
 
 export async function deploywmUSD(
     hre: HardhatRuntimeEnvironment,
-    contractsCarbon: ContractsCarbon,
     environment: EnvironmentType,
+    params: {
+        mUSD: string;
+        yieldDistributor?: string;
+    },
 ): Promise<string> {
     // Find an account address corresponding to the given PRIVATE_KEY
     const issuerAddress = hre.tronweb.defaultAddress.base58 as string;
@@ -32,11 +32,11 @@ export async function deploywmUSD(
             // rebaseToken_ Rebase token's address.
             // yieldDistributor_ Authorized Yield Distributor's address.
             parameters: [
-                config.WMUSD_NAME,
-                config.WMUSD_SYMBOL,
+                config.WMUSD_TOKEN_NAME,
+                config.WMUSD_TOKEN_SYMBOL,
                 config.OWNER,
-                contractsCarbon.tron.rebaseToken,
-                config.OWNER, // NOTE: yieldDistributor is the owner!
+                params.mUSD,
+                params.yieldDistributor || config.OWNER, // Owner is a default yieldDistributor!
             ],
         },
         issuerAddress,

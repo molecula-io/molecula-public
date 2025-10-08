@@ -139,10 +139,10 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
     AGENT_AUTHORIZED_LZ_CONFIGURATOR:
         evmAuthorizedAddresses.AGENT_AUTHORIZED_LZ_CONFIGURATOR[EVMChainIDs.Mainnet].prod,
 
-    WMUSD_TOKEN_NAME: 'Wrapped mUSD',
+    WMUSD_TOKEN_NAME: 'Wrapped Molecula USD',
     WMUSD_TOKEN_SYMBOL: 'wmUSD',
 
-    LMUSD_TOKEN_NAME: 'Locked mUSD',
+    LMUSD_TOKEN_NAME: 'Locked Molecula USD',
     LMUSD_TOKEN_SYMBOL: 'lmUSD',
     LMUSD_PERIODS: [],
     LMUSD_MULTIPLIERS: [],

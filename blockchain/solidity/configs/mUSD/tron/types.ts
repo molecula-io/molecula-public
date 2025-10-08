@@ -40,7 +40,7 @@ export type TronNetworkConfig = {
     MUSD_TOKEN_MIN_REDEEM: bigint;
     MUSD_TOKEN_INITIAL_SUPPLY: bigint;
 
-    // wrapped token info
-    WMUSD_NAME: string;
-    WMUSD_SYMBOL: string;
+    // Wrapped token info
+    WMUSD_TOKEN_NAME: string;
+    WMUSD_TOKEN_SYMBOL: string;
 };

@@ -1,15 +1,26 @@
+import { ZeroAddress } from '../constants';
+
 import type { mrEthNetworkConfig } from './mrEthConfigTypes';
 
-/** Holesky config for mrETH protocol. */
+/** Holesky configuration for mrETH protocol. */
 export const holeskyMrEthConfig: mrEthNetworkConfig = {
-    /** Wrapped ETH (WETH) token address on EthereumHolesky. */
+    /** Owner address on Ethereum Holesky. */
+    OWNER: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Yield distributor address on Ethereum Holesky. */
+    YIELD_DISTRIBUTOR: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Guardian address on Ethereum Holesky. */
+    GUARDIAN: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Wrapped ETH (WETH) token address on Ethereum Holesky. */
     WETH_ADDRESS: '0x94373a4919B3240D86eA41593D5eBa789FEF3848',
 
     /** AAVE Mock Token for WETH (AToken) token address on Ethereum Holesky. */
     AWETH_ADDRESS: '0xCFaBbCC539de33f27928C73bc541Dde46e657a45',
 
     /** Compound Token for WETH (cWETHv3) token address on Ethereum Holesky. */
-    CWETH_V3: '0x0000000000000000000000000000000000000000',
+    CWETH_V3: ZeroAddress,
 
     /** Lido LRT Token address on Ethereum Holesky. */
     STETH_ADDRESS: '0x3F1c547b21f65e10480dE3ad8E19fAAC46C95034',
@@ -56,6 +67,15 @@ export const holeskyMrEthConfig: mrEthNetworkConfig = {
     /** Molecula Buffer symbol on Ethereum Holesky. */
     MOLECULA_BUFFER_SYMBOL: 'mwETHtS',
 
-    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mUSD holder. */
+    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mrETH holders. */
     APY_FORMATTER: 8_000,
+
+    /** (BUFFER_PERCENTAGE / 10_000) * 100% is the percentage of TVL that must stay in the Buffer. */
+    BUFFER_PERCENTAGE: 500,
+
+    /** (MIN_FEE_PERCENTAGE / 10_000) * 100% is the minimum fee percentage for instant withdrawals. */
+    MIN_FEE_PERCENTAGE: 500,
+
+    /** (MAX_FEE_PERCENTAGE / 10_000) * 100% is the maximum fee percentage for instant withdrawals. */
+    MAX_FEE_PERCENTAGE: 1000,
 };

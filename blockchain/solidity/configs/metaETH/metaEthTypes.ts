@@ -20,6 +20,9 @@ export type MetaEthNetworkConfig = {
     META_ETH_TOKEN_SYMBOL: string;
     META_ETH_TOKEN_DECIMALS: number;
 
+    WMETA_ETH_TOKEN_NAME: string;
+    WMETA_ETH_TOKEN_SYMBOL: string;
+
     MIN_DEPOSIT_ETH: bigint;
     MIN_DEPOSIT_weETH: bigint;
     MIN_DEPOSIT_ezETH: bigint;

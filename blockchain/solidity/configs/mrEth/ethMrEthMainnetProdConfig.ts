@@ -1,7 +1,16 @@
 import type { mrEthNetworkConfig } from './mrEthConfigTypes';
 
-/** Ethereum Mainnet config for prod mrETH protocol. */
+/** Ethereum Mainnet Prod configuration for mrETH protocol. */
 export const ethMrEthMainnetProdConfig: mrEthNetworkConfig = {
+    /** Owner address on Ethereum Mainnet. */
+    OWNER: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Yield distributor address on Ethereum Mainnet. */
+    YIELD_DISTRIBUTOR: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
+    /** Guardian address on Ethereum Mainnet. */
+    GUARDIAN: '0x99EC47D28FB39d1888b025Cf4B33765043c41353',
+
     /** Wrapped ETH (WETH) token address on Ethereum Mainnet. */
     WETH_ADDRESS: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
 
@@ -44,18 +53,27 @@ export const ethMrEthMainnetProdConfig: mrEthNetworkConfig = {
     /** mrETH token decimals. */
     MRETH_TOKEN_DECIMALS: 18,
 
-    /** mrETH token minimum deposit. */
+    /** mrETH token minimum deposit amount. */
     MRETH_TOKEN_MIN_DEPOSIT: 1_000_000n,
 
-    /** mrETH token minimum redeem. */
+    /** mrETH token minimum redeem amount. */
     MRETH_TOKEN_MIN_REDEEM: 10n ** 15n,
 
-    /** Molecula Buffer name. */
+    /** Molecula Buffer token name. */
     MOLECULA_BUFFER_NAME: 'Molecula Buffer Token',
 
-    /** Molecula Buffer symbol. */
+    /** Molecula Buffer token symbol. */
     MOLECULA_BUFFER_SYMBOL: 'mwETH',
 
-    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mUSD holder. */
+    /** (APY_FORMATTER / 10_000) * 100% is the percentage of revenue retained by all mrETH holders. */
     APY_FORMATTER: 8_000,
+
+    /** (BUFFER_PERCENTAGE / 10_000) * 100% is the percentage of TVL that must stay in the Buffer. */
+    BUFFER_PERCENTAGE: 500,
+
+    /** (MIN_FEE_PERCENTAGE / 10_000) * 100% is the minimum fee percentage for instant withdrawals. */
+    MIN_FEE_PERCENTAGE: 500,
+
+    /** (MAX_FEE_PERCENTAGE / 10_000) * 100% is the maximum fee percentage for instant withdrawals. */
+    MAX_FEE_PERCENTAGE: 1000,
 };

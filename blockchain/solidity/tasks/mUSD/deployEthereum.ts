@@ -4,6 +4,7 @@ import { scope } from 'hardhat/config';
 
 import type { ContractsCore, ContractsNitrogen } from '@molecula-monorepo/blockchain.addresses';
 
+import { getConfig, getEnvironment, handleError, readFromFile, writeToFile } from '../../scripts';
 import {
     deployCarbon,
     deployCore,
@@ -14,15 +15,9 @@ import {
     migrateAgentLZ,
 } from '../../scripts/mUSD/ethereum';
 import { deployNitrogenTokenVault } from '../../scripts/mUSD/ethereum/deploy/deployNitrogenTokenVault';
+import { deployPriceChecker } from '../../scripts/mUSD/ethereum/deploy/deployPriceChecker';
 import { deployRebaseTokenOwner } from '../../scripts/mUSD/ethereum/deploy/deployRebaseTokenOwner';
 import { deploylmUSD, deploywmUSD } from '../../scripts/mUSD/ethereum/deploy/deploywmUSD';
-import {
-    getConfig,
-    getEnvironment,
-    handleError,
-    readFromFile,
-    writeToFile,
-} from '../../scripts/utils/deployUtils';
 
 const ethereumMajorScope = scope('ethereumScope', 'Scope for major ethereum deployment flow');
 
@@ -117,17 +112,19 @@ ethereumMajorScope
 ethereumMajorScope
     .task('deploywmUSD', 'Deploys wmUSD contract')
     .addParam('environment', 'Deployment environment')
-    .addParam('yieldDist', 'Yield distributor address')
+    .addOptionalParam('yieldDist', 'Yield distributor address')
     .setAction(async (taskArgs, hre) => {
         console.log('Environment:', taskArgs.environment);
         console.log('Network:', hre.network.name);
         console.log('Yield distributor address:', taskArgs.yieldDist);
 
         const environment = getEnvironment(hre, taskArgs.environment);
+
         const contractsNitrogen: ContractsNitrogen = await readFromFile(
             `${environment}/contracts_nitrogen.json`,
         );
 
+        // Execute deployment
         contractsNitrogen.eth.wmUSD = await deploywmUSD(hre, environment, {
             mUSD: contractsNitrogen.eth.rebaseToken,
             yieldDistributor: taskArgs.yieldDist,
@@ -296,6 +293,26 @@ ethereumMajorScope
                 oftVault: oftVaultAddress,
             },
         });
+    });
+
+ethereumMajorScope
+    .task('deployPriceChecker', 'Deploys PriceChecker contract')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+        const contractsNitrogen: ContractsNitrogen = await readFromFile(
+            `${environment}/contracts_nitrogen.json`,
+        );
+
+        contractsNitrogen.eth.priceChecker = await deployPriceChecker(
+            hre,
+            environment,
+            contractsNitrogen,
+        );
+        writeToFile(`${environment}/contracts_nitrogen.json`, contractsNitrogen);
     });
 
 ethereumMajorScope

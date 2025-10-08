@@ -60,6 +60,7 @@ export type EthereumNetworkConfig = {
     WMUSD_TOKEN_NAME: string;
     WMUSD_TOKEN_SYMBOL: string;
 
+    // ==== Locked mUSD smart-contract which isn't used right now ====
     LMUSD_TOKEN_NAME: string;
     LMUSD_TOKEN_SYMBOL: string;
     LMUSD_PERIODS: [];

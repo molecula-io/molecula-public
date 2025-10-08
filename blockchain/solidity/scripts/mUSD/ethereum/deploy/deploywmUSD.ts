@@ -13,28 +13,31 @@ export async function deploywmUSD(
     environment: EnvironmentType,
     params: {
         mUSD: string;
-        yieldDistributor: string;
+        yieldDistributor?: string;
     },
 ) {
     const { config } = await getConfig(hre, environment);
 
     const WMUSD = await hre.ethers.getContractFactory('MoleculaSuppliedWrapper');
+
     console.log('Deploying wmUSD...');
     const constructorArguments: [string, string, AddressLike, AddressLike, AddressLike] = [
         config.WMUSD_TOKEN_NAME,
         config.WMUSD_TOKEN_SYMBOL,
         config.OWNER,
         params.mUSD,
-        params.yieldDistributor,
+        params.yieldDistributor || config.OWNER, // Owner is a default yieldDistributor!
     ];
+
     const wmUSD = await WMUSD.deploy(...constructorArguments, { gasLimit: DEPLOY_GAS_LIMIT });
     await wmUSD.waitForDeployment();
+
     const wmUSDAddress = await wmUSD.getAddress();
     console.log('wmUSD: ', wmUSDAddress);
 
     await verifyContractWithRetry(
         hre,
-        'contracts/solutions/Nitrogen/wmUSD.sol:WmUSD',
+        'contracts/coreV2/WrappedTokens/MoleculaSuppliedWrapper.sol:MoleculaSuppliedWrapper',
         wmUSDAddress,
         constructorArguments,
     );

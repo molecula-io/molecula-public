@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import isEqual from 'lodash/isEqual';
 
-import { computed, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
 import { Log } from '@molecula-monorepo/common.logs';
 
@@ -113,6 +113,12 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
     private topItems: Item[] | null = null;
 
     /**
+     * Keys of top items. Created, so we can check presence of any item in topItems quickly,
+     * without mapping original top items.
+     */
+    private topItemsKeysSet: Set<string> = new Set();
+
+    /**
      * More items of the collection (fetched with the `moreItemsFetcher`).
      */
     private moreItems: Item[] | null = null;
@@ -166,9 +172,12 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
             | 'loading'
             | 'isLoading'
             | 'moreItems'
+            | 'updateMoreItems'
             | 'topItems'
+            | 'updateTopItems'
             | 'canLoadMoreItems'
             | 'fetchError'
+            | 'reset'
         >(this, {
             items: computed,
             loading: observable,
@@ -179,6 +188,9 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
             topItems: observable,
             fetchError: observable,
             error: computed,
+            updateTopItems: action,
+            updateMoreItems: action,
+            reset: action,
         });
     }
 
@@ -241,7 +253,7 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
     // Actions
     public reset() {
         // Delete the loaded collection items (top & more)
-        this.topItems = null;
+        this.updateTopItems(null);
         this.moreItems = null;
 
         // Delete the error
@@ -255,6 +267,15 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
 
         // Unsubscribe the fetchers
         this.unsubscribe();
+    }
+
+    private updateTopItems(itemsToSet: Item[] | null) {
+        this.topItemsKeysSet = new Set(itemsToSet ? itemsToSet.map(el => el.key) : []);
+        this.topItems = itemsToSet;
+    }
+
+    private updateMoreItems(itemsToSet: Item[]) {
+        this.moreItems = itemsToSet;
     }
 
     public prepare() {
@@ -305,7 +326,7 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
                     this.savedTopItems = JSON.parse(cachedItems) as Item[];
 
                     // Fill the top items dictionary with it
-                    this.topItems = this.savedTopItems;
+                    this.updateTopItems(this.savedTopItems);
 
                     // Complete loading the cached collection from the storage
                     this.completeLoadingCollection(false);
@@ -349,11 +370,28 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
                     this.canLoadMore = items.length >= this.limit;
 
                     // Reassign the top items with the fetched items
-                    this.topItems = fetchedTopItems;
+                    this.updateTopItems(fetchedTopItems);
                 } else {
-                    // Combine existing top items with the updates received from the fetcher
-                    // this.topItems = [...(this.topItems || []), ...fetchedTopItems];
-                    this.topItems = [...fetchedTopItems];
+                    /**
+                     * filtering fetched items for duplicates with already loaded top items
+                     */
+                    const filteredFetchItems = fetchedTopItems.filter(
+                        item => !this.topItemsKeysSet.has(item.key),
+                    );
+
+                    /**
+                     *  Combine existing top items with the updates received from the fetcher.
+                     * In this scenario we expect that timestamps of fetchedTopItems will be
+                     * more than timestamps of existing top items
+                     *
+                     * !!! We sort combined top items in this case to prevent order breaking
+                     * due to potential transport delays between socket messages.
+                     */
+                    const sortedTopItems = filteredFetchItems
+                        .concat(this.topItems || [])
+                        .sort((prevItem, nextItem) => nextItem.time - prevItem.time);
+
+                    this.updateTopItems(sortedTopItems);
                 }
 
                 // Complete loading the collection
@@ -390,7 +428,7 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
             const moreItems = await this.moreItemsFetcher(this.lastItem);
 
             // Update more items dictionary with the loaded items
-            this.moreItems = [...(this.moreItems || []), ...moreItems];
+            this.updateMoreItems([...(this.moreItems || []), ...moreItems]);
 
             // Check if can load more items
             this.canLoadMore = moreItems.length >= this.limit;
@@ -488,12 +526,12 @@ export class MemoCollectionLoaderV2<Item extends BaseCollectionItem>
 
         // Should update an item only in case the top items are already loaded
         if (this.topItems) {
-            this.topItems = replaceItemWithNewOne(item, this.topItems);
+            this.updateTopItems(replaceItemWithNewOne(item, this.topItems));
 
             if (this.moreItems) {
-                this.moreItems = replaceItemWithNewOne(item, this.moreItems);
+                this.updateMoreItems(replaceItemWithNewOne(item, this.moreItems));
             } else {
-                this.moreItems = [item];
+                this.updateMoreItems([item]);
             }
         }
 

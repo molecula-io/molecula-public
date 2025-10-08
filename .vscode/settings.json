@@ -64,6 +64,7 @@
         "./common/evm-utilities",
         "./common/feature-flags",
         "./common/logs",
+        "./common/providers-manager",
         "./common/server-connector",
         "./common/ton-utilities",
         "./common/tron-utilities",

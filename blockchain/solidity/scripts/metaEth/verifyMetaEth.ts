@@ -37,11 +37,11 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         config.POOL_KEEPER,
         meta.eth.metaPoolTreasury,
         config.APY,
-        meta.eth.rebaseTokenV2,
+        meta.eth.metaETH,
         ETH_VIRTUAL_OFFSET,
     ]);
 
-    await verifyContract(hre, 'RebaseTokenV2', meta.eth.rebaseTokenV2, [
+    await verifyContract(hre, 'RebaseTokenV2', meta.eth.metaETH, [
         meta.eth.supplyManagerV2,
         account.address,
         config.META_ETH_TOKEN_NAME,
@@ -50,10 +50,16 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
         meta.eth.supplyManagerV2,
     ]);
 
+    await verifyContract(hre, 'RewardBearingWrapper', meta.eth.wmetaETH, [
+        config.WMETA_ETH_TOKEN_NAME,
+        config.WMETA_ETH_TOKEN_SYMBOL,
+        meta.eth.metaETH,
+    ]);
+
     for (const vault of [meta.eth.stETHVault, meta.eth.wETHVault]) {
         await verifyContract(hre, 'MetaERC20TokenVault', vault, [
             account.address,
-            meta.eth.rebaseTokenV2,
+            meta.eth.metaETH,
             meta.eth.supplyManagerV2,
             config.GUARDIAN,
         ]);
@@ -61,7 +67,7 @@ export async function runVerify(hre: HardhatRuntimeEnvironment) {
 
     await verifyContract(hre, 'MetaNativeTokenVault', meta.eth.nativeTokenVault, [
         account.address,
-        meta.eth.rebaseTokenV2,
+        meta.eth.metaETH,
         meta.eth.supplyManagerV2,
         config.GUARDIAN,
     ]);

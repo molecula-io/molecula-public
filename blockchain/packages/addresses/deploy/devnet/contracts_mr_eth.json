@@ -1,15 +1,15 @@
 {
     "eth": {
-        "supplyManagerV2": "0x5B9e571c99659fBA84C3A43AC2726936D8a58292",
-        "mrETH": "0x56814D8Cc8b331FD3b915b915aEa6D8a39e30ab0",
-        "wEthVault": "0x9A5eCF1Ef9F25CD206Ae6761595c73601aC6561c",
-        "ethVault": "0xa638536c00eb5DC571478557366ccf0D6c8D3F46",
-        "stEthVault": "0x9091fcD5D888E3193C4cC79bB21Bce653Ad5A516",
-        "depositManagerPool": "0x6abBC2bd40F791AAb40ca6A226Ae6d911028B5ED",
-        "depositManagerRestaker": "0x8440f0AbEEA8D473760091D0F19A021ca81f7c83",
-        "depositManagerLib": "0x0f15a8c36e552db4afAB3AddD5565506591cfd22",
-        "delegatorImplementation": "0xEacCA28f7Fb8B8348432De62C18002007153917a",
-        "moleculaBuffer": "0xe57db2f15190A14c950a9A8Ca551B05e69C18CBE"
+        "supplyManagerV2": "0xB3DBF95e23e6Ba48739eb74C9aa393a02F9d2542",
+        "mrETH": "0x8916185Bfa8f6d265A195577e3BfF848330fF5ff",
+        "wEthVault": "0x3e6B218dDDac99233e75c5c631FB5e080faA4D17",
+        "ethVault": "0xfAcc845491B6e9d7f076c44820F30Bbbc76B5590",
+        "stEthVault": "0x3034c8759BCB2Cf03Ea9aD8b09abB15331CD5827",
+        "depositManagerPool": "0xd296fD09F90Fbb9fe46fb48D87E0E9812FebDCbb",
+        "depositManagerRestaker": "0x952B561e1A8240210a0Bba9EDc7eB8b6b4059991",
+        "depositManagerLib": "0x9afF39d5bd9Bd1Da0b6Ff34113AdCfE8fc84d7F9",
+        "delegatorImplementation": "0x2511D5B64dDC278159a4aeb95c1d3a144Aa40fEC",
+        "moleculaBuffer": "0xaaeCe0FcE1666ffcb59D4A3394863DA475FbBc64"
     },
     "holesky": {
         "supplyManagerV2": "0xDB3bbBe531aeD6FABaE34a234751BC87B75a729A",

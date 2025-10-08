@@ -45,6 +45,12 @@ export const metaEthMainnetBetaConfig: MetaEthNetworkConfig = {
     /** MetaETH token decimals. */
     META_ETH_TOKEN_DECIMALS: 18,
 
+    /** wmetaETH token name. */
+    WMETA_ETH_TOKEN_NAME: 'Wrapped MetaETH release candidate',
+
+    /** wmetaETH token symbol. */
+    WMETA_ETH_TOKEN_SYMBOL: 'wMETHrc',
+
     /** Minimal deposit in ETH */
     MIN_DEPOSIT_ETH: ethers.parseEther('0.001'),
 

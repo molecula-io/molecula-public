@@ -45,6 +45,12 @@ export const metaEthSepoliaConfig: MetaEthNetworkConfig = {
     /** MetaETH token decimals. */
     META_ETH_TOKEN_DECIMALS: 18,
 
+    /** wmetaETH token name. */
+    WMETA_ETH_TOKEN_NAME: 'Wrapped MetaETH test v0.1',
+
+    /** wmetaETH token symbol. */
+    WMETA_ETH_TOKEN_SYMBOL: 'wMETHtv0.1',
+
     /** Minimal deposit in ETH */
     MIN_DEPOSIT_ETH: ethers.parseEther('0.001'),
 

@@ -55,6 +55,12 @@ echo "Removing typechain files..."
 rm_global "typechain"
 rm_global "typechain-types"
 
+echo "Removing turnkey-addon files..."
+rm_global "target"
+rm -f ./backend/packages/turnkey-addon/index.d.ts
+rm -f ./backend/packages/turnkey-addon/index.js
+rm -f ./backend/packages/turnkey-addon/turnkey-addon*
+
 echo "Cleanup completed!"
 
 echo "Installing dependencies..."
