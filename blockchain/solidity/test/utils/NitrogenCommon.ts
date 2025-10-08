@@ -1,10 +1,14 @@
-/* eslint-disable camelcase, max-lines */
+/* eslint-disable camelcase, max-lines, no-restricted-syntax, no-await-in-loop */
 import { days } from '@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration';
 import { expect } from 'chai';
 import { keccak256, type Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { chainLinkFeeds, EVMChainIDs } from '@molecula-monorepo/blockchain.addresses';
+import {
+    chainLinkFeeds,
+    EVMChainIDs,
+    staticPoolCurrenciesRetailMainnet,
+} from '@molecula-monorepo/blockchain.addresses';
 
 import { ethMainnetBetaConfig } from '../../configs';
 
@@ -16,6 +20,118 @@ import { grantERC20 } from './grant';
 
 // https://etherscan.io/token/0xbc65ad17c5c0a2a4d159fa5a503f4992c7b545fe
 const SPARK_USDC = '0xBc65ad17c5C0a2A4D159fa5a503f4992c7B545FE';
+
+export const DAI_INITIAL_SUPPLY = 100n * 10n ** 18n;
+
+function getTokensForPriceChecker() {
+    const usdcFeed = chainLinkFeeds.usd.usdc[EVMChainIDs.Mainnet];
+    const susdeFeed = chainLinkFeeds.usd.sUSDe[EVMChainIDs.Mainnet];
+    return [
+        {
+            asset: SPARK_USDC,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+
+        {
+            asset: staticPoolCurrenciesRetailMainnet.DAI.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.sDAI.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.USDT.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.USDC.token,
+            priceFeed: usdcFeed.address,
+            priceDeviationBps: 50, // 0.5 %
+            stalenessThreshold: usdcFeed.heartbeat,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.spDAI.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.USDe.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.sUSDe.token,
+            priceFeed: susdeFeed.address,
+            priceDeviationBps: 50, // 0.5 %
+            stalenessThreshold: susdeFeed.heartbeat,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.aEthUSDT.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.aEthUSDC.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.aEthDAI.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.FRAX.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.sFRAX.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.frxUSD.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.sFrxUSD.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.USDS.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+        {
+            asset: staticPoolCurrenciesRetailMainnet.sUSDS.token,
+            priceFeed: ethers.ZeroAddress,
+            priceDeviationBps: 0,
+            stalenessThreshold: 0,
+        },
+    ];
+}
 
 export async function deployNitrogenV2CommonWithOldMoleculaPool(token: string) {
     // Contracts are deployed using the first signer/account by default
@@ -65,9 +181,8 @@ export async function deployNitrogenV2CommonWithOldMoleculaPool(token: string) {
     const initBalance = await DAI.balanceOf(moleculaPool.getAddress());
     expect(initBalance).to.be.equal(0n);
     // grant DAI for initial supply
-    const INITIAL_SUPPLY = 100n * 10n ** 18n;
-    await grantERC20(moleculaPool.getAddress(), DAI, INITIAL_SUPPLY);
-    expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(INITIAL_SUPPLY);
+    await grantERC20(moleculaPool.getAddress(), DAI, DAI_INITIAL_SUPPLY);
+    expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(DAI_INITIAL_SUPPLY);
 
     // deploy pausable agent accountant
     const Agent = await ethers.getContractFactory('AccountantAgent');
@@ -201,12 +316,13 @@ export async function deployNitrogenV2Common(token: string) {
         nonce: transactionCount + 3,
     });
 
-    const USDT = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.USDT_ADDRESS);
+    const USDT = await ethers.getContractAt('IERC20Metadata', ethMainnetBetaConfig.USDT_ADDRESS);
     const approveSelector = USDT.interface.getFunction('approve').selector;
 
     // deploy moleculaPool
     const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
     const moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+        ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
         poolOwner.address,
         [SPARK_USDC, ...ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token)],
         poolKeeper,
@@ -221,9 +337,8 @@ export async function deployNitrogenV2Common(token: string) {
     const initBalance = await DAI.balanceOf(moleculaPool.getAddress());
     expect(initBalance).to.be.equal(0n);
     // grant DAI for initial supply
-    const INITIAL_SUPPLY = 100n * 10n ** 18n;
-    await grantERC20(moleculaPool.getAddress(), DAI, INITIAL_SUPPLY);
-    expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(INITIAL_SUPPLY);
+    await grantERC20(moleculaPool.getAddress(), DAI, DAI_INITIAL_SUPPLY);
+    expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(DAI_INITIAL_SUPPLY);
 
     // deploy pausable agent accountant
     const Agent = await ethers.getContractFactory('AccountantAgent');
@@ -354,6 +469,7 @@ export async function deployMoleculaPool() {
     // deploy moleculaPool
     const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
     const moleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+        ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
         poolOwner.address,
         [],
         poolKeeper.address,
@@ -459,62 +575,27 @@ export async function deployNitrogenWithTokenVault() {
     );
 
     const PriceChecker = await ethers.getContractFactory('PriceChecker');
-    const usdcFeed = chainLinkFeeds.usd.usdc[EVMChainIDs.Mainnet];
-    const susdeFeed = chainLinkFeeds.usd.sUSDe[EVMChainIDs.Mainnet];
-    const priceChecker = await PriceChecker.connect(nitrogen.poolOwner).deploy(
-        [
-            {
-                asset: USDC,
-                priceFeed: usdcFeed.address,
-                priceDeviationBps: 50, // 0.5 %
-                stalenessThreshold: usdcFeed.heartbeat,
-            },
-            {
-                asset: sUSDe,
-                priceFeed: susdeFeed.address,
-                priceDeviationBps: 50, // 0.5 %
-                stalenessThreshold: susdeFeed.heartbeat,
-            },
-            {
-                asset: SPARK_USDC,
-                priceFeed: ethers.ZeroAddress,
-                priceDeviationBps: 0,
-                stalenessThreshold: 0,
-            },
-        ],
-        nitrogen.poolOwner,
+    const vaultPriceChecker = await PriceChecker.connect(nitrogen.poolOwner).deploy(
+        getTokensForPriceChecker(),
+        nitrogen.poolOwner.address,
         18,
     );
 
     // deploy TokenVault
+    const vaultParams: [string, string, string, string, string, string] = [
+        nitrogen.poolOwner.address,
+        // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
+        await nitrogen.rebaseToken.getAddress(),
+        await nitrogen.supplyManager.getAddress(),
+        await rebaseTokenOwner.getAddress(),
+        nitrogen.guardian.address,
+        await vaultPriceChecker.getAddress(),
+    ];
     const TokenVault = await ethers.getContractFactory('NitrogenTokenVault');
-    const usdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
-        nitrogen.poolOwner,
-        // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
-        nitrogen.rebaseToken,
-        nitrogen.supplyManager,
-        rebaseTokenOwner,
-        nitrogen.guardian,
-        priceChecker,
-    );
-    const susdeVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
-        nitrogen.poolOwner,
-        // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
-        nitrogen.rebaseToken,
-        nitrogen.supplyManager,
-        rebaseTokenOwner,
-        nitrogen.guardian,
-        priceChecker,
-    );
-    const sparkUsdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(
-        nitrogen.poolOwner,
-        // Share. Note: it's not er20 token, but it should be! See https://eips.ethereum.org/EIPS/eip-7575
-        nitrogen.rebaseToken,
-        nitrogen.supplyManager,
-        rebaseTokenOwner,
-        nitrogen.guardian,
-        priceChecker,
-    );
+
+    const usdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(...vaultParams);
+    const susdeVault = await TokenVault.connect(nitrogen.poolOwner).deploy(...vaultParams);
+    const sparkUsdcVault = await TokenVault.connect(nitrogen.poolOwner).deploy(...vaultParams);
 
     // init usdcVault
     await usdcVault.init(
@@ -554,9 +635,35 @@ export async function deployNitrogenWithTokenVault() {
     await usdcVault.unpauseAll();
     await sparkUsdcVault.unpauseAll();
 
+    const tokens = ethMainnetBetaConfig.MOLECULA_POOL_TOKENS.map(x => x.token).filter(token => {
+        return (
+            token !== ethMainnetBetaConfig.USDC_ADDRESS &&
+            token !== ethMainnetBetaConfig.SUSDE_ADDRESS
+        );
+    });
+    for (const token of tokens) {
+        const vault = await TokenVault.connect(nitrogen.poolOwner).deploy(...vaultParams);
+        await vault.init(
+            token, // asset
+            10n ** 6n, // minDepositValue
+            10n ** 18n, // minRedeemShares
+        );
+        await rebaseTokenOwner.addTokenVault(vault);
+    }
+
+    const PoolPriceChecker = await ethers.getContractFactory('PoolPriceChecker');
+    const poolPriceChecker = await PoolPriceChecker.connect(nitrogen.poolOwner).deploy(
+        getTokensForPriceChecker(),
+        nitrogen.poolOwner.address,
+        18,
+        await nitrogen.moleculaPool.getAddress(),
+    );
+    await nitrogen.moleculaPool.setPriceChecker(poolPriceChecker);
+
     return {
         ...nitrogen,
-        priceChecker,
+        vaultPriceChecker,
+        poolPriceChecker,
         usdcVault,
         susdeVault,
         rebaseTokenOwner,

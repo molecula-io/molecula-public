@@ -158,6 +158,7 @@ contract LZCrossMessageTest is TestHelperOz5 {
 
             // Deploy a Supply Manager instance on Ethereum.
             mpTreasuryEth = new MoleculaPoolTreasuryV2(
+                1e18,
                 address(this),
                 tokens,
                 address(this),

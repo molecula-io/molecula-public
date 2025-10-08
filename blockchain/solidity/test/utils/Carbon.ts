@@ -5,10 +5,9 @@ import { ethers } from 'hardhat';
 import { ethMainnetBetaConfig, tronMainnetBetaConfig } from '../../configs';
 
 import { generateRandomWallet } from './Common';
-import { deployNitrogenWithUSDT } from './NitrogenCommon';
+import { deployNitrogenWithUSDT, DAI_INITIAL_SUPPLY } from './NitrogenCommon';
 import { grantERC20, grantETH } from './grant';
 
-export const INITIAL_SUPPLY = 100n * 10n ** 18n;
 export const enforcedOptionData = '0x00030100110100000000000000000000000000030d40';
 
 export async function deployCarbon() {
@@ -24,12 +23,12 @@ export async function deployCarbon() {
     // if POOL_KEEPER do not have DAI then transfer it
     const DAI = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.DAI_ADDRESS);
     const initBalance = await DAI.balanceOf(poolKeeper);
-    if (initBalance < INITIAL_SUPPLY) {
-        const val = INITIAL_SUPPLY - initBalance;
+    if (initBalance < DAI_INITIAL_SUPPLY) {
+        const val = DAI_INITIAL_SUPPLY - initBalance;
         // grant DAI for initial supply
         await grantERC20(poolKeeper.address, DAI, val);
     }
-    expect(await DAI.balanceOf(poolKeeper)).to.equal(INITIAL_SUPPLY);
+    expect(await DAI.balanceOf(poolKeeper)).to.equal(DAI_INITIAL_SUPPLY);
     // Grant ETH to POOL_KEEPER
     await grantETH(poolKeeper.address, ethers.parseEther('20'));
 

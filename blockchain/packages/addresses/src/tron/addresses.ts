@@ -62,3 +62,12 @@ export const tronStaticOFTAddresses = {
         [TronChainIDs.Shasta]: 'TKSnyHmNMFhU2vWp2zBDZE48b1gd54GBcs',
     },
 } as const;
+
+/**
+ * Tron LayerZero Endpoint V2.
+ * See: https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=tron
+ */
+export const tronLayerZeroEndpointV2Addresses = {
+    [TronChainIDs.Mainnet]: 'TAy9xwjYjBBN6kutzrZJaAZJHCAejjK1V9' as TronAddress,
+    [TronChainIDs.Shasta]: 'TCT5FvMTuUCspdY689LbKbUThCwBVUw4tM' as TronAddress,
+} as const;

@@ -35,7 +35,6 @@ export type EthereumNetworkConfig = {
     STETH_ADDRESS: EVMAddress;
 
     // Deploy params
-    INITIAL_DAI_SUPPLY: bigint;
     INITIAL_USDT_SUPPLY: bigint;
     DAI_ADDRESS: EVMAddress;
 

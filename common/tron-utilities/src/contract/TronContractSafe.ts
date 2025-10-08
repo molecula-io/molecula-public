@@ -372,9 +372,24 @@ export class TronContractSafe<Contract extends AllTronContracts> {
                       });
                   }
 
-                  selectorTypes.push(input.type);
+                  let { type } = input;
+                  const { components } = input;
+                  if (components) {
+                      const tupleType = components
+                          ?.map(({ type: componentType }) => componentType)
+                          .join(',');
+
+                      if (type === 'tuple') {
+                          type = `tuple(${tupleType})`;
+                      } else if (type === 'tuple[]') {
+                          type = `tuple(${tupleType})[]`;
+                      }
+                  }
+
+                  selectorTypes.push(type);
+
                   return {
-                      type: input.type,
+                      type,
                       value: args[index],
                   };
               })

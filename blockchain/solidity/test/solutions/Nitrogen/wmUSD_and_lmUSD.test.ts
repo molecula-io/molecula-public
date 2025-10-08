@@ -34,8 +34,8 @@ describe('Test wmUSD and lmUSD', () => {
             // user0 calls requestDeposit on rebaseToken
             await rebaseToken.connect(user0).requestDeposit(depositValue, user0, user0);
 
-            // generate income. make x2 share price.
-            // User get 40% of the income
+            // Generate income. Make x2 share price.
+            // User gets 40% of the income
             const income = 500_000_000n;
             await grantERC20(moleculaPool.getAddress(), USDT, income);
 
@@ -217,7 +217,7 @@ describe('Test wmUSD and lmUSD', () => {
             // user0 calls requestDeposit on rebaseToken
             await rebaseToken.connect(user0).requestDeposit(depositValue, user0, user0);
 
-            // User get 40% of the income
+            // User gets 40% of the income
             const income = 500_000_000n;
             await grantERC20(moleculaPool.getAddress(), USDT, income);
 

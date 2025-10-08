@@ -195,3 +195,39 @@ verificationScope
             handleError(error);
         }
     });
+
+verificationScope
+    .task('verifyExecutor', 'Verifies Executor contracts')
+    .addParam('environment', 'Deployment environment')
+    .setAction(async (taskArgs, hre) => {
+        console.log('\n Contract Verification');
+        console.log('Environment:', taskArgs.environment);
+        console.log('Network:', hre.network.name);
+
+        const environment = getEnvironment(hre, taskArgs.environment);
+
+        try {
+            const config = getEnvironmentConfig(environment);
+            const contractsExecutor = await readFromFile(`${environment}/contracts_executor.json`);
+
+            const account = (await hre.ethers.getSigners())[0]!;
+
+            await verifyContract(hre, 'ExecutorFeeLib', contractsExecutor.eth.executorFeeLib, [
+                config.LAYER_ZERO_ETHEREUM_EID,
+                hre.ethers.parseEther('1'),
+            ]);
+
+            await verifyContract(hre, 'Executor', contractsExecutor.eth.executor, [
+                config.LAYER_ZERO_ENDPOINT,
+                config.LAYER_ZERO_RECEIVE_ULN_LIB,
+                [config.LAYER_ZERO_SEND_ULN_LIB],
+                config.LAYER_ZERO_PRICE_FEED,
+                account.address,
+                [account.address],
+            ]);
+
+            console.log('Executor verification completed successfully.');
+        } catch (error) {
+            handleError(error);
+        }
+    });

@@ -16,7 +16,8 @@ import {
     UPDATE_ORACLE,
 } from '../../../scripts/utils/lzTronSetupUtils';
 
-import { deployCarbon, INITIAL_SUPPLY } from '../../utils/Carbon';
+import { deployCarbon } from '../../utils/Carbon';
+import { DAI_INITIAL_SUPPLY } from '../../utils/NitrogenCommon';
 import {
     findRequestRedeemEvent,
     findRequestDepositEvent,
@@ -95,9 +96,9 @@ describe('Test Carbon', () => {
         it('Test update oracle', async () => {
             const { supplyManager, agentLZ, moleculaPool } = await loadFixture(deployCarbon);
 
-            const val = INITIAL_SUPPLY * 3n;
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY);
+            const val = DAI_INITIAL_SUPPLY * 3n;
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY);
+            expect(await supplyManager.totalSharesSupply()).to.equal(DAI_INITIAL_SUPPLY);
             const DAI = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.DAI_ADDRESS);
             // generate income
             await grantERC20(await moleculaPool.poolKeeper(), DAI, val);
@@ -267,7 +268,7 @@ describe('Test Carbon', () => {
             const users = [...distributeEventData.users];
             const shares = [...distributeEventData.shares];
 
-            tx = await mockLZEndpoint.lzReceiveDistributeYield(
+            await mockLZEndpoint.lzReceiveDistributeYield(
                 await accountantLZ.getAddress(),
                 ethMainnetBetaConfig.LAYER_ZERO_ETHEREUM_EID,
                 ethers.zeroPadValue(await agentLZ.getAddress(), 32),
@@ -292,7 +293,7 @@ describe('Test Carbon', () => {
 
             const totalData = await supplyManager.getTotalSupply();
 
-            tx = await mockLZEndpoint.lzReceiveDistributeYieldAndUpdateOracle(
+            await mockLZEndpoint.lzReceiveDistributeYieldAndUpdateOracle(
                 await accountantLZ.getAddress(),
                 ethMainnetBetaConfig.LAYER_ZERO_ETHEREUM_EID,
                 ethers.zeroPadValue(await agentLZ.getAddress(), 32),
@@ -303,7 +304,7 @@ describe('Test Carbon', () => {
                 totalData[1],
             );
 
-            tx = await mockLZEndpoint.lzReceive(
+            await mockLZEndpoint.lzReceive(
                 await accountantLZ.getAddress(),
                 ethMainnetBetaConfig.LAYER_ZERO_ETHEREUM_EID,
                 ethers.zeroPadValue(await agentLZ.getAddress(), 32),

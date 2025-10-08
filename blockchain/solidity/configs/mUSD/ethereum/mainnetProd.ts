@@ -5,6 +5,7 @@ import {
     staticPoolCurrenciesRetailMainnet,
     staticPoolCurrenciesMetaETHMainnet,
     evmStaticOFTAddresses,
+    evmLayerZeroEndpointV2Addresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -17,7 +18,7 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
      * Executor is a contract responsible for executing received cross-chain messages automatically
      * https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=ethereum
      */
-    LAYER_ZERO_ENDPOINT: '0x1a44076050125825900e736c501f859c50fE728c',
+    LAYER_ZERO_ENDPOINT: evmLayerZeroEndpointV2Addresses[EVMChainIDs.Mainnet],
     LAYER_ZERO_EXECUTOR: '0x173272739Bd7Aa6e4e214714048a9fE699453059',
     LAYER_ZERO_ETHEREUM_REQUIERED_DVNS: [
         '0x3b0531eB02Ab4aD72e7a531180beeF9493a00dD2', // USDT0 DVN address
@@ -72,9 +73,6 @@ export const ethMainnetProdConfig: EthereumNetworkConfig = {
 
     /**  DAI token address on Ethereum Mainnet. */
     DAI_ADDRESS: evmStaticTokenAddresses.DAI[EVMChainIDs.Mainnet],
-
-    /** @deprecated Dai initial supply. */
-    INITIAL_DAI_SUPPLY: 5_000_000_000_000_000_000n,
 
     /** Initial Supply Manager balance. */
     INITIAL_USDT_SUPPLY: 100_000_000n,

@@ -261,3 +261,12 @@ export const evmStaticOFTAddresses = {
         [EVMChainIDs.Sepolia]: '0x101760Fd9486AcC415f6f8c52f78f1cC1318A41a',
     },
 } as const;
+
+/**
+ * EVM LayerZero Endpoint V2.
+ * See: https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=ethereum
+ */
+export const evmLayerZeroEndpointV2Addresses = {
+    [EVMChainIDs.Mainnet]: '0x1a44076050125825900e736c501f859c50fE728c' as EVMAddress,
+    [EVMChainIDs.Sepolia]: '0x6EDCE65403992e310A62460808c4b910D972f10f' as EVMAddress,
+} as const;

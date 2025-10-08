@@ -54,6 +54,7 @@ export async function deployCore(
         throw new Error(`Set guardian address in config.`);
     }
     const moleculaPoolV2 = await MoleculaPoolFactoryV2.deploy(
+        config.INITIAL_USDT_SUPPLY * 10n ** 12n,
         account.address,
         tokens.map(x => x.token),
         poolKeeper,

@@ -26,6 +26,7 @@ export async function deployMoleculaPoolTreasuryV2(
 
     const MoleculaPoolTreasuryV2 = await hre.ethers.getContractFactory('MoleculaPoolTreasuryV2');
     const moleculaPoolTreasuryV2 = await MoleculaPoolTreasuryV2.deploy(
+        config.INITIAL_USDT_SUPPLY * 10n ** 12n,
         config.OWNER, // Note: owner is not deploy wallet
         tokens.map(x => x.token),
         config.POOL_KEEPER,

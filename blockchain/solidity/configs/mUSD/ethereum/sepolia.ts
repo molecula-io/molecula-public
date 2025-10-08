@@ -5,6 +5,7 @@ import {
     staticPoolCurrenciesRetailTestnet,
     staticPoolCurrenciesMetaETHTestnet,
     evmStaticOFTAddresses,
+    evmLayerZeroEndpointV2Addresses,
 } from '@molecula-monorepo/blockchain.addresses';
 
 import type { EthereumNetworkConfig } from './types';
@@ -17,7 +18,7 @@ export const sepoliaConfig: EthereumNetworkConfig = {
      * Executor is a contract responsible for executing received cross-chain messages automatically
      * https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=sepolia
      */
-    LAYER_ZERO_ENDPOINT: '0x6EDCE65403992e310A62460808c4b910D972f10f',
+    LAYER_ZERO_ENDPOINT: evmLayerZeroEndpointV2Addresses[EVMChainIDs.Sepolia],
     LAYER_ZERO_EXECUTOR: '0x718B92b5CB0a5552039B593faF724D182A881eDA',
     LAYER_ZERO_ETHEREUM_REQUIERED_DVNS: [
         '0x8eebf8b423b73bfca51a1db4b7354aa0bfca9193', // LayerZero Labs DVN address
@@ -70,9 +71,6 @@ export const sepoliaConfig: EthereumNetworkConfig = {
 
     /**  DAI token address on Ethereum Sepolia. */
     DAI_ADDRESS: evmStaticTokenAddresses.DAI[EVMChainIDs.Sepolia],
-
-    /** @deprecated Dai initial supply. */
-    INITIAL_DAI_SUPPLY: 100_000_000_000_000_000_000n,
 
     /** Initial Supply Manager balance. */
     INITIAL_USDT_SUPPLY: 100_000_000n,

@@ -5,7 +5,6 @@ import { ethers } from 'hardhat';
 
 import { ethMainnetBetaConfig } from '../../../configs';
 
-import { INITIAL_SUPPLY } from '../../utils/Carbon';
 import { getEthena, grantStakedUSDE, grantUSDe } from '../../utils/Common';
 
 import {
@@ -15,6 +14,7 @@ import {
     deployNitrogenWithUSDT,
     deployNitrogenWithUSDTAndOldPool,
     getRidOf,
+    DAI_INITIAL_SUPPLY,
     initNitrogenAndRequestDeposit,
     initNitrogenForPause,
 } from '../../utils/NitrogenCommon';
@@ -63,8 +63,8 @@ describe('Test Nitrogen solution', () => {
             const shares = depositValue * 10n ** 12n;
             expect(await USDT.balanceOf(user0)).to.equal(0);
             expect(await USDT.balanceOf(moleculaPool.getAddress())).to.equal(depositValue);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 2n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
             expect(await rebaseToken.balanceOf(user0)).to.equal(depositValue * 10n ** 12n);
             expect(await rebaseToken.sharesOf(user0)).to.equal(shares);
 
@@ -72,16 +72,16 @@ describe('Test Nitrogen solution', () => {
             // User gets 40% of the income
             const income = 500_000_000n;
             await grantERC20(moleculaPool.getAddress(), USDT, income);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 7n);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 4n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY * 2n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 7n);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 4n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
             expect(await rebaseToken.balanceOf(user0)).to.equal(depositValue * 2n * 10n ** 12n);
             expect(await rebaseToken.sharesOf(user0)).to.equal(shares);
 
             // Grant user1 wallet with 100 USDT and 2 ETH
             await grantERC20(user1, USDT, depositValue);
             expect(await USDT.balanceOf(user1)).to.equal(depositValue);
-            expect(await supplyManager.totalDepositedSupply()).to.equal(INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalDepositedSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
 
             // approve USDT to agent
             await USDT.connect(user1).approve(await agent.getAddress(), depositValue);
@@ -93,19 +93,19 @@ describe('Test Nitrogen solution', () => {
             expect(await USDT.balanceOf(await moleculaPool.getAddress())).to.equal(
                 depositValue * 2n + income,
             );
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 5n);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 5n);
             expect(await supplyManager.totalSharesSupply()).to.equal(
-                INITIAL_SUPPLY + shares + secondShares,
+                DAI_INITIAL_SUPPLY + shares + secondShares,
             );
             expect(await rebaseToken.balanceOf(user0)).to.equal(depositValue * 2n * 10n ** 12n);
             expect(await rebaseToken.sharesOf(user0)).to.equal(shares);
             expect(await rebaseToken.balanceOf(user1)).to.equal(depositValue * 10n ** 12n);
             expect(await rebaseToken.sharesOf(user1)).to.equal(secondShares);
 
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 8n);
-            expect(await supplyManager.totalDepositedSupply()).to.equal(INITIAL_SUPPLY * 3n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 8n);
+            expect(await supplyManager.totalDepositedSupply()).to.equal(DAI_INITIAL_SUPPLY * 3n);
             // check molecula pool
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 8n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 8n);
             expect(await supplyManager.totalSupply()).to.equal(
                 (await supplyManager.totalSharesSupply()) * 2n,
             );
@@ -124,18 +124,18 @@ describe('Test Nitrogen solution', () => {
             expect(await rebaseToken.sharesOf(user0)).to.equal(0);
             expect(await rebaseToken.balanceOf(user1)).to.equal(depositValue * 10n ** 12n);
             expect(await rebaseToken.sharesOf(user1)).to.equal(secondShares);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 6n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 6n);
             expect((await moleculaPool.poolMap(USDT)).valueToRedeem).to.equal(
-                (INITIAL_SUPPLY * 2n) / 10n ** 12n,
+                (DAI_INITIAL_SUPPLY * 2n) / 10n ** 12n,
             );
             expect(await supplyManager.totalSupply()).to.equal(420n * 10n ** 18n);
             expect(await supplyManager.totalSharesSupply()).to.equal(
-                INITIAL_SUPPLY + secondShares + 60n * 10n ** 18n,
+                DAI_INITIAL_SUPPLY + secondShares + 60n * 10n ** 18n,
             );
             expect(await supplyManager.totalSupply()).to.equal(
                 (await supplyManager.totalSharesSupply()) * 2n,
             );
-            expect(await supplyManager.totalDepositedSupply()).to.equal(INITIAL_SUPPLY * 3n);
+            expect(await supplyManager.totalDepositedSupply()).to.equal(DAI_INITIAL_SUPPLY * 3n);
 
             // user1 ask for redeem
             const redeemShares_1 = await rebaseToken.sharesOf(user1);
@@ -156,10 +156,10 @@ describe('Test Nitrogen solution', () => {
             );
 
             // check molecula pool
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 5n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 5n);
             expect(await USDT.balanceOf(moleculaPool.getAddress())).to.equal(700_000_000n);
             const DAI = await ethers.getContractAt('IERC20', ethMainnetBetaConfig.DAI_ADDRESS);
-            expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(INITIAL_SUPPLY);
+            expect(await DAI.balanceOf(moleculaPool.getAddress())).to.equal(DAI_INITIAL_SUPPLY);
 
             // redeem to user and user1
 
@@ -172,9 +172,11 @@ describe('Test Nitrogen solution', () => {
             // Check event
             await expect(tx).to.emit(rebaseToken, 'Redeem');
             // check molecula pool
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 5n);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 5n);
             expect(await USDT.balanceOf(await moleculaPool.getAddress())).to.equal(400_000_000n);
-            expect(await DAI.balanceOf(await moleculaPool.getAddress())).to.equal(INITIAL_SUPPLY);
+            expect(await DAI.balanceOf(await moleculaPool.getAddress())).to.equal(
+                DAI_INITIAL_SUPPLY,
+            );
             // check redeem requests
             expect((await rebaseToken.redeemRequests(operationId)).status).to.equal(4);
             expect((await rebaseToken.redeemRequests(operationId)).val).to.equal(redeemValue);
@@ -457,22 +459,6 @@ describe('Test Nitrogen solution', () => {
     });
 
     describe('Test special cases', () => {
-        it('Should be MOLECULA_POOL.totalSupply > 0', async () => {
-            const { moleculaPool, poolOwner } = await loadFixture(deployMoleculaPool);
-
-            // deploy supply manager
-            const SupplyManager = await ethers.getContractFactory('SupplyManager');
-            // Failed to deploy supply manager
-            await expect(
-                SupplyManager.connect(poolOwner).deploy(
-                    poolOwner.address,
-                    poolOwner.address,
-                    await moleculaPool.getAddress(),
-                    4000,
-                ),
-            ).to.be.rejectedWith('EZeroTotalSupply()');
-        });
-
         it('Check push invalid token', async () => {
             const { moleculaPool, poolOwner } = await loadFixture(deployNitrogenWithStakedUSDe);
 
@@ -630,7 +616,7 @@ describe('Test Nitrogen solution', () => {
             // It should be equal, but we store mUSD (kind of USDe) and sUSDe cost is always increasing.
             expect(eventData.redeemValue).to.be.lessThan(susdeUserDeposit);
 
-            // User get back theis tokens
+            // User gets back theis tokens
             await moleculaPool.connect(randAccount).redeem([operationId]);
             // `valueToRedeem` must be 0, but we have some rounding error
             expect((await moleculaPool.poolMap(susde)).valueToRedeem).to.be.equal(0);
@@ -833,6 +819,7 @@ describe('Test Nitrogen solution', () => {
             const MoleculaPool_revert = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
             await expect(
                 MoleculaPool_revert.connect(poolOwner).deploy(
+                    ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
                     poolOwner.address,
                     [],
                     poolOwner.address,
@@ -1170,6 +1157,7 @@ describe('Test Nitrogen solution', () => {
 
         const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
         const newMoleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+            ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
             poolOwner.address,
             [USDT],
             poolKeeper,
@@ -1206,6 +1194,7 @@ describe('Test Nitrogen solution', () => {
         const MoleculaPool = await ethers.getContractFactory('MoleculaPoolTreasuryV2');
 
         let newMoleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+            ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
             malicious,
             [USDT],
             poolKeeper,
@@ -1219,6 +1208,7 @@ describe('Test Nitrogen solution', () => {
         );
 
         newMoleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+            ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
             poolOwner.address,
             [USDT],
             malicious,
@@ -1232,6 +1222,7 @@ describe('Test Nitrogen solution', () => {
         );
 
         newMoleculaPool = await MoleculaPool.connect(poolOwner).deploy(
+            ethMainnetBetaConfig.INITIAL_USDT_SUPPLY * 10n ** 12n,
             poolOwner.address,
             [USDT],
             poolKeeper,
@@ -1312,6 +1303,7 @@ describe('Test Nitrogen solution', () => {
             moleculaPool,
             USDT,
             user0,
+            poolPriceChecker,
         } = await loadFixture(deployNitrogenWithTokenVault);
         const oneUnit = 10n ** 18n;
         const Mock4626Token = await ethers.getContractFactory('MockToken4626');
@@ -1342,6 +1334,7 @@ describe('Test Nitrogen solution', () => {
         );
         await mock4626TokenVault.unpauseAll();
 
+        await poolPriceChecker.setPriceFeed(mock4626Token, ethers.ZeroAddress, 0n, 0n);
         await moleculaPool.addToken(mock4626Token);
         await rebaseTokenOwner.addTokenVault(mock4626TokenVault);
         await supplyManager.setAgent(mock4626TokenVault, true);

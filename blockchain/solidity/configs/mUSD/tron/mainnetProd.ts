@@ -1,6 +1,7 @@
 import {
     tronAuthorizedAddresses,
     TronChainIDs,
+    tronLayerZeroEndpointV2Addresses,
     tronStaticOFTAddresses,
     tronStaticTokenAddresses,
 } from '@molecula-monorepo/blockchain.addresses';
@@ -16,7 +17,7 @@ export const tronMainnetProdConfig: TronNetworkConfig = {
      * Executor is a contract responsible for executing received cross-chain messages automatically
      * https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=tron
      */
-    LAYER_ZERO_TRON_ENDPOINT: 'TAy9xwjYjBBN6kutzrZJaAZJHCAejjK1V9',
+    LAYER_ZERO_TRON_ENDPOINT: tronLayerZeroEndpointV2Addresses[TronChainIDs.Mainnet],
     LAYER_ZERO_TRON_EXECUTOR: '0x67DE40af19C0C0a6D0278d96911889fAF4EBc1Bc',
     LAYER_ZERO_TRON_REQUIERED_DVNS: [
         '0x8bC1D368036EE5E726D230beB685294BE191A24e', // LayerZero Labs DVN address

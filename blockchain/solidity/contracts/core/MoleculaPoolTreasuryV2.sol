@@ -27,9 +27,15 @@ struct TokenParams {
     bool isERC4626;
 }
 
+/**
+ * @dev Token type.
+ * @param None Token is not present.
+ * @param ERC20 ERC20 token type, not an extension.
+ * @param ERC4626 ERC4626 token type.
+ */
 enum TokenType {
     None,
-    ERC20, // Value represents the ERC20 token type, not an extension.
+    ERC20,
     ERC4626
 }
 
@@ -58,6 +64,13 @@ contract MoleculaPoolTreasuryV2 is
 {
     using SafeERC20 for IERC20;
     using Address for address;
+
+    /// @dev Minimal initial supply.
+    uint256 internal constant _MIN_INITIAL_SUPPLY = 1e18;
+
+    /// @dev Protocol's initial supply.
+    /// @notice The mUSD ERC-20 contract holds a non-transferrable amount of tokens corresponding to the initial supply.
+    uint256 public immutable INITIAL_SUPPLY;
 
     /// @dev Supply Manager's address.
     address public immutable SUPPLY_MANAGER;
@@ -116,6 +129,15 @@ contract MoleculaPoolTreasuryV2 is
     /// @dev Error: Wrong Guardian address during migration.
     error EBadGuardian();
 
+    /// @dev Error: Zero assets to redeem.
+    error EZeroAssetsToRedeem();
+
+    /// @dev Error: Pool in the unhealthy state. The total supply has dropped below the initial supply.
+    error EUnhealthyPoolState();
+
+    /// @dev Error: Initial supply is too low.
+    error ETooLowInitialSupply();
+
     /// @dev Emitted when the target has been added in the whitelist.
     /// @param target Address.
     event AddedInWhiteList(address indexed target);
@@ -157,6 +179,7 @@ contract MoleculaPoolTreasuryV2 is
 
     /**
      * @dev Initializes the contract setting the initializer address.
+     * @param initialSupply Protocol's initial supply.
      * @param initialOwner Owner's address.
      * @param tokens List of ERC20/ERC4626 tokens.
      * @param poolKeeperAddress Pool Keeper's address.
@@ -166,6 +189,7 @@ contract MoleculaPoolTreasuryV2 is
      * @param priceChecker_ Price checker contract's address.
      */
     constructor(
+        uint256 initialSupply,
         address initialOwner,
         address[] memory tokens,
         address poolKeeperAddress,
@@ -177,18 +201,22 @@ contract MoleculaPoolTreasuryV2 is
         Ownable(initialOwner)
         WhitelistedExecutor(whiteList)
         PriceCheckerClient(priceChecker_)
+        notZeroAddress(poolKeeperAddress)
         notZeroAddress(supplyManagerAddress)
         notZeroAddress(guardianAddress)
     {
+        if (initialSupply < _MIN_INITIAL_SUPPLY) {
+            revert ETooLowInitialSupply();
+        }
+        INITIAL_SUPPLY = initialSupply;
+
         uint256 tokensLength = tokens.length;
         for (uint256 i = 0; i < tokensLength; ++i) {
             _addToken(tokens[i]);
         }
 
-        // slither-disable-next-line missing-zero-check (checked in ERC1271)
         poolKeeper = poolKeeperAddress;
         SUPPLY_MANAGER = supplyManagerAddress;
-
         guardian = guardianAddress;
 
         // Validates that the price checker is properly set for each asset.
@@ -447,6 +475,11 @@ contract MoleculaPoolTreasuryV2 is
         address from,
         uint256 value
     ) external only(SUPPLY_MANAGER) returns (uint256 formattedValue) {
+        // Check that the Pool is in the healthy state.
+        if (totalSupply() < INITIAL_SUPPLY) {
+            revert EUnhealthyPoolState();
+        }
+
         // Check each token's price.
         _checkPoolPrices();
 
@@ -488,6 +521,16 @@ contract MoleculaPoolTreasuryV2 is
             tokenValue = IERC4626(token).convertToShares(assets);
             // Must reduce the Pool amount to correctly calculate `totalSupply` upon redemption.
             poolMap[token].valueToRedeem += tokenValue;
+        }
+
+        // Throw an exception if assets to redeem are equal to zero.
+        if (tokenValue == 0) {
+            revert EZeroAssetsToRedeem();
+        }
+
+        // Check that the Pool is not depegged.
+        if (totalSupply() < INITIAL_SUPPLY) {
+            revert EUnhealthyPoolState();
         }
     }
 

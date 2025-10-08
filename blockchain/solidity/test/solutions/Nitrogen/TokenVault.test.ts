@@ -306,9 +306,6 @@ describe('Test TokenVault', () => {
         );
         await daiTokenVault.connect(randAccount).init(DAI, 10n ** 6n, 10n ** 18n);
 
-        // Add TokenVault into RebaseTokenOwner
-        await rebaseTokenOwner.addTokenVault(daiTokenVault);
-
         // Remove dia usdcVault
         await rebaseTokenOwner.removeTokenVault(daiTokenVault);
 

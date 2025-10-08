@@ -3,8 +3,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { INITIAL_SUPPLY } from '../../utils/Carbon';
-import { deployNitrogenWithUSDT } from '../../utils/NitrogenCommon';
+import { deployNitrogenWithUSDT, DAI_INITIAL_SUPPLY } from '../../utils/NitrogenCommon';
 import { findRequestRedeemEvent } from '../../utils/event';
 import { grantERC20 } from '../../utils/grant';
 
@@ -43,11 +42,11 @@ describe('Test SupplyManger yield', () => {
             const { moleculaPool, supplyManager, rebaseToken, agent, user0, user1, caller, USDT } =
                 await loadFixture(deployNitrogenWithUSDT);
 
-            // generate income. make x2 share price.
+            // Generate income. Make x2 share price.
             const income = 250_000_000n;
             // const income18 = income * 10n ** 12n;
             await grantERC20(await moleculaPool.poolKeeper(), USDT, income);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY);
 
             // user0 deposit 100 USDT
             const depositValue = 100_000_000n;
@@ -66,9 +65,9 @@ describe('Test SupplyManger yield', () => {
             const value18 = depositValue * 10n ** 12n;
             expect(await USDT.balanceOf(user0)).to.equal(0);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 2n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY + shares);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(DAI_INITIAL_SUPPLY + shares);
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
             expect(await rebaseToken.balanceOf(user0)).to.equal(value18);
             expect(await rebaseToken.sharesOf(user0)).to.equal(shares);
 
@@ -86,9 +85,11 @@ describe('Test SupplyManger yield', () => {
             await rebaseToken.connect(user1).requestDeposit(depositValue, user1, user1);
             expect(await USDT.balanceOf(user1)).to.equal(0);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 3n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY + shares * 2n);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY + shares * 2n);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 3n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(
+                DAI_INITIAL_SUPPLY + shares * 2n,
+            );
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY + shares * 2n);
             expect(await rebaseToken.balanceOf(user1)).to.equal(value18);
             expect(await rebaseToken.sharesOf(user1)).to.equal(shares);
 
@@ -143,9 +144,11 @@ describe('Test SupplyManger yield', () => {
 
             expect(await USDT.balanceOf(caller)).to.equal(0);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 2n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY + shares * 1n);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY + value18);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(
+                DAI_INITIAL_SUPPLY + shares * 1n,
+            );
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY + value18);
             expect(await rebaseToken.balanceOf(caller)).to.equal(value18);
             expect(await rebaseToken.sharesOf(caller)).to.equal(shares);
 
@@ -188,9 +191,11 @@ describe('Test SupplyManger yield', () => {
 
             expect(await USDT.balanceOf(caller)).to.equal(0);
             expect(await USDT.balanceOf(await moleculaPool.poolKeeper())).to.equal(income);
-            expect(await supplyManager.totalSupply()).to.equal(INITIAL_SUPPLY * 2n);
-            expect(await supplyManager.totalSharesSupply()).to.equal(INITIAL_SUPPLY + shares * 1n);
-            expect(await moleculaPool.totalSupply()).to.equal(INITIAL_SUPPLY + value18);
+            expect(await supplyManager.totalSupply()).to.equal(DAI_INITIAL_SUPPLY * 2n);
+            expect(await supplyManager.totalSharesSupply()).to.equal(
+                DAI_INITIAL_SUPPLY + shares * 1n,
+            );
+            expect(await moleculaPool.totalSupply()).to.equal(DAI_INITIAL_SUPPLY + value18);
             expect(await rebaseToken.balanceOf(caller)).to.equal(value18);
             expect(await rebaseToken.sharesOf(caller)).to.equal(shares);
 
